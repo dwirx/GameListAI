@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Terminal with Vim, Snake, and JavaScript</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #000;
+            color: #0f0;
+            font-family: monospace;
+        }
+        #terminal {
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        #input-line {
+            display: flex;
+        }
+        #prompt {
+            color: #0f0;
+        }
+        #user-input {
+            flex-grow: 1;
+            background-color: transparent;
+            border: none;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 16px;
+            outline: none;
+            caret-color: #0f0;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+        #vim-editor, #js-editor {
+            background-color: #000;
+            color: #0f0;
+            width: 100%;
+            height: 300px;
+            display: none;
+        }
+        #snake-game {
+            display: none;
+            border: 1px solid #0f0;
+        }
+    </style>
+</head>
+<body>
+    <div id="terminal">
+        <div id="output"></div>
+        <div id="input-line">
+            <span id="prompt">$&nbsp;</span>
+            <input type="text" id="user-input" autofocus>
+        </div>
+    </div>
+    <textarea id="vim-editor"></textarea>
+    <textarea id="js-editor"></textarea>
+    <canvas id="snake-game" width="300" height="300"></canvas>
+
+    <script>
+        const output = document.getElementById('output');
+        const userInput = document.getElementById('user-input');
+        const vimEditor = document.getElementById('vim-editor');
+        const jsEditor = document.getElementById('js-editor');
+        const snakeGame = document.getElementById('snake-game');
+        let currentDirectory = '/home/user';
+        let commandHistory = [];
+        let historyIndex = -1;
+        let vimMode = false;
+        let snakeMode = false;
+        let jsMode = false;
+        let fileSystem = {
+            '/home/user': {
+                'file1.txt': 'This is file 1',
+                'file2.txt': 'This is file 2'
+            }
+        };
+
+        // Snake game variables
+        let snake, food, dx, dy, score, gameLoop;
+
+        function processCommand(command) {
+            commandHistory.push(command);
+            historyIndex = commandHistory.length;
+            let response = '';
+            const args = command.split(' ');
+            const cmd = args[0].toLowerCase();
+
+            switch(cmd) {
+                case 'cd':
+                    if (args[1]) {
+                        if (args[1] === '..') {
+                            currentDirectory = currentDirectory.split('/').slice(0, -1).join('/') || '/';
+                        } else {
+                            currentDirectory += '/' + args[1];
+                        }
+                        response = `Changed directory to ${currentDirectory}`;
+                    } else {
+                        response = 'Usage: cd <directory>';
+                    }
+                    break;
+                case 'ls':
+                    response = Object.keys(fileSystem[currentDirectory] || {}).join('\n');
+                    break;
+                case 'pwd':
+                    response = currentDirectory;
+                    break;
+                case 'vim':
+                    if (args[1]) {
+                        vimMode = true;
+                        vimEditor.style.display = 'block';
+                        vimEditor.value = fileSystem[currentDirectory][args[1]] || '';
+                        response = `Opening ${args[1]} in Vim`;
+                        userInput.style.display = 'none';
+                    } else {
+                        response = 'Usage: vim <filename>';
+                    }
+                    break;
+                case 'snake':
+                    snakeMode = true;
+                    snakeGame.style.display = 'block';
+                    userInput.style.display = 'none';
+                    initSnake();
+                    response = 'Starting Snake game. Use h (left), j (down), k (up), l (right) to move. Press Esc to exit.';
+                    break;
+                case 'js':
+                    jsMode = true;
+                    jsEditor.style.display = 'block';
+                    userInput.style.display = 'none';
+                    jsEditor.value = '';
+                    jsEditor.focus();
+                    response = 'Enter JavaScript code. Press Ctrl+Enter to execute. Press Esc to exit.';
+                    break;
+                case 'help':
+                    response = `
+Available commands:
+
+1. cd <directory>   : Change current directory
+   Usage: cd ..     (move to parent directory)
+          cd foldername     (move into folder)
+
+2. ls               : List files in current directory
+
+3. pwd              : Print current working directory
+
+4. vim <filename>   : Open a file in Vim editor
+   Usage: vim file1.txt
+   In Vim: Press Esc to exit and save
+
+5. snake            : Start Snake game
+   Controls: h (left), j (down), k (up), l (right)
+   Press Esc to exit game
+
+6. js               : Open JavaScript editor
+   Write your JavaScript code
+   Press Ctrl+Enter to execute
+   Press Esc to exit editor
+
+7. clear            : Clear terminal screen
+
+8. help             : Display this help message
+
+Navigation:
+- Use Up/Down arrow keys to cycle through command history
+- Type a command and press Enter to execute
+`;
+                    break;
+                case 'clear':
+                    output.innerHTML = '';
+                    return;
+                default:
+                    response = `Command not found: ${command}`;
+            }
+            output.innerHTML += `$ ${command}<br><pre>${response}</pre><br>`;
+        }
+
+        userInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                const command = userInput.value;
+                processCommand(command);
+                userInput.value = '';
+                window.scrollTo(0, document.body.scrollHeight);
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    userInput.value = commandHistory[historyIndex];
+                }
+            } else if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    userInput.value = commandHistory[historyIndex];
+                } else {
+                    historyIndex = commandHistory.length;
+                    userInput.value = '';
+                }
+            }
+        });
+
+        vimEditor.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                vimMode = false;
+                vimEditor.style.display = 'none';
+                userInput.style.display = 'block';
+                userInput.focus();
+                output.innerHTML += 'File saved and closed.<br>';
+            }
+        });
+
+        jsEditor.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                jsMode = false;
+                jsEditor.style.display = 'none';
+                userInput.style.display = 'block';
+                userInput.focus();
+                output.innerHTML += 'JavaScript editor closed.<br>';
+            } else if (event.key === 'Enter' && event.ctrlKey) {
+                executeJavaScript();
+            }
+        });
+
+        function executeJavaScript() {
+            const code = jsEditor.value;
+            let jsOutput = '';
+            const originalLog = console.log;
+            console.log = function(...args) {
+                jsOutput += args.join(' ') + '\n';
+                originalLog.apply(console, args);
+            };
+            try {
+                const result = eval(code);
+                if (result !== undefined) {
+                    jsOutput += 'Result: ' + result + '\n';
+                }
+            } catch (error) {
+                jsOutput += 'Error: ' + error.message + '\n';
+            }
+            console.log = originalLog;
+            output.innerHTML += `<pre>${jsOutput}</pre>`;
+        }
+
+        window.addEventListener('keydown', function(event) {
+            if (snakeMode) {
+                if (event.key === 'Escape') {
+                    endSnake();
+                } else if (['h', 'j', 'k', 'l'].includes(event.key)) {
+                    event.preventDefault();
+                }
+            }
+        });
+
+        function initSnake() {
+            const ctx = snakeGame.getContext('2d');
+            snake = [{x: 150, y: 150}];
+            food = {x: 0, y: 0};
+            dx = 10;
+            dy = 0;
+            score = 0;
+            placeFood();
+
+            gameLoop = setInterval(function() {
+                ctx.clearRect(0, 0, snakeGame.width, snakeGame.height);
+                moveSnake();
+                drawSnake();
+                drawFood();
+                checkCollision();
+            }, 100);
+
+            document.addEventListener('keydown', changeDirection);
+        }
+
+        function moveSnake() {
+            const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            snake.unshift(head);
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                placeFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function drawSnake() {
+            const ctx = snakeGame.getContext('2d');
+            ctx.fillStyle = '#0f0';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x, segment.y, 10, 10);
+            });
+        }
+
+        function drawFood() {
+            const ctx = snakeGame.getContext('2d');
+            ctx.fillStyle = '#f00';
+            ctx.fillRect(food.x, food.y, 10, 10);
+        }
+
+        function placeFood() {
+            food.x = Math.floor(Math.random() * 30) * 10;
+            food.y = Math.floor(Math.random() * 30) * 10;
+        }
+
+        function changeDirection(event) {
+            const keyPressed = event.key;
+            const goingUp = dy === -10;
+            const goingDown = dy === 10;
+            const goingRight = dx === 10;
+            const goingLeft = dx === -10;
+
+            if (keyPressed === 'h' && !goingRight) {
+                dx = -10;
+                dy = 0;
+            }
+            if (keyPressed === 'k' && !goingDown) {
+                dx = 0;
+                dy = -10;
+            }
+            if (keyPressed === 'l' && !goingLeft) {
+                dx = 10;
+                dy = 0;
+            }
+            if (keyPressed === 'j' && !goingUp) {
+                dx = 0;
+                dy = 10;
+            }
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            if (head.x < 0 || head.x >= snakeGame.width || head.y < 0 || head.y >= snakeGame.height) {
+                endSnake();
+            }
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    endSnake();
+                }
+            }
+        }
+
+        function endSnake() {
+            clearInterval(gameLoop);
+            snakeMode = false;
+            snakeGame.style.display = 'none';
+            userInput.style.display = 'block';
+            userInput.focus();
+            output.innerHTML += `Snake game ended. Score: ${score}<br>`;
+        }
+
+        window.addEventListener('click', function() {
+            if (!vimMode && !snakeMode && !jsMode) {
+                userInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
