@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Code Editor with Syntax Highlighting</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+      #toolbar {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        background-color: #333;
+        color: white;
+        border-bottom: 1px solid #444;
+      }
+      #toolbar button {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        margin: 0 5px;
+        font-size: 1.2em;
+      }
+      #toolbar button:hover {
+        color: #ddd;
+      }
+      #editor {
+        display: flex;
+        flex: 1;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+      #editor.horizontal {
+        flex-direction: row;
+      }
+      #editor.vertical {
+        flex-direction: column;
+      }
+      .CodeMirror {
+        flex: 1;
+        height: 100%;
+      }
+      iframe {
+        flex: 1;
+        width: 100%;
+        border: none;
+      }
+      .divider {
+        width: 5px;
+        background-color: #444;
+        cursor: ew-resize;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        z-index: 10;
+      }
+      #editor.horizontal .divider {
+        right: 50%;
+      }
+      #editor.vertical .divider {
+        display: none;
+      }
+      #preview.hidden {
+        display: none;
+      }
+      @media (max-width: 768px) {
+        #editor {
+          flex-direction: column;
+        }
+        .divider {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="toolbar">
+      <div class="resize-container">
+        <button id="toggleLayout" title="Toggle Layout">
+          <i class="fas fa-columns"></i>
+        </button>
+        <button id="resizeButton" title="Resize Layout">
+          <i class="fas fa-expand-arrows-alt"></i>
+        </button>
+        <button id="togglePreviewButton" title="Hide/Show Preview">
+          <i class="fas fa-eye-slash"></i>
+        </button>
+        <button id="toggleWrapButton" title="Toggle Wrap">
+          <i class="fas fa-text-width"></i>
+        </button>
+      </div>
+      <button id="copyButton" title="Copy Code">
+        <i class="fas fa-copy"></i>
+      </button>
+    </div>
+    <div id="editor" class="horizontal">
+      <textarea id="code"></textarea>
+      <div class="divider"></div>
+      <iframe id="preview"></iframe>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closetag.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
+
+    <script>
+      const editorDiv = document.getElementById("editor");
+      const codeEditor = CodeMirror.fromTextArea(
+        document.getElementById("code"),
+        {
+          lineNumbers: true,
+          mode: "htmlmixed",
+          autoCloseTags: true,
+          autoCloseBrackets: true,
+          lineWrapping: false, // Default no wrapping
+        },
+      );
+      const previewFrame = document.getElementById("preview");
+      const divider = document.querySelector(".divider");
+
+      codeEditor.on("change", () => {
+        const code = codeEditor.getValue();
+        previewFrame.srcdoc = code;
+        localStorage.setItem("savedCode", code);
+      });
+
+      document.getElementById("toggleLayout").addEventListener("click", () => {
+        if (editorDiv.classList.contains("horizontal")) {
+          editorDiv.classList.remove("horizontal");
+          editorDiv.classList.add("vertical");
+        } else {
+          editorDiv.classList.remove("vertical");
+          editorDiv.classList.add("horizontal");
+        }
+      });
+
+      document.getElementById("resizeButton").addEventListener("click", () => {
+        if (editorDiv.classList.contains("editor-resized")) {
+          editorDiv.classList.remove("editor-resized");
+        } else {
+          editorDiv.classList.add("editor-resized");
+        }
+      });
+
+      document
+        .getElementById("togglePreviewButton")
+        .addEventListener("click", () => {
+          previewFrame.classList.toggle("hidden");
+        });
+
+      document
+        .getElementById("toggleWrapButton")
+        .addEventListener("click", () => {
+          const isWrapping = codeEditor.getOption("lineWrapping");
+          codeEditor.setOption("lineWrapping", !isWrapping);
+        });
+
+      divider.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        document.addEventListener("mousemove", resizeEditor);
+        document.addEventListener("mouseup", stopResizing);
+      });
+
+      function resizeEditor(e) {
+        const rect = editorDiv.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        editorDiv.style.flex = `0 0 ${offsetX}px`;
+      }
+
+      function stopResizing() {
+        document.removeEventListener("mousemove", resizeEditor);
+        document.removeEventListener("mouseup", stopResizing);
+      }
+
+      document.getElementById("copyButton").addEventListener("click", () => {
+        navigator.clipboard
+          .writeText(codeEditor.getValue())
+          .then(() => {
+            alert("Code copied to clipboard!");
+          })
+          .catch((err) => {
+            alert("Failed to copy code: ", err);
+          });
+      });
+
+      const savedCode = localStorage.getItem("savedCode");
+      if (savedCode) {
+        codeEditor.setValue(savedCode);
+        previewFrame.srcdoc = savedCode;
+      } else {
+        const defaultCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Preview</title>
+</head>
+<body>
+    <h1>Hello, World!</h1>
+    <p>This is a live preview of your HTML code.</p>
+</body>
+</html>`;
+        codeEditor.setValue(defaultCode);
+        previewFrame.srcdoc = defaultCode;
+      }
+    </script>
+  </body>
+</html>
