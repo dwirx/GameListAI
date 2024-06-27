@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>2048 AI Battle</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+        padding: 20px;
+        background-color: #f0f0f0;
+      }
+      .game-container {
+        display: flex;
+        justify-content: space-around;
+        width: 100%;
+        max-width: 1200px;
+      }
+      .game-board {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .board {
+        display: grid;
+        grid-gap: 10px;
+        background-color: #bbada0;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 20px;
+      }
+      .tile {
+        background-color: #ccc0b3;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 24px;
+        font-weight: bold;
+        border-radius: 5px;
+      }
+      .score,
+      .level {
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+      button {
+        font-size: 18px;
+        padding: 10px 20px;
+        margin: 5px;
+        cursor: pointer;
+      }
+      #settings {
+        margin-bottom: 20px;
+      }
+      #analysis {
+        width: 100%;
+        max-width: 1200px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+      }
+      .chart-container {
+        width: 45%;
+        margin-bottom: 20px;
+      }
+      #prediction {
+        width: 100%;
+        text-align: center;
+        margin-top: 20px;
+        font-size: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="settings">
+      <label for="grid-size">Grid Size:</label>
+      <select id="grid-size">
+        <option value="4">4x4</option>
+        <option value="5">5x5</option>
+        <option value="6">6x6</option>
+      </select>
+      <label for="difficulty">Difficulty:</label>
+      <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+    </div>
+    <div class="game-container">
+      <div class="game-board">
+        <h2>AI 1</h2>
+        <div class="score" id="score1">Score: 0</div>
+        <div class="level" id="level1">Level: 1</div>
+        <div class="board" id="game-board1"></div>
+      </div>
+      <div class="game-board">
+        <h2>AI 2</h2>
+        <div class="score" id="score2">Score: 0</div>
+        <div class="level" id="level2">Level: 1</div>
+        <div class="board" id="game-board2"></div>
+      </div>
+    </div>
+    <button id="start-stop">Start Battle</button>
+    <div id="prediction"></div>
+    <div id="analysis">
+      <div class="chart-container">
+        <canvas id="scoreChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <canvas id="levelChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <canvas id="moveChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <canvas id="maxTileChart"></canvas>
+      </div>
+    </div>
+
+    <script>
+      const gameBoard1 = document.getElementById("game-board1");
+      const gameBoard2 = document.getElementById("game-board2");
+      const scoreElement1 = document.getElementById("score1");
+      const scoreElement2 = document.getElementById("score2");
+      const levelElement1 = document.getElementById("level1");
+      const levelElement2 = document.getElementById("level2");
+      const startStopButton = document.getElementById("start-stop");
+      const gridSizeSelect = document.getElementById("grid-size");
+      const difficultySelect = document.getElementById("difficulty");
+      const predictionElement = document.getElementById("prediction");
+
+      let board1 = [];
+      let board2 = [];
+      let score1 = 0;
+      let score2 = 0;
+      let level1 = 1;
+      let level2 = 1;
+      let gameInterval;
+      let isPlaying = false;
+      let gridSize = 4;
+      let difficulty = "easy";
+      let moveHistory1 = [];
+      let moveHistory2 = [];
+      let moveCount1 = 0;
+      let moveCount2 = 0;
+
+      const scoreChart = new Chart(
+        document.getElementById("scoreChart").getContext("2d"),
+        {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "AI 1 Score",
+                data: [],
+                borderColor: "rgb(75, 192, 192)",
+                tension: 0.1,
+              },
+              {
+                label: "AI 2 Score",
+                data: [],
+                borderColor: "rgb(255, 99, 132)",
+                tension: 0.1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        },
+      );
+
+      const levelChart = new Chart(
+        document.getElementById("levelChart").getContext("2d"),
+        {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "AI 1 Level",
+                data: [],
+                borderColor: "rgb(75, 192, 192)",
+                tension: 0.1,
+              },
+              {
+                label: "AI 2 Level",
+                data: [],
+                borderColor: "rgb(255, 99, 132)",
+                tension: 0.1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        },
+      );
+
+      const moveChart = new Chart(
+        document.getElementById("moveChart").getContext("2d"),
+        {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "AI 1 Moves",
+                data: [],
+                borderColor: "rgb(75, 192, 192)",
+                tension: 0.1,
+              },
+              {
+                label: "AI 2 Moves",
+                data: [],
+                borderColor: "rgb(255, 99, 132)",
+                tension: 0.1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        },
+      );
+
+      const maxTileChart = new Chart(
+        document.getElementById("maxTileChart").getContext("2d"),
+        {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "AI 1 Max Tile",
+                data: [],
+                borderColor: "rgb(75, 192, 192)",
+                tension: 0.1,
+              },
+              {
+                label: "AI 2 Max Tile",
+                data: [],
+                borderColor: "rgb(255, 99, 132)",
+                tension: 0.1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        },
+      );
+
+      function initializeBoards() {
+        gridSize = parseInt(gridSizeSelect.value);
+        difficulty = difficultySelect.value;
+        board1 = Array(gridSize)
+          .fill()
+          .map(() => Array(gridSize).fill(0));
+        board2 = Array(gridSize)
+          .fill()
+          .map(() => Array(gridSize).fill(0));
+        score1 = 0;
+        score2 = 0;
+        level1 = 1;
+        level2 = 1;
+        moveHistory1 = [];
+        moveHistory2 = [];
+        moveCount1 = 0;
+        moveCount2 = 0;
+        addNewTile(board1);
+        addNewTile(board1);
+        addNewTile(board2);
+        addNewTile(board2);
+        updateDisplay(
+          board1,
+          gameBoard1,
+          score1,
+          scoreElement1,
+          level1,
+          levelElement1,
+        );
+        updateDisplay(
+          board2,
+          gameBoard2,
+          score2,
+          scoreElement2,
+          level2,
+          levelElement2,
+        );
+        updateCharts();
+      }
+
+      function addNewTile(board) {
+        const emptyTiles = [];
+        for (let i = 0; i < gridSize; i++) {
+          for (let j = 0; j < gridSize; j++) {
+            if (board[i][j] === 0) {
+              emptyTiles.push({ i, j });
+            }
+          }
+        }
+        if (emptyTiles.length > 0) {
+          const { i, j } =
+            emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
+          board[i][j] = Math.random() < 0.9 ? 2 : 4;
+        }
+      }
+
+      function updateDisplay(
+        board,
+        gameBoard,
+        score,
+        scoreElement,
+        level,
+        levelElement,
+      ) {
+        gameBoard.innerHTML = "";
+        gameBoard.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+        const tileSize = 300 / gridSize;
+        for (let i = 0; i < gridSize; i++) {
+          for (let j = 0; j < gridSize; j++) {
+            const tile = document.createElement("div");
+            tile.className = "tile";
+            tile.textContent = board[i][j] || "";
+            tile.style.backgroundColor = getTileColor(board[i][j]);
+            tile.style.width = `${tileSize}px`;
+            tile.style.height = `${tileSize}px`;
+            tile.style.fontSize = `${tileSize / 3}px`;
+            gameBoard.appendChild(tile);
+          }
+        }
+        scoreElement.textContent = `Score: ${score}`;
+        levelElement.textContent = `Level: ${level}`;
+      }
+
+      function getTileColor(value) {
+        const colors = {
+          0: "#ccc0b3",
+          2: "#eee4da",
+          4: "#ede0c8",
+          8: "#f2b179",
+          16: "#f59563",
+          32: "#f67c5f",
+          64: "#f65e3b",
+          128: "#edcf72",
+          256: "#edcc61",
+          512: "#edc850",
+          1024: "#edc53f",
+          2048: "#edc22e",
+        };
+        return colors[value] || "#3c3a32";
+      }
+
+      function move(board, score, level) {
+        const directions = ["up", "right", "down", "left"];
+        let bestMove = null;
+        let bestScore = -Infinity;
+
+        for (const direction of directions) {
+          const tempBoard = JSON.parse(JSON.stringify(board));
+          const moved = performMove(tempBoard, direction);
+          if (moved) {
+            const evaluationScore = evaluateBoard(tempBoard);
+            if (evaluationScore > bestScore) {
+              bestScore = evaluationScore;
+              bestMove = direction;
+            }
+          }
+        }
+
+        if (bestMove) {
+          const moved = performMove(board, bestMove);
+          if (moved) {
+            addNewTile(board);
+            score += calculateScore(board);
+            level = updateLevel(score, level);
+          }
+          return true;
+        }
+        return false;
+      }
+
+      function performMove(board, direction) {
+        let moved = false;
+        const rotatedBoard = rotateBoard(board, direction);
+
+        for (let i = 0; i < gridSize; i++) {
+          const row = rotatedBoard[i].filter((tile) => tile !== 0);
+          for (let j = 0; j < row.length - 1; j++) {
+            if (row[j] === row[j + 1]) {
+              row[j] *= 2;
+              row[j + 1] = 0;
+              moved = true;
+            }
+          }
+          const newRow = row.filter((tile) => tile !== 0);
+          while (newRow.length < gridSize) {
+            newRow.push(0);
+          }
+          if (newRow.join(",") !== rotatedBoard[i].join(",")) {
+            moved = true;
+          }
+          rotatedBoard[i] = newRow;
+        }
+
+        const newBoard = rotateBoard(rotatedBoard, direction, true);
+        if (moved) {
+          for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+              board[i][j] = newBoard[i][j];
+            }
+          }
+        }
+        return moved;
+      }
+
+      function rotateBoard(board, direction, reverse = false) {
+        const rotated = [];
+        for (let i = 0; i < gridSize; i++) {
+          rotated[i] = [];
+          for (let j = 0; j < gridSize; j++) {
+            switch (direction) {
+              case "up":
+                rotated[i][j] = reverse
+                  ? board[j][gridSize - 1 - i]
+                  : board[gridSize - 1 - j][i];
+                break;
+              case "right":
+                rotated[i][j] = reverse
+                  ? board[gridSize - 1 - j][gridSize - 1 - i]
+                  : board[i][gridSize - 1 - j];
+                break;
+              case "down":
+                rotated[i][j] = reverse
+                  ? board[gridSize - 1 - j][i]
+                  : board[j][gridSize - 1 - i];
+                break;
+              case "left":
+                rotated[i][j] = board[i][j];
+                break;
+            }
+          }
+        }
+        return rotated;
+      }
+
+      function calculateScore(board) {
+        let score = 0;
+        for (let i = 0; i < gridSize; i++) {
+          for (let j = 0; j < gridSize; j++) {
+            if (board[i][j] > 2) {
+              score += board[i][j];
+            }
+          }
+        }
+        return score;
+      }
+
+      function updateLevel(score, level) {
+        return Math.floor(score / 1000) + 1;
+      }
+
+      function evaluateBoard(board) {
+        let emptyTiles = 0;
+        let mergeScore = 0;
+        let gradientScore = 0;
+        let maxTile = 0;
+
+        for (let i = 0; i < gridSize; i++) {
+          for (let j = 0; j < gridSize; j++) {
+            if (board[i][j] === 0) {
+              emptyTiles++;
+            } else {
+              maxTile = Math.max(maxTile, board[i][j]);
+              // Check for potential merges
+              if (i < gridSize - 1 && board[i][j] === board[i + 1][j]) {
+                mergeScore += board[i][j];
+              }
+              if (j < gridSize - 1 && board[i][j] === board[i][j + 1]) {
+                mergeScore += board[i][j];
+              }
+
+              // Calculate gradient score
+              gradientScore += board[i][j] * (gridSize - Math.min(i, j));
+            }
+          }
+        }
+
+        const emptyWeight = 10;
+        const mergeWeight = 5;
+        const gradientWeight = 1;
+        const maxTileWeight = 2;
+
+        return (
+          emptyTiles * emptyWeight +
+          mergeScore * mergeWeight +
+          gradientScore * gradientWeight +
+          maxTile * maxTileWeight
+        );
+      }
+
+      function updateCharts() {
+        const moveCount = Math.max(moveCount1, moveCount2);
+        scoreChart.data.labels = Array.from(
+          { length: moveCount },
+          (_, i) => i + 1,
+        );
+        scoreChart.data.datasets[0].data = moveHistory1.map(
+          (move) => move.score,
+        );
+        scoreChart.data.datasets[1].data = moveHistory2.map(
+          (move) => move.score,
+        );
+        scoreChart.update();
+
+        levelChart.data.labels = Array.from(
+          { length: moveCount },
+          (_, i) => i + 1,
+        );
+        levelChart.data.datasets[0].data = moveHistory1.map(
+          (move) => move.level,
+        );
+        levelChart.data.datasets[1].data = moveHistory2.map(
+          (move) => move.level,
+        );
+        levelChart.update();
+
+        moveChart.data.labels = Array.from(
+          { length: moveCount },
+          (_, i) => i + 1,
+        );
+        moveChart.data.datasets[0].data = moveHistory1.map((_, i) => i + 1);
+        moveChart.data.datasets[1].data = moveHistory2.map((_, i) => i + 1);
+        moveChart.update();
+
+        maxTileChart.data.labels = Array.from(
+          { length: moveCount },
+          (_, i) => i + 1,
+        );
+        maxTileChart.data.datasets[0].data = moveHistory1.map((move) =>
+          Math.max(...move.board.flat()),
+        );
+        maxTileChart.data.datasets[1].data = moveHistory2.map((move) =>
+          Math.max(...move.board.flat()),
+        );
+        maxTileChart.update();
+      }
+
+      function predictWinner() {
+        const score1 = moveHistory1[moveHistory1.length - 1].score;
+        const score2 = moveHistory2[moveHistory2.length - 1].score;
+        const maxTile1 = Math.max(...board1.flat());
+        const maxTile2 = Math.max(...board2.flat());
+        const emptyTiles1 = board1.flat().filter((tile) => tile === 0).length;
+        const emptyTiles2 = board2.flat().filter((tile) => tile === 0).length;
+
+        let prediction = "";
+        if (score1 > score2 * 1.2) {
+          prediction = "AI 1 is likely to win";
+        } else if (score2 > score1 * 1.2) {
+          prediction = "AI 2 is likely to win";
+        } else if (maxTile1 > maxTile2) {
+          prediction = "AI 1 has a slight advantage";
+        } else if (maxTile2 > maxTile1) {
+          prediction = "AI 2 has a slight advantage";
+        } else if (emptyTiles1 > emptyTiles2) {
+          prediction = "AI 1 has more room to maneuver";
+        } else if (emptyTiles2 > emptyTiles1) {
+          prediction = "AI 2 has more room to maneuver";
+        } else {
+          prediction = "The game is too close to call";
+        }
+
+        predictionElement.textContent = `Prediction: ${prediction}`;
+      }
+
+      function startStopGame() {
+        if (isPlaying) {
+          clearInterval(gameInterval);
+          startStopButton.textContent = "Start Battle";
+          isPlaying = false;
+        } else {
+          initializeBoards();
+          gameInterval = setInterval(() => {
+            const moved1 = move(board1, score1, level1);
+            const moved2 = move(board2, score2, level2);
+
+            if (moved1) {
+              moveCount1++;
+              score1 = calculateScore(board1);
+              level1 = updateLevel(score1, level1);
+              moveHistory1.push({
+                board: JSON.parse(JSON.stringify(board1)),
+                score: score1,
+                level: level1,
+              });
+            }
+
+            if (moved2) {
+              moveCount2++;
+              score2 = calculateScore(board2);
+              level2 = updateLevel(score2, level2);
+              moveHistory2.push({
+                board: JSON.parse(JSON.stringify(board2)),
+                score: score2,
+                level: level2,
+              });
+            }
+
+            updateDisplay(
+              board1,
+              gameBoard1,
+              score1,
+              scoreElement1,
+              level1,
+              levelElement1,
+            );
+            updateDisplay(
+              board2,
+              gameBoard2,
+              score2,
+              scoreElement2,
+              level2,
+              levelElement2,
+            );
+            updateCharts();
+            predictWinner();
+
+            if (!moved1 && !moved2) {
+              clearInterval(gameInterval);
+              startStopButton.textContent = "Start Battle";
+              isPlaying = false;
+              const winner =
+                score1 > score2
+                  ? "AI 1"
+                  : score2 > score1
+                    ? "AI 2"
+                    : "It's a tie";
+              alert(
+                `Game Over! ${winner} wins! Final Scores - AI 1: ${score1}, AI 2: ${score2}`,
+              );
+            }
+          }, getDifficultyInterval());
+          startStopButton.textContent = "Stop Battle";
+          isPlaying = true;
+        }
+      }
+
+      function getDifficultyInterval() {
+        switch (difficulty) {
+          case "easy":
+            return 500;
+          case "medium":
+            return 300;
+          case "hard":
+            return 100;
+          default:
+            return 300;
+        }
+      }
+
+      startStopButton.addEventListener("click", startStopGame);
+      gridSizeSelect.addEventListener("change", initializeBoards);
+      difficultySelect.addEventListener("change", () => {
+        if (isPlaying) {
+          clearInterval(gameInterval);
+          gameInterval = setInterval(() => {
+            // ... (same code as in startStopGame interval)
+          }, getDifficultyInterval());
+        }
+      });
+
+      initializeBoards();
+    </script>
+  </body>
+</html>

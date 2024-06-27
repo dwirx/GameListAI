@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Super Smart Battle Snake AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #1a1a1a;
+        color: #f0f0f0;
+      }
+      .game-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      canvas {
+        border: 2px solid #4a4a4a;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        max-width: 100%;
+        height: auto;
+      }
+      .info-panel {
+        flex: 1;
+        min-width: 300px;
+        background-color: #2a2a2a;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+      }
+      h2 {
+        margin-top: 0;
+        color: #f0f0f0;
+      }
+      #scores,
+      #analysis,
+      #bestScores,
+      #history,
+      #aiActions {
+        margin-bottom: 20px;
+      }
+      .congratulations {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(0, 0, 0, 0.8);
+        color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 24px;
+        animation: fadeInOut 3s ease-in-out;
+      }
+      @keyframes fadeInOut {
+        0%,
+        100% {
+          opacity: 0;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+      #chart {
+        margin-top: 20px;
+        max-width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-container">
+      <canvas id="gameCanvas1" width="400" height="400"></canvas>
+      <canvas id="gameCanvas2" width="400" height="400"></canvas>
+      <div class="info-panel">
+        <div id="scores"></div>
+        <div id="bestScores"></div>
+        <div id="analysis"></div>
+        <div id="aiActions"></div>
+        <div id="history"></div>
+        <canvas id="chart"></canvas>
+      </div>
+    </div>
+
+    <script>
+      const canvas1 = document.getElementById("gameCanvas1");
+      const ctx1 = canvas1.getContext("2d");
+      const canvas2 = document.getElementById("gameCanvas2");
+      const ctx2 = canvas2.getContext("2d");
+      const scoresDiv = document.getElementById("scores");
+      const bestScoresDiv = document.getElementById("bestScores");
+      const analysisDiv = document.getElementById("analysis");
+      const aiActionsDiv = document.getElementById("aiActions");
+      const historyDiv = document.getElementById("history");
+      const chartCanvas = document.getElementById("chart");
+
+      const gridSize = 20;
+      const tileCount = 20;
+
+      let globalBestScore = 0;
+      let gameHistory = [];
+      let aiActions = { snake1: [], snake2: [] };
+
+      class Snake {
+        constructor(x, y, color) {
+          this.body = [{ x, y }];
+          this.dx = 0;
+          this.dy = 0;
+          this.color = color;
+          this.score = 0;
+          this.bestScore = 0;
+        }
+
+        move() {
+          const head = {
+            x: this.body[0].x + this.dx,
+            y: this.body[0].y + this.dy,
+          };
+          head.x = (head.x + tileCount) % tileCount;
+          head.y = (head.y + tileCount) % tileCount;
+          this.body.unshift(head);
+          if (this.body.length > this.score + 1) {
+            this.body.pop();
+          }
+        }
+
+        draw(ctx, canvasWidth, canvasHeight) {
+          const cellWidth = canvasWidth / tileCount;
+          const cellHeight = canvasHeight / tileCount;
+          this.body.forEach((segment, index) => {
+            const hue = (index * 10) % 360;
+            ctx.fillStyle = `hsl(${hue}, 100%, ${this.color})`;
+            ctx.beginPath();
+            ctx.arc(
+              (segment.x + 0.5) * cellWidth,
+              (segment.y + 0.5) * cellHeight,
+              Math.min(cellWidth, cellHeight) / 2 - 1,
+              0,
+              2 * Math.PI,
+            );
+            ctx.fill();
+          });
+        }
+
+        checkCollision() {
+          const head = this.body[0];
+          return this.body
+            .slice(1)
+            .some((segment) => segment.x === head.x && segment.y === head.y);
+        }
+      }
+
+      class Game {
+        constructor(canvas, ctx, snakeColor, aiName) {
+          this.canvas = canvas;
+          this.ctx = ctx;
+          this.snake = new Snake(10, 10, snakeColor);
+          this.food = this.generateFood();
+          this.isGameOver = false;
+          this.aiName = aiName;
+        }
+
+        generateFood() {
+          let newFood;
+          do {
+            newFood = {
+              x: Math.floor(Math.random() * tileCount),
+              y: Math.floor(Math.random() * tileCount),
+            };
+          } while (
+            this.snake.body.some(
+              (segment) => segment.x === newFood.x && segment.y === newFood.y,
+            )
+          );
+          return newFood;
+        }
+
+        update() {
+          if (this.isGameOver) return;
+
+          this.snake.move();
+          if (this.snake.checkCollision()) {
+            this.isGameOver = true;
+            return;
+          }
+          this.checkCollision();
+          this.draw();
+        }
+
+        checkCollision() {
+          const head = this.snake.body[0];
+          if (head.x === this.food.x && head.y === this.food.y) {
+            this.snake.score++;
+            if (this.snake.score > this.snake.bestScore) {
+              this.snake.bestScore = this.snake.score;
+              if (this.snake.bestScore > globalBestScore) {
+                globalBestScore = this.snake.bestScore;
+                this.showCongratulations();
+              }
+            }
+            this.food = this.generateFood();
+          }
+        }
+
+        draw() {
+          this.ctx.fillStyle = "#2a2a2a";
+          this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+          this.snake.draw(this.ctx, this.canvas.width, this.canvas.height);
+          this.ctx.fillStyle = "red";
+          const cellWidth = this.canvas.width / tileCount;
+          const cellHeight = this.canvas.height / tileCount;
+          this.ctx.beginPath();
+          this.ctx.arc(
+            (this.food.x + 0.5) * cellWidth,
+            (this.food.y + 0.5) * cellHeight,
+            Math.min(cellWidth, cellHeight) / 2 - 1,
+            0,
+            2 * Math.PI,
+          );
+          this.ctx.fill();
+        }
+
+        reset() {
+          this.snake = new Snake(10, 10, this.snake.color);
+          this.food = this.generateFood();
+          this.isGameOver = false;
+        }
+
+        showCongratulations() {
+          const congrats = document.createElement("div");
+          congrats.className = "congratulations";
+          congrats.textContent = `${this.aiName} New Best Score: ${globalBestScore}!`;
+          document.body.appendChild(congrats);
+          setTimeout(() => {
+            document.body.removeChild(congrats);
+          }, 3000);
+        }
+
+        findPath() {
+          return findPath(this.snake.body[0], this.food, this.snake.body);
+        }
+
+        makeDecision() {
+          const path = this.findPath();
+          let decision = "Continue";
+          if (path.length > 1) {
+            const next = path[1];
+            const head = this.snake.body[0];
+            if (next.x > head.x) decision = "Right";
+            else if (next.x < head.x) decision = "Left";
+            else if (next.y > head.y) decision = "Down";
+            else if (next.y < head.y) decision = "Up";
+          } else {
+            // Evasive action if no path found
+            const possibleMoves = this.getValidMoves();
+            if (possibleMoves.length > 0) {
+              const randomMove =
+                possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+              decision = randomMove;
+            }
+          }
+          aiActions[this.aiName].push(decision);
+          if (aiActions[this.aiName].length > 5) aiActions[this.aiName].shift();
+          return decision;
+        }
+
+        getValidMoves() {
+          const head = this.snake.body[0];
+          const possibleMoves = [
+            { x: head.x + 1, y: head.y, direction: "Right" },
+            { x: head.x - 1, y: head.y, direction: "Left" },
+            { x: head.x, y: head.y + 1, direction: "Down" },
+            { x: head.x, y: head.y - 1, direction: "Up" },
+          ];
+          return possibleMoves
+            .filter(
+              (move) =>
+                !this.snake.body.some(
+                  (segment) => segment.x === move.x && segment.y === move.y,
+                ) &&
+                move.x >= 0 &&
+                move.x < tileCount &&
+                move.y >= 0 &&
+                move.y < tileCount,
+            )
+            .map((move) => move.direction);
+        }
+      }
+
+      const game1 = new Game(canvas1, ctx1, "50%", "snake1");
+      const game2 = new Game(canvas2, ctx2, "70%", "snake2");
+
+      function gameLoop() {
+        game1.update();
+        game2.update();
+
+        const decision1 = game1.makeDecision();
+        const decision2 = game2.makeDecision();
+
+        applyDecision(game1, decision1);
+        applyDecision(game2, decision2);
+
+        if (game1.isGameOver) {
+          gameHistory.push({ winner: "Snake 2", score: game2.snake.score });
+          game1.reset();
+        }
+        if (game2.isGameOver) {
+          gameHistory.push({ winner: "Snake 1", score: game1.snake.score });
+          game2.reset();
+        }
+
+        updateInfo();
+        requestAnimationFrame(gameLoop);
+      }
+
+      function applyDecision(game, decision) {
+        switch (decision) {
+          case "Up":
+            game.snake.dx = 0;
+            game.snake.dy = -1;
+            break;
+          case "Down":
+            game.snake.dx = 0;
+            game.snake.dy = 1;
+            break;
+          case "Left":
+            game.snake.dx = -1;
+            game.snake.dy = 0;
+            break;
+          case "Right":
+            game.snake.dx = 1;
+            game.snake.dy = 0;
+            break;
+        }
+      }
+
+      function updateInfo() {
+        scoresDiv.innerHTML = `
+                      <h2>Scores</h2>
+                      <p>Snake 1: ${game1.snake.score}</p>
+                      <p>Snake 2: ${game2.snake.score}</p>
+                  `;
+        bestScoresDiv.innerHTML = `
+                      <h2>Best Scores</h2>
+                      <p>Snake 1: ${game1.snake.bestScore}</p>
+                      <p>Snake 2: ${game2.snake.bestScore}</p>
+                      <p>Global Best: ${globalBestScore}</p>
+                  `;
+        analysisDiv.innerHTML = `
+                      <h2>Analysis</h2>
+                      <p>Snake 1 Length: ${game1.snake.body.length}</p>
+                      <p>Snake 2 Length: ${game2.snake.body.length}</p>
+                      <p>Snake 1 Efficiency: ${((game1.snake.score / game1.snake.body.length) * 100).toFixed(2)}%</p>
+                      <p>Snake 2 Efficiency: ${((game2.snake.score / game2.snake.body.length) * 100).toFixed(2)}%</p>
+                  `;
+        aiActionsDiv.innerHTML = `
+                      <h2>AI Actions</h2>
+                      <p>Snake 1: ${aiActions.snake1.join(", ")}</p>
+                      <p>Snake 2: ${aiActions.snake2.join(", ")}</p>
+                  `;
+        historyDiv.innerHTML = `
+                      <h2>Game History</h2>
+                      ${gameHistory
+                        .slice(-5)
+                        .map(
+                          (game) =>
+                            `<p>${game.winner} won with score ${game.score}</p>`,
+                        )
+                        .join("")}
+                  `;
+        updateChart();
+      }
+
+      function updateChart() {
+        const snake1Wins = gameHistory.filter(
+          (game) => game.winner === "Snake 1",
+        ).length;
+        const snake2Wins = gameHistory.filter(
+          (game) => game.winner === "Snake 2",
+        ).length;
+
+        const chartData = {
+          labels: ["Snake 1", "Snake 2"],
+          datasets: [
+            {
+              label: "Wins",
+              data: [snake1Wins, snake2Wins],
+              backgroundColor: [
+                "rgba(255, 99, 132, 0.2)",
+                "rgba(54, 162, 235, 0.2)",
+              ],
+              borderColor: ["rgba(255, 99, 132, 1)", "rgba(54, 162, 235, 1)"],
+              borderWidth: 1,
+            },
+          ],
+        };
+
+        if (window.myChart) {
+          window.myChart.data = chartData;
+          window.myChart.update();
+        } else {
+          window.myChart = new Chart(chartCanvas, {
+            type: "bar",
+            data: chartData,
+            options: {
+              responsive: true,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                },
+              },
+            },
+          });
+        }
+      }
+
+      function findPath(start, goal, snakeBody) {
+        const openSet = [start];
+        const cameFrom = {};
+        const gScore = { [JSON.stringify(start)]: 0 };
+        const fScore = { [JSON.stringify(start)]: heuristic(start, goal) };
+
+        while (openSet.length > 0) {
+          let current = openSet.reduce((a, b) =>
+            fScore[JSON.stringify(a)] < fScore[JSON.stringify(b)] ? a : b,
+          );
+
+          if (current.x === goal.x && current.y === goal.y) {
+            return reconstructPath(cameFrom, current);
+          }
+
+          openSet.splice(openSet.indexOf(current), 1);
+          const neighbors = [
+            { x: current.x + 1, y: current.y },
+            { x: current.x - 1, y: current.y },
+            { x: current.x, y: current.y + 1 },
+            { x: current.x, y: current.y - 1 },
+          ];
+
+          for (let neighbor of neighbors) {
+            if (
+              neighbor.x < 0 ||
+              neighbor.x >= tileCount ||
+              neighbor.y < 0 ||
+              neighbor.y >= tileCount
+            )
+              continue;
+            if (
+              snakeBody.some(
+                (segment) =>
+                  segment.x === neighbor.x && segment.y === neighbor.y,
+              )
+            )
+              continue;
+
+            const tentative_gScore = gScore[JSON.stringify(current)] + 1;
+            if (
+              tentative_gScore < (gScore[JSON.stringify(neighbor)] || Infinity)
+            ) {
+              cameFrom[JSON.stringify(neighbor)] = current;
+              gScore[JSON.stringify(neighbor)] = tentative_gScore;
+              fScore[JSON.stringify(neighbor)] =
+                gScore[JSON.stringify(neighbor)] + heuristic(neighbor, goal);
+              if (
+                !openSet.some(
+                  (node) => node.x === neighbor.x && node.y === neighbor.y,
+                )
+              ) {
+                openSet.push(neighbor);
+              }
+            }
+          }
+        }
+
+        return [];
+      }
+
+      function reconstructPath(cameFrom, current) {
+        const path = [current];
+        while (JSON.stringify(current) in cameFrom) {
+          current = cameFrom[JSON.stringify(current)];
+          path.unshift(current);
+        }
+        return path;
+      }
+
+      function heuristic(a, b) {
+        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+      }
+
+      gameLoop();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advanced Multi-Board Snake AI Game</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: #1a1a2e;
+        font-family: Arial, sans-serif;
+      }
+      #gameContainer {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+      }
+      .boardContainer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      canvas {
+        border: 4px solid #0f3460;
+        border-radius: 10px;
+        box-shadow: 0 0 30px rgba(15, 52, 96, 0.7);
+      }
+      #controls {
+        margin-top: 20px;
+        color: #fff;
+      }
+      #analysisBoard {
+        margin-top: 20px;
+        color: #fff;
+        font-size: 14px;
+        background: rgba(15, 52, 96, 0.7);
+        padding: 10px;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="gameContainer">
+      <div id="controls">
+        <button id="addBoardBtn">Add Board</button>
+        <div id="analysisBoard">
+          <h3>Game Statistics</h3>
+          <div id="gameStats"></div>
+          <h4>Best Scores:</h4>
+          <div id="bestScores"></div>
+        </div>
+      </div>
+    </div>
+    <script>
+      const gameContainer = document.getElementById("gameContainer");
+      const addBoardBtn = document.getElementById("addBoardBtn");
+      const gameStats = document.getElementById("gameStats");
+      const bestScoresDiv = document.getElementById("bestScores");
+
+      const gridSize = 20;
+      const tileCount = 20;
+      const canvasSize = gridSize * tileCount;
+
+      let boards = [];
+      let bestScores = [];
+
+      class Board {
+        constructor(id) {
+          this.id = id;
+          this.canvas = document.createElement("canvas");
+          this.canvas.width = canvasSize;
+          this.canvas.height = canvasSize;
+          this.ctx = this.canvas.getContext("2d");
+
+          this.boardContainer = document.createElement("div");
+          this.boardContainer.classList.add("boardContainer");
+          this.boardContainer.appendChild(this.canvas);
+
+          this.scoreElement = document.createElement("div");
+          this.scoreElement.style.color = "#fff";
+          this.boardContainer.appendChild(this.scoreElement);
+
+          gameContainer.insertBefore(
+            this.boardContainer,
+            addBoardBtn.parentNode,
+          );
+
+          this.snake = new Snake(10, 10);
+          this.food = this.createFood();
+          this.score = 0;
+          this.gameOver = false;
+          this.startTime = Date.now();
+        }
+
+        createFood() {
+          let x, y;
+          do {
+            x = Math.floor(Math.random() * tileCount);
+            y = Math.floor(Math.random() * tileCount);
+          } while (
+            this.snake.body.some((part) => part.x === x && part.y === y)
+          );
+          return { x, y, color: getRealisticColor(Math.random() * 360) };
+        }
+
+        update() {
+          if (this.gameOver) {
+            this.reset();
+          }
+
+          this.snake.think(this.food);
+          this.snake.move();
+
+          if (this.snake.checkCollision()) {
+            this.gameOver = true;
+            return;
+          }
+
+          if (
+            this.snake.body[0].x === this.food.x &&
+            this.snake.body[0].y === this.food.y
+          ) {
+            this.snake.grow();
+            this.food = this.createFood();
+            this.score += 10;
+          }
+
+          this.draw();
+        }
+
+        draw() {
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+          // Draw snake
+          this.snake.draw(this.ctx);
+
+          // Draw food
+          const foodGradient = this.ctx.createRadialGradient(
+            this.food.x * gridSize + gridSize / 2,
+            this.food.y * gridSize + gridSize / 2,
+            0,
+            this.food.x * gridSize + gridSize / 2,
+            this.food.y * gridSize + gridSize / 2,
+            gridSize / 2 - 2,
+          );
+          foodGradient.addColorStop(0, this.food.color);
+          foodGradient.addColorStop(
+            1,
+            getRealisticColor(parseInt(this.food.color.match(/\d+/)[0]) + 30),
+          );
+
+          this.ctx.fillStyle = foodGradient;
+          this.ctx.beginPath();
+          this.ctx.arc(
+            this.food.x * gridSize + gridSize / 2,
+            this.food.y * gridSize + gridSize / 2,
+            gridSize / 2 - 2,
+            0,
+            Math.PI * 2,
+          );
+          this.ctx.fill();
+
+          // Update score
+          this.scoreElement.textContent = `Score: ${this.score}`;
+        }
+
+        reset() {
+          bestScores.push({ boardId: this.id, score: this.score });
+          bestScores.sort((a, b) => b.score - a.score);
+          bestScores = bestScores.slice(0, 5);
+          updateBestScores();
+
+          this.snake = new Snake(10, 10);
+          this.food = this.createFood();
+          this.score = 0;
+          this.gameOver = false;
+          this.startTime = Date.now();
+        }
+      }
+
+      class Snake {
+        constructor(x, y) {
+          this.body = [{ x, y }];
+          this.dx = 1;
+          this.dy = 0;
+          this.color = getRealisticColor(Math.random() * 360);
+        }
+
+        move() {
+          const head = {
+            x: this.body[0].x + this.dx,
+            y: this.body[0].y + this.dy,
+          };
+          this.body.unshift(head);
+          this.body.pop();
+        }
+
+        grow() {
+          const tail = this.body[this.body.length - 1];
+          this.body.push({ ...tail });
+        }
+
+        checkCollision() {
+          const head = this.body[0];
+          return (
+            head.x < 0 ||
+            head.x >= tileCount ||
+            head.y < 0 ||
+            head.y >= tileCount ||
+            this.body
+              .slice(1)
+              .some((part) => part.x === head.x && part.y === head.y)
+          );
+        }
+
+        think(food) {
+          const head = this.body[0];
+          const possibleMoves = [
+            { dx: 1, dy: 0 },
+            { dx: -1, dy: 0 },
+            { dx: 0, dy: 1 },
+            { dx: 0, dy: -1 },
+          ];
+
+          let bestMove = null;
+          let bestScore = -Infinity;
+
+          for (let move of possibleMoves) {
+            const newX = head.x + move.dx;
+            const newY = head.y + move.dy;
+
+            if (
+              newX < 0 ||
+              newX >= tileCount ||
+              newY < 0 ||
+              newY >= tileCount ||
+              this.body
+                .slice(1)
+                .some((part) => part.x === newX && part.y === newY)
+            ) {
+              continue;
+            }
+
+            const distanceToFood =
+              Math.abs(newX - food.x) + Math.abs(newY - food.y);
+            const score = 1 / distanceToFood;
+
+            if (score > bestScore) {
+              bestScore = score;
+              bestMove = move;
+            }
+          }
+
+          if (bestMove) {
+            this.dx = bestMove.dx;
+            this.dy = bestMove.dy;
+          }
+        }
+
+        draw(ctx) {
+          for (let i = 0; i < this.body.length; i++) {
+            const part = this.body[i];
+            const radius = gridSize / 2 - 2;
+            const gradient = ctx.createRadialGradient(
+              part.x * gridSize + gridSize / 2,
+              part.y * gridSize + gridSize / 2,
+              0,
+              part.x * gridSize + gridSize / 2,
+              part.y * gridSize + gridSize / 2,
+              radius,
+            );
+            const baseHue = parseInt(this.color.match(/\d+/)[0]);
+            gradient.addColorStop(0, getRealisticColor(baseHue));
+            gradient.addColorStop(1, getRealisticColor(baseHue + 30));
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(
+              part.x * gridSize + gridSize / 2,
+              part.y * gridSize + gridSize / 2,
+              radius,
+              0,
+              Math.PI * 2,
+            );
+            ctx.fill();
+
+            if (i > 0) {
+              const prevPart = this.body[i - 1];
+              ctx.beginPath();
+              ctx.moveTo(
+                prevPart.x * gridSize + gridSize / 2,
+                prevPart.y * gridSize + gridSize / 2,
+              );
+              ctx.lineTo(
+                part.x * gridSize + gridSize / 2,
+                part.y * gridSize + gridSize / 2,
+              );
+              ctx.lineWidth = radius * 2;
+              ctx.strokeStyle = gradient;
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      function getRealisticColor(hue) {
+        return `hsl(${hue}, 70%, 50%)`;
+      }
+
+      function updateBestScores() {
+        bestScoresDiv.innerHTML = bestScores
+          .map(
+            (score, index) =>
+              `<p>#${index + 1}: Board ${score.boardId} - ${score.score} points</p>`,
+          )
+          .join("");
+      }
+
+      function updateGameStats() {
+        gameStats.innerHTML = boards
+          .map((board) => {
+            const elapsedTime = Math.floor(
+              (Date.now() - board.startTime) / 1000,
+            );
+            return `
+                                      <p>Board ${board.id}:</p>
+                                      <ul>
+                                          <li>Current Score: ${board.score}</li>
+                                          <li>Snake Length: ${board.snake.body.length}</li>
+                                          <li>Time: ${elapsedTime}s</li>
+                                      </ul>
+                                  `;
+          })
+          .join("");
+      }
+
+      function gameLoop() {
+        boards.forEach((board) => board.update());
+        updateGameStats();
+        requestAnimationFrame(gameLoop);
+      }
+
+      addBoardBtn.addEventListener("click", () => {
+        const newBoard = new Board(boards.length + 1);
+        boards.push(newBoard);
+      });
+
+      // Initialize game with one board
+      boards.push(new Board(1));
+      gameLoop();
+    </script>
+  </body>
+</html>

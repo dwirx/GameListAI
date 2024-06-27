@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI vs AI Sudoku Duel</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      }
+      .container {
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.8);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      }
+      h1,
+      h2 {
+        color: #333;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .sudoku-container {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 20px;
+      }
+      .sudoku {
+        border-collapse: collapse;
+        background-color: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .sudoku td {
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        border: 1px solid #ddd;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+      .sudoku td:nth-child(3n) {
+        border-right: 2px solid #333;
+      }
+      .sudoku tr:nth-child(3n) td {
+        border-bottom: 2px solid #333;
+      }
+      .sudoku td.highlight {
+        background-color: #f0f0f0;
+        transform: scale(1.1);
+      }
+      button {
+        font-size: 16px;
+        padding: 10px 20px;
+        cursor: pointer;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+        margin: 5px;
+      }
+      button:hover {
+        background-color: #45a049;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .solved {
+        color: #4caf50;
+        font-weight: bold;
+      }
+      #scores,
+      #history {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+      }
+      .ai-score {
+        font-size: 24px;
+        font-weight: bold;
+      }
+      #victory-notification {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        font-size: 24px;
+        display: none;
+        animation: fadeIn 0.5s;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      #chart-container {
+        width: 100%;
+        max-width: 600px;
+        margin: 20px auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>AI vs AI Sudoku Duel</h1>
+      <div id="scores">
+        <div>AI 1: <span id="ai1-score" class="ai-score">0</span></div>
+        <div>AI 2: <span id="ai2-score" class="ai-score">0</span></div>
+      </div>
+      <h2>
+        Round: <span id="round-number">1</span> /
+        <span id="total-rounds">10</span>
+      </h2>
+      <div class="sudoku-container">
+        <table id="sudoku1" class="sudoku"></table>
+        <table id="sudoku2" class="sudoku"></table>
+      </div>
+      <input type="number" id="rounds-input" min="1" value="10" />
+      <button onclick="startDuel()">Start New Duel</button>
+      <button onclick="nextRound()">Next Round</button>
+      <div id="chart-container">
+        <canvas id="rankChart"></canvas>
+      </div>
+      <h3>Duel History</h3>
+      <div id="history"></div>
+    </div>
+    <div id="victory-notification"></div>
+
+    <script>
+      let boards = [[], []];
+      let solvedBoards = [[], []];
+      let solvingSteps = [[], []];
+      let currentRound = 1;
+      let totalRounds = 10;
+      let scores = { ai1: 0, ai2: 0 };
+      let history = [];
+      let rankChart;
+
+      function createEmptyBoard() {
+        return Array(9)
+          .fill()
+          .map(() => Array(9).fill(0));
+      }
+
+      function isValid(board, row, col, num) {
+        for (let x = 0; x < 9; x++) {
+          if (board[row][x] === num || board[x][col] === num) {
+            return false;
+          }
+        }
+        let startRow = Math.floor(row / 3) * 3;
+        let startCol = Math.floor(col / 3) * 3;
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if (board[i + startRow][j + startCol] === num) {
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      function solveSudoku(board, steps) {
+        for (let row = 0; row < 9; row++) {
+          for (let col = 0; col < 9; col++) {
+            if (board[row][col] === 0) {
+              for (let num = 1; num <= 9; num++) {
+                if (isValid(board, row, col, num)) {
+                  board[row][col] = num;
+                  steps.push({ row, col, num });
+                  if (solveSudoku(board, steps)) {
+                    return true;
+                  }
+                  board[row][col] = 0;
+                  steps.push({ row, col, num: 0 });
+                }
+              }
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      function generatePuzzle() {
+        let solved = createEmptyBoard();
+        solveSudoku(solved, []);
+        let solvedCopy = JSON.parse(JSON.stringify(solved));
+
+        let puzzle = JSON.parse(JSON.stringify(solved));
+        let cellsToRemove = 40;
+        while (cellsToRemove > 0) {
+          let row = Math.floor(Math.random() * 9);
+          let col = Math.floor(Math.random() * 9);
+          if (puzzle[row][col] !== 0) {
+            puzzle[row][col] = 0;
+            cellsToRemove--;
+          }
+        }
+        return { puzzle, solved: solvedCopy };
+      }
+
+      function renderBoard(boardIndex) {
+        let table = document.getElementById(`sudoku${boardIndex + 1}`);
+        table.innerHTML = "";
+        for (let i = 0; i < 9; i++) {
+          let row = table.insertRow();
+          for (let j = 0; j < 9; j++) {
+            let cell = row.insertCell();
+            cell.textContent = boards[boardIndex][i][j] || "";
+            if (boards[boardIndex][i][j] !== 0) {
+              cell.classList.add("initial");
+            }
+          }
+        }
+      }
+
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      async function solvePuzzles() {
+        let aiSteps = [0, 0];
+        let finished = [false, false];
+
+        while (!finished[0] || !finished[1]) {
+          for (let i = 0; i < 2; i++) {
+            if (!finished[i] && solvingSteps[i].length > 0) {
+              let step = solvingSteps[i].shift();
+              let cell = document.getElementById(`sudoku${i + 1}`).rows[
+                step.row
+              ].cells[step.col];
+              cell.classList.add("highlight");
+              await sleep(50);
+              boards[i][step.row][step.col] = step.num;
+              cell.textContent = step.num || "";
+              if (step.num !== 0) {
+                cell.classList.add("solved");
+                aiSteps[i]++;
+              } else {
+                cell.classList.remove("solved");
+              }
+              await sleep(50);
+              cell.classList.remove("highlight");
+            }
+            if (solvingSteps[i].length === 0) {
+              finished[i] = true;
+            }
+          }
+        }
+
+        // Determine winner
+        let winner = aiSteps[0] < aiSteps[1] ? 1 : 2;
+        scores[`ai${winner}`]++;
+        updateScores();
+        showVictoryNotification(winner);
+        addToHistory(winner, aiSteps[0], aiSteps[1]);
+        updateRankChart();
+
+        if (currentRound < totalRounds) {
+          setTimeout(nextRound, 2000);
+        } else {
+          showFinalResult();
+        }
+      }
+
+      function updateScores() {
+        document.getElementById("ai1-score").textContent = scores.ai1;
+        document.getElementById("ai2-score").textContent = scores.ai2;
+      }
+
+      function showVictoryNotification(winner) {
+        let notification = document.getElementById("victory-notification");
+        notification.textContent = `AI ${winner} wins this round!`;
+        notification.style.display = "block";
+        setTimeout(() => {
+          notification.style.display = "none";
+        }, 2000);
+      }
+
+      function addToHistory(winner, ai1Steps, ai2Steps) {
+        history.push(
+          `Round ${currentRound}: AI ${winner} won (AI 1: ${ai1Steps} steps, AI 2: ${ai2Steps} steps)`,
+        );
+        updateHistoryDisplay();
+      }
+
+      function updateHistoryDisplay() {
+        let historyElement = document.getElementById("history");
+        historyElement.innerHTML = history
+          .map((entry) => `<p>${entry}</p>`)
+          .join("");
+      }
+
+      function startDuel() {
+        currentRound = 1;
+        totalRounds =
+          parseInt(document.getElementById("rounds-input").value) || 10;
+        document.getElementById("total-rounds").textContent = totalRounds;
+        scores = { ai1: 0, ai2: 0 };
+        history = [];
+        updateScores();
+        updateHistoryDisplay();
+        document.getElementById("round-number").textContent = currentRound;
+        initRankChart();
+        startNewRound();
+      }
+
+      function nextRound() {
+        currentRound++;
+        document.getElementById("round-number").textContent = currentRound;
+        startNewRound();
+      }
+
+      function startNewRound() {
+        for (let i = 0; i < 2; i++) {
+          let { puzzle, solved } = generatePuzzle();
+          boards[i] = puzzle;
+          solvedBoards[i] = solved;
+          solvingSteps[i] = [];
+          solveSudoku(JSON.parse(JSON.stringify(boards[i])), solvingSteps[i]);
+          renderBoard(i);
+        }
+        setTimeout(solvePuzzles, 1000);
+      }
+
+      function showFinalResult() {
+        let winner = scores.ai1 > scores.ai2 ? 1 : 2;
+        let notification = document.getElementById("victory-notification");
+        notification.textContent = `Final Result: AI ${winner} wins the duel!`;
+        notification.style.display = "block";
+        setTimeout(() => {
+          notification.style.display = "none";
+        }, 5000);
+      }
+
+      function initRankChart() {
+        let ctx = document.getElementById("rankChart").getContext("2d");
+        rankChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "AI 1",
+                data: [],
+                borderColor: "rgb(75, 192, 192)",
+                tension: 0.1,
+              },
+              {
+                label: "AI 2",
+                data: [],
+                borderColor: "rgb(255, 99, 132)",
+                tension: 0.1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+      }
+
+      function updateRankChart() {
+        rankChart.data.labels.push(currentRound);
+        rankChart.data.datasets[0].data.push(scores.ai1);
+        rankChart.data.datasets[1].data.push(scores.ai2);
+        rankChart.update();
+      }
+
+      initRankChart();
+      startDuel();
+    </script>
+  </body>
+</html>

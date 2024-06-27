@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advanced Self-Playing Snake Battle with Analysis</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #111;
+        font-family: Arial, sans-serif;
+        color: #fff;
+      }
+      .game-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+        max-width: 100%;
+      }
+      canvas {
+        border: 2px solid #444;
+        background-color: #222;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+      }
+      .scoreboard,
+      .history {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 820px;
+        margin-bottom: 20px;
+      }
+      .score,
+      .level,
+      .best-score,
+      .timer {
+        font-size: 24px;
+      }
+      .history {
+        flex-direction: column;
+        align-items: center;
+      }
+      .history h2 {
+        margin-bottom: 10px;
+      }
+      .history-list {
+        list-style-type: none;
+        padding: 0;
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .history-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        border-bottom: 1px solid #444;
+      }
+      .controls {
+        margin-top: 20px;
+      }
+      button {
+        margin: 0 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .analysis-container {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 820px;
+        margin-top: 20px;
+      }
+      .analysis {
+        width: 48%;
+      }
+      @media (max-width: 768px) {
+        .game-container,
+        .analysis-container {
+          flex-direction: column;
+        }
+        canvas {
+          max-width: 90vw;
+          height: auto;
+        }
+        .analysis {
+          width: 100%;
+          margin-bottom: 20px;
+        }
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="scoreboard">
+      <div class="score">Snake 1: <span id="score1">0</span></div>
+      <div class="level">Level: <span id="level">1</span></div>
+      <div class="score">Snake 2: <span id="score2">0</span></div>
+    </div>
+    <div class="best-score">Best Score: <span id="bestScore">0</span></div>
+    <div class="timer" id="timer"></div>
+    <div class="game-container">
+      <canvas id="gameCanvas1" width="400" height="400"></canvas>
+      <canvas id="gameCanvas2" width="400" height="400"></canvas>
+    </div>
+    <div class="controls">
+      <button id="classicMode">Classic Mode</button>
+      <button id="timeTrialMode">Time Trial Mode</button>
+      <button id="survivalMode">Survival Mode</button>
+    </div>
+    <div class="analysis-container">
+      <div class="analysis">
+        <h3>Snake 1 Analysis</h3>
+        <canvas id="analysisChart1"></canvas>
+      </div>
+      <div class="analysis">
+        <h3>Snake 2 Analysis</h3>
+        <canvas id="analysisChart2"></canvas>
+      </div>
+    </div>
+    <div class="history">
+      <h2>Game History</h2>
+      <ul id="historyList" class="history-list"></ul>
+    </div>
+    <script>
+      const canvas1 = document.getElementById("gameCanvas1");
+      const canvas2 = document.getElementById("gameCanvas2");
+      const ctx1 = canvas1.getContext("2d");
+      const ctx2 = canvas2.getContext("2d");
+      const scoreDisplay1 = document.getElementById("score1");
+      const scoreDisplay2 = document.getElementById("score2");
+      const levelDisplay = document.getElementById("level");
+      const bestScoreDisplay = document.getElementById("bestScore");
+      const historyList = document.getElementById("historyList");
+      const timerDisplay = document.getElementById("timer");
+
+      const GRID = 20;
+      const CANVAS_SIZE = 400;
+      let level = 1;
+      let gameSpeed = 100;
+      let bestScore = 0;
+      let gameMode = "classic";
+      let timeLeft = 60;
+      let timerInterval;
+
+      class Snake {
+        constructor(canvas, ctx, scoreDisplay, color) {
+          this.canvas = canvas;
+          this.ctx = ctx;
+          this.scoreDisplay = scoreDisplay;
+          this.color = color;
+          this.reset();
+          this.moveHistory = [];
+        }
+
+        reset() {
+          this.x = GRID * 5;
+          this.y = GRID * 5;
+          this.dx = GRID;
+          this.dy = 0;
+          this.cells = [];
+          this.maxCells = 4;
+          this.score = 0;
+          this.moveHistory = [];
+          this.updateScore();
+        }
+
+        update() {
+          this.x += this.dx;
+          this.y += this.dy;
+
+          if (this.x < 0) this.x = this.canvas.width - GRID;
+          else if (this.x >= this.canvas.width) this.x = 0;
+          if (this.y < 0) this.y = this.canvas.height - GRID;
+          else if (this.y >= this.canvas.height) this.y = 0;
+
+          this.cells.unshift({ x: this.x, y: this.y });
+          if (this.cells.length > this.maxCells) this.cells.pop();
+        }
+
+        draw() {
+          this.ctx.fillStyle = this.color;
+          this.cells.forEach((cell, index) => {
+            this.ctx.fillRect(cell.x, cell.y, GRID - 1, GRID - 1);
+          });
+        }
+
+        eat(food) {
+          if (this.x === food.x && this.y === food.y) {
+            this.maxCells++;
+            this.score++;
+            this.updateScore();
+            return true;
+          }
+          return false;
+        }
+
+        checkCollision() {
+          for (let i = 1; i < this.cells.length; i++) {
+            if (this.x === this.cells[i].x && this.y === this.cells[i].y) {
+              return true;
+            }
+          }
+          return false;
+        }
+
+        updateScore() {
+          this.scoreDisplay.textContent = this.score;
+          if (this.score > bestScore) {
+            bestScore = this.score;
+            bestScoreDisplay.textContent = bestScore;
+          }
+        }
+
+        autoMove(food, otherSnake) {
+          const possibleMoves = [
+            { dx: GRID, dy: 0, direction: "right" },
+            { dx: -GRID, dy: 0, direction: "left" },
+            { dx: 0, dy: GRID, direction: "down" },
+            { dx: 0, dy: -GRID, direction: "up" },
+          ];
+
+          let bestMove = null;
+          let bestScore = -Infinity;
+
+          for (const move of possibleMoves) {
+            if (move.dx === -this.dx && move.dy === -this.dy) continue;
+
+            const newX = this.x + move.dx;
+            const newY = this.y + move.dy;
+
+            // Check for collision with walls or self
+            if (
+              newX < 0 ||
+              newX >= this.canvas.width ||
+              newY < 0 ||
+              newY >= this.canvas.height ||
+              this.cells.some((cell) => cell.x === newX && cell.y === newY)
+            ) {
+              continue;
+            }
+
+            // Check for collision with other snake
+            if (
+              otherSnake &&
+              otherSnake.cells.some(
+                (cell) => cell.x === newX && cell.y === newY,
+              )
+            ) {
+              continue;
+            }
+
+            let moveScore = 0;
+
+            // Prioritize food
+            const distanceToFood =
+              Math.abs(newX - food.x) + Math.abs(newY - food.y);
+            moveScore += 1000 - distanceToFood;
+
+            // Avoid getting trapped
+            const freeSpaces = this.countFreeSpaces(newX, newY, otherSnake);
+            moveScore += freeSpaces * 10;
+
+            if (moveScore > bestScore) {
+              bestScore = moveScore;
+              bestMove = move;
+            }
+          }
+
+          if (bestMove) {
+            this.dx = bestMove.dx;
+            this.dy = bestMove.dy;
+            this.moveHistory.push(bestMove.direction);
+            if (this.moveHistory.length > 100) {
+              this.moveHistory.shift();
+            }
+          }
+        }
+
+        countFreeSpaces(x, y, otherSnake) {
+          const visited = new Set();
+          const stack = [{ x, y }];
+          let count = 0;
+
+          while (stack.length > 0) {
+            const current = stack.pop();
+            const key = `${current.x},${current.y}`;
+
+            if (visited.has(key)) continue;
+            visited.add(key);
+
+            if (
+              current.x < 0 ||
+              current.x >= this.canvas.width ||
+              current.y < 0 ||
+              current.y >= this.canvas.height
+            )
+              continue;
+            if (
+              this.cells.some(
+                (cell) => cell.x === current.x && cell.y === current.y,
+              )
+            )
+              continue;
+            if (
+              otherSnake &&
+              otherSnake.cells.some(
+                (cell) => cell.x === current.x && cell.y === current.y,
+              )
+            )
+              continue;
+
+            count++;
+
+            stack.push({ x: current.x + GRID, y: current.y });
+            stack.push({ x: current.x - GRID, y: current.y });
+            stack.push({ x: current.x, y: current.y + GRID });
+            stack.push({ x: current.x, y: current.y - GRID });
+          }
+
+          return count;
+        }
+      }
+
+      class Food {
+        constructor(canvas) {
+          this.canvas = canvas;
+          this.reset();
+        }
+
+        reset() {
+          this.x =
+            Math.floor(Math.random() * (this.canvas.width / GRID)) * GRID;
+          this.y =
+            Math.floor(Math.random() * (this.canvas.height / GRID)) * GRID;
+        }
+
+        draw(ctx) {
+          ctx.fillStyle = "red";
+          ctx.fillRect(this.x, this.y, GRID - 1, GRID - 1);
+        }
+      }
+
+      const snake1 = new Snake(canvas1, ctx1, scoreDisplay1, "lime");
+      const snake2 = new Snake(canvas2, ctx2, scoreDisplay2, "cyan");
+      const food1 = new Food(canvas1);
+      const food2 = new Food(canvas2);
+
+      function gameLoop() {
+        if (gameMode === "timeTrial" && timeLeft <= 0) {
+          endGame();
+          return;
+        }
+
+        setTimeout(() => {
+          requestAnimationFrame(gameLoop);
+
+          ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
+          ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+
+          snake1.autoMove(food1, snake2);
+          snake2.autoMove(food2, snake1);
+
+          snake1.update();
+          snake2.update();
+
+          if (snake1.eat(food1)) {
+            food1.reset();
+            if (gameMode === "survival") levelUp();
+          }
+          if (snake2.eat(food2)) {
+            food2.reset();
+            if (gameMode === "survival") levelUp();
+          }
+
+          snake1.draw();
+          snake2.draw();
+          food1.draw(ctx1);
+          food2.draw(ctx2);
+
+          if (snake1.checkCollision() || snake2.checkCollision()) {
+            endGame();
+            return;
+          }
+
+          if (
+            gameMode === "classic" &&
+            snake1.score + snake2.score >= level * 10
+          ) {
+            levelUp();
+          }
+
+          updateAnalysis();
+        }, gameSpeed);
+      }
+
+      function startGame(mode) {
+        gameMode = mode;
+        resetGame();
+        clearInterval(timerInterval);
+
+        if (mode === "timeTrial") {
+          timeLeft = 60;
+          timerInterval = setInterval(() => {
+            timeLeft--;
+            timerDisplay.textContent = `Time: ${timeLeft}`;
+            if (timeLeft <= 0) {
+              clearInterval(timerInterval);
+            }
+          }, 1000);
+        } else {
+          timerDisplay.textContent = "";
+        }
+
+        gameLoop();
+      }
+
+      function resetGame() {
+        snake1.reset();
+        snake2.reset();
+        food1.reset();
+        food2.reset();
+        level = 1;
+        gameSpeed = 100;
+        updateLevel();
+      }
+
+      function levelUp() {
+        level++;
+        gameSpeed = Math.max(50, gameSpeed - 10);
+        updateLevel();
+      }
+
+      function updateLevel() {
+        levelDisplay.textContent = level;
+      }
+
+      function endGame() {
+        clearInterval(timerInterval);
+        const winner =
+          snake1.score > snake2.score
+            ? "Snake 1"
+            : snake2.score > snake1.score
+              ? "Snake 2"
+              : "Draw";
+        const score = Math.max(snake1.score, snake2.score);
+
+        updateHistory(winner, score);
+        alert(`Game Over! ${winner} wins with a score of ${score}`);
+      }
+
+      function updateHistory(winner, score) {
+        const historyItem = document.createElement("li");
+        historyItem.className = "history-item";
+        historyItem.innerHTML = `
+                  <span>${winner}</span>
+                  <span>Score: ${score}</span>
+                  <span>Level: ${level}</span>
+              `;
+        historyList.prepend(historyItem);
+
+        // Keep only the last 10 game results
+        if (historyList.children.length > 10) {
+          historyList.removeChild(historyList.lastChild);
+        }
+      }
+
+      // Analysis charts
+      const ctx1Analysis = document
+        .getElementById("analysisChart1")
+        .getContext("2d");
+      const ctx2Analysis = document
+        .getElementById("analysisChart2")
+        .getContext("2d");
+
+      const chart1 = new Chart(ctx1Analysis, {
+        type: "bar",
+        data: {
+          labels: ["Up", "Down", "Left", "Right"],
+          datasets: [
+            {
+              label: "Move Distribution",
+              data: [0, 0, 0, 0],
+              backgroundColor: "rgba(0, 255, 0, 0.5)",
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+
+      const chart2 = new Chart(ctx2Analysis, {
+        type: "bar",
+        data: {
+          labels: ["Up", "Down", "Left", "Right"],
+          datasets: [
+            {
+              label: "Move Distribution",
+              data: [0, 0, 0, 0],
+              backgroundColor: "rgba(0, 255, 255, 0.5)",
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+
+      function updateAnalysis() {
+        const moveCount1 = { up: 0, down: 0, left: 0, right: 0 };
+        const moveCount2 = { up: 0, down: 0, left: 0, right: 0 };
+
+        snake1.moveHistory.forEach((move) => moveCount1[move]++);
+        snake2.moveHistory.forEach((move) => moveCount2[move]++);
+
+        chart1.data.datasets[0].data = [
+          moveCount1.up,
+          moveCount1.down,
+          moveCount1.left,
+          moveCount1.right,
+        ];
+        chart1.update();
+
+        chart2.data.datasets[0].data = [
+          moveCount2.up,
+          moveCount2.down,
+          moveCount2.left,
+          moveCount2.right,
+        ];
+        chart2.update();
+      }
+
+      // Event listeners for game mode buttons
+      document
+        .getElementById("classicMode")
+        .addEventListener("click", () => startGame("classic"));
+      document
+        .getElementById("timeTrialMode")
+        .addEventListener("click", () => startGame("timeTrial"));
+      document
+        .getElementById("survivalMode")
+        .addEventListener("click", () => startGame("survival"));
+
+      // Start the game in classic mode by default
+      startGame("classic");
+    </script>
+  </body>
+</html>
