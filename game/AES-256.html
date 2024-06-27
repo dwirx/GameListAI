@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AES-256 Encryption/Decryption</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+      }
+      .container {
+        max-width: 800px;
+        margin-top: 50px;
+      }
+      .card {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      #drop_zone {
+        border: 2px dashed #007bff;
+        border-radius: 5px;
+        padding: 25px;
+        text-align: center;
+        cursor: pointer;
+      }
+      #drop_zone:hover {
+        background-color: #f1f8ff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h2 class="mb-0">AES-256 Encryption/Decryption</h2>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label for="input" class="form-label"
+              >Input Text or Drag & Drop File:</label
+            >
+            <div
+              id="drop_zone"
+              onclick="document.getElementById('fileInput').click();"
+            >
+              <p>Drag & drop a file here or click to select</p>
+            </div>
+            <input type="file" id="fileInput" style="display: none" />
+            <textarea
+              class="form-control mt-2"
+              id="input"
+              rows="5"
+              placeholder="Or type/paste your text here"
+            ></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Password:</label>
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              placeholder="Enter password"
+            />
+          </div>
+          <div class="mb-3">
+            <button
+              class="btn btn-success me-2"
+              onclick="processData('encrypt')"
+            >
+              Encrypt
+            </button>
+            <button class="btn btn-warning" onclick="processData('decrypt')">
+              Decrypt
+            </button>
+          </div>
+          <div class="mb-3">
+            <label for="output" class="form-label">Output:</label>
+            <textarea
+              class="form-control"
+              id="output"
+              rows="5"
+              readonly
+            ></textarea>
+          </div>
+          <div class="mb-3">
+            <button class="btn btn-primary" onclick="downloadOutput()">
+              Download Output
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+      const dropZone = document.getElementById("drop_zone");
+      const fileInput = document.getElementById("fileInput");
+      const inputTextarea = document.getElementById("input");
+
+      dropZone.ondragover = (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = "#28a745";
+      };
+
+      dropZone.ondragleave = () => {
+        dropZone.style.borderColor = "#007bff";
+      };
+
+      dropZone.ondrop = (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = "#007bff";
+        handleFile(e.dataTransfer.files[0]);
+      };
+
+      fileInput.onchange = () => {
+        handleFile(fileInput.files[0]);
+      };
+
+      function handleFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          inputTextarea.value = e.target.result;
+        };
+        reader.readAsText(file);
+      }
+
+      function processData(action) {
+        const input = document.getElementById("input").value;
+        const password = document.getElementById("password").value;
+        const output = document.getElementById("output");
+
+        if (!input || !password) {
+          alert("Please provide both input and password.");
+          return;
+        }
+
+        try {
+          if (action === "encrypt") {
+            output.value = CryptoJS.AES.encrypt(input, password).toString();
+          } else {
+            const decrypted = CryptoJS.AES.decrypt(input, password).toString(
+              CryptoJS.enc.Utf8,
+            );
+            if (!decrypted) throw new Error("Decryption failed");
+            output.value = decrypted;
+          }
+        } catch (error) {
+          output.value = `${action.charAt(0).toUpperCase() + action.slice(1)}ion failed. Check your input and password.`;
+        }
+      }
+
+      function downloadOutput() {
+        const output = document.getElementById("output").value;
+        if (!output) {
+          alert("No output to download");
+          return;
+        }
+
+        const blob = new Blob([output], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "output.txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    </script>
+  </body>
+</html>
