@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Editor Responsif dengan Resizable Panels dan Dark Mode</title>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.css"
+        />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/xml/xml.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/javascript/javascript.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/css/css.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/htmlmixed/htmlmixed.min.js"></script>
+        <style>
+            body,
+            html {
+                height: 100%;
+                margin: 0;
+                font-family: Arial, sans-serif;
+            }
+            .container {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }
+            .toolbar {
+                padding: 10px;
+                background-color: #f0f0f0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .editor-container {
+                display: flex;
+                flex: 1;
+                overflow: hidden;
+            }
+            #editor-wrapper,
+            #preview {
+                height: 100%;
+                overflow: auto;
+            }
+            #editor-wrapper {
+                flex: 1;
+            }
+            #preview {
+                flex: 1;
+                padding: 10px;
+            }
+            .resizer {
+                width: 5px;
+                background: #ccc;
+                cursor: col-resize;
+            }
+            @media (max-width: 768px) {
+                .editor-container {
+                    flex-direction: column;
+                }
+                .resizer {
+                    width: 100%;
+                    height: 5px;
+                    cursor: row-resize;
+                }
+            }
+            .CodeMirror {
+                height: 100%;
+            }
+            select,
+            button {
+                padding: 5px 10px;
+                margin-right: 10px;
+            }
+            body.dark-mode {
+                background-color: #1e1e1e;
+                color: #e0e0e0;
+            }
+            body.dark-mode .toolbar {
+                background-color: #2d2d2d;
+            }
+            body.dark-mode #preview {
+                background-color: #1e1e1e;
+                color: #e0e0e0;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="toolbar">
+                <div>
+                    <select id="theme-select">
+                        <option value="default">Default Theme</option>
+                        <option value="monokai">Monokai</option>
+                        <option value="solarized">Solarized</option>
+                    </select>
+                    <select id="language-select">
+                        <option value="htmlmixed">HTML Mixed</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="css">CSS</option>
+                    </select>
+                    <button id="dark-mode-toggle">Toggle Dark Mode</button>
+                    <button id="copy-code">Copy Code</button>
+                </div>
+                <button id="toggle-preview">Toggle Preview</button>
+            </div>
+            <div class="editor-container">
+                <div id="editor-wrapper">
+                    <textarea id="editor"></textarea>
+                </div>
+                <div class="resizer" id="resizer"></div>
+                <div id="preview"></div>
+            </div>
+        </div>
+
+        <script>
+            const editor = CodeMirror.fromTextArea(
+                document.getElementById("editor"),
+                {
+                    lineNumbers: true,
+                    mode: "htmlmixed",
+                    theme: "default",
+                    autoCloseTags: true,
+                    autoCloseBrackets: true,
+                    matchBrackets: true,
+                },
+            );
+
+            const preview = document.getElementById("preview");
+            const themeSelect = document.getElementById("theme-select");
+            const languageSelect = document.getElementById("language-select");
+            const togglePreviewBtn = document.getElementById("toggle-preview");
+            const resizer = document.getElementById("resizer");
+            const editorWrapper = document.getElementById("editor-wrapper");
+            const darkModeToggle = document.getElementById("dark-mode-toggle");
+            const copyCodeBtn = document.getElementById("copy-code");
+
+            editor.on("change", function () {
+                preview.innerHTML = editor.getValue();
+            });
+
+            themeSelect.addEventListener("change", function () {
+                editor.setOption("theme", this.value);
+            });
+
+            languageSelect.addEventListener("change", function () {
+                editor.setOption("mode", this.value);
+            });
+
+            togglePreviewBtn.addEventListener("click", function () {
+                const editorContainer =
+                    document.querySelector(".editor-container");
+                editorContainer.classList.toggle("preview-hidden");
+                if (editorContainer.classList.contains("preview-hidden")) {
+                    preview.style.display = "none";
+                    resizer.style.display = "none";
+                    editorWrapper.style.flex = "1";
+                } else {
+                    preview.style.display = "block";
+                    resizer.style.display = "block";
+                    editorWrapper.style.flex = "";
+                }
+                editor.refresh();
+            });
+
+            // Resizer functionality
+            let isResizing = false;
+
+            resizer.addEventListener("mousedown", function (e) {
+                isResizing = true;
+            });
+
+            document.addEventListener("mousemove", function (e) {
+                if (!isResizing) return;
+
+                const editorContainer =
+                    document.querySelector(".editor-container");
+                const containerRect = editorContainer.getBoundingClientRect();
+                const newEditorWidth = e.clientX - containerRect.left;
+
+                editorWrapper.style.width = `${newEditorWidth}px`;
+                editor.refresh();
+            });
+
+            document.addEventListener("mouseup", function (e) {
+                isResizing = false;
+            });
+
+            // Dark mode toggle
+            darkModeToggle.addEventListener("click", function () {
+                document.body.classList.toggle("dark-mode");
+                if (document.body.classList.contains("dark-mode")) {
+                    editor.setOption("theme", "monokai");
+                } else {
+                    editor.setOption("theme", "default");
+                }
+            });
+
+            // Copy code functionality
+            copyCodeBtn.addEventListener("click", function () {
+                const codeText = editor.getValue();
+                navigator.clipboard.writeText(codeText).then(
+                    function () {
+                        alert("Code copied to clipboard!");
+                    },
+                    function (err) {
+                        console.error("Could not copy text: ", err);
+                    },
+                );
+            });
+
+            // Load additional themes
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.href =
+                "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/theme/monokai.min.css";
+            document.head.appendChild(link);
+
+            const link2 = document.createElement("link");
+            link2.rel = "stylesheet";
+            link2.href =
+                "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/theme/solarized.min.css";
+            document.head.appendChild(link2);
+        </script>
+    </body>
+</html>
