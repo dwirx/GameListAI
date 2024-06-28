@@ -84,20 +84,6 @@ app.get("/", (req, res) => {
         .hacker-theme .hover\\:shadow-lg:hover {
           box-shadow: 0 0 15px #00FF00;
         }
-        .control-buttons {
-          display: flex;
-          justify-content: flex-end;
-          gap: 0.5rem;
-        }
-        .control-button {
-          background-color: #ddd;
-          border: none;
-          padding: 0.5rem;
-          cursor: pointer;
-        }
-        .control-button:hover {
-          background-color: #ccc;
-        }
       </style>
     </head>
     <body class="bg-gray-100 min-h-screen" id="body">
@@ -187,11 +173,6 @@ app.get("/", (req, res) => {
         </div>
 
         <div id="file-container" class="mt-8 hidden">
-          <div class="control-buttons">
-            <button class="control-button" onclick="minimizeFile()">Minimize</button>
-            <button class="control-button" onclick="toggleFullscreen()">Fullscreen</button>
-            <button class="control-button" onclick="closeFile()">Close</button>
-          </div>
           <h2 id="file-title" class="text-2xl font-bold mb-4"></h2>
           <div id="frame-container" class="w-full" style="height: 80vh;">
             <iframe id="file-frame" class="game-frame"></iframe>
@@ -233,21 +214,6 @@ app.get("/", (req, res) => {
           fileContainer.style.display = 'block';
           foldersContainer.style.display = 'none';
           pagination.style.display = 'none';
-        }
-
-        function closeFile() {
-          const fileContainer = document.getElementById('file-container');
-          const foldersContainer = document.getElementById('folders-container');
-          const pagination = document.getElementById('pagination');
-
-          fileContainer.style.display = 'none';
-          foldersContainer.style.display = 'block';
-          pagination.style.display = 'flex';
-        }
-
-        function minimizeFile() {
-          const frameContainer = document.getElementById('frame-container');
-          frameContainer.style.height = frameContainer.style.height === '40vh' ? '80vh' : '40vh';
         }
 
         function toggleFullscreen() {
