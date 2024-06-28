@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Self-Avoiding Walk 3D</title>
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden;
+            }
+            canvas {
+                display: block;
+            }
+            #controls {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                z-index: 100;
+                background-color: rgba(255, 255, 255, 0.8);
+                padding: 10px;
+                border-radius: 8px;
+            }
+            button,
+            input,
+            select,
+            label {
+                display: block;
+                margin: 5px 0;
+            }
+            input[type="range"] {
+                width: 100%;
+            }
+        </style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    </head>
+    <body>
+        <div id="controls">
+            <button onclick="startAnimation()">Start</button>
+            <button onclick="stopAnimation()">Stop</button>
+            <button onclick="resetWalk()">Reset</button>
+            <button onclick="saveWalk()">Save Walk</button>
+            <button onclick="exportImage()">Export as Image</button>
+            <input
+                type="file"
+                id="loadWalk"
+                accept=".json"
+                onchange="importWalk(event)"
+            />
+            <br />
+            <label for="speed">Speed:</label>
+            <input
+                type="range"
+                id="speed"
+                name="speed"
+                min="1"
+                max="60"
+                value="30"
+                oninput="updateSpeed(this.value)"
+            />
+            <span id="speedValue">30</span>
+            <br />
+            <label for="size">Size:</label>
+            <input
+                type="range"
+                id="size"
+                name="size"
+                min="5"
+                max="50"
+                value="10"
+                oninput="updateSize(this.value)"
+            />
+            <span id="sizeValue">10</span>
+            <br />
+            <label for="steps">Steps:</label>
+            <input
+                type="range"
+                id="steps"
+                name="steps"
+                min="100"
+                max="2000"
+                value="1000"
+                oninput="updateSteps(this.value)"
+            />
+            <span id="stepsValue">1000</span>
+            <br />
+            <label for="colorScheme">Color Scheme:</label>
+            <select
+                id="colorScheme"
+                name="colorScheme"
+                onchange="updateColorScheme(this.value)"
+            >
+                <option value="rainbow">Rainbow</option>
+                <option value="grayscale">Grayscale</option>
+                <option value="heatmap">Heatmap</option>
+            </select>
+            <br />
+            <label for="pointSize">Point/Line Size:</label>
+            <input
+                type="range"
+                id="pointSize"
+                name="pointSize"
+                min="1"
+                max="10"
+                value="1"
+                oninput="updatePointSize(this.value)"
+            />
+            <span id="pointSizeValue">1</span>
+            <br />
+            <label>
+                <input
+                    type="checkbox"
+                    id="toggleStyle"
+                    name="toggleStyle"
+                    onchange="toggleStyle(this.checked)"
+                />
+                Toggle Style (Lines/Points)
+            </label>
+            <br />
+            <label>
+                <input
+                    type="checkbox"
+                    id="unlimitedSteps"
+                    name="unlimitedSteps"
+                    onchange="toggleUnlimitedSteps(this.checked)"
+                />
+                Unlimited Steps
+            </label>
+            <br />
+            <label for="backgroundMusic">Background Music:</label>
+            <input
+                type="file"
+                id="backgroundMusic"
+                accept="audio/*"
+                onchange="loadBackgroundMusic(event)"
+            />
+        </div>
+        <script>
+            let walk = [];
+            let currentStep = 0;
+            let size = 10;
+            let steps = 1000;
+            let isAnimating = false;
+            let speed = 30;
+            let colorScheme = "rainbow";
+            let drawPoints = false;
+            let unlimitedSteps = false;
+            let pointSize = 1;
+            let bgMusic;
+
+            function setup() {
+                createCanvas(windowWidth, windowHeight, WEBGL);
+                resetWalk();
+                frameRate(speed);
+            }
+
+            function windowResized() {
+                resizeCanvas(windowWidth, windowHeight);
+            }
+
+            function draw() {
+                background(0);
+                orbitControl();
+                stroke(255);
+                strokeWeight(pointSize);
+                noFill();
+
+                if (isAnimating) {
+                    if (unlimitedSteps || currentStep < walk.length - 1) {
+                        currentStep++;
+                        if (currentStep >= walk.length) {
+                            walk = walk.concat(
+                                generateSelfAvoidingWalk(size, steps),
+                            );
+                        }
+                    }
+                }
+
+                beginShape();
+                for (let i = 0; i <= currentStep && i < walk.length; i++) {
+                    let p = walk[i];
+                    stroke(getColor(i, walk.length));
+                    if (drawPoints) {
+                        point(p.x * 20, p.y * 20, p.z * 20);
+                    } else {
+                        vertex(p.x * 20, p.y * 20, p.z * 20);
+                    }
+                }
+                endShape();
+            }
+
+            function startAnimation() {
+                if (!isAnimating) {
+                    isAnimating = true;
+                    loop();
+                }
+            }
+
+            function stopAnimation() {
+                isAnimating = false;
+                noLoop();
+            }
+
+            function resetWalk() {
+                stopAnimation();
+                walk = generateSelfAvoidingWalk(size, steps);
+                currentStep = 0;
+                loop();
+            }
+
+            function generateSelfAvoidingWalk(size, steps) {
+                let directions = [
+                    { x: 1, y: 0, z: 0 },
+                    { x: -1, y: 0, z: 0 },
+                    { x: 0, y: 1, z: 0 },
+                    { x: 0, y: -1, z: 0 },
+                    { x: 0, y: 0, z: 1 },
+                    { x: 0, y: 0, z: -1 },
+                ];
+                let path = [{ x: 0, y: 0, z: 0 }];
+                let current = { x: 0, y: 0, z: 0 };
+
+                for (let i = 0; i < steps; i++) {
+                    let possibleMoves = directions
+                        .map((d) => ({
+                            x: current.x + d.x,
+                            y: current.y + d.y,
+                            z: current.z + d.z,
+                        }))
+                        .filter(
+                            (p) =>
+                                !path.some(
+                                    (q) =>
+                                        q.x === p.x &&
+                                        q.y === p.y &&
+                                        q.z === p.z,
+                                ) &&
+                                Math.abs(p.x) <= size &&
+                                Math.abs(p.y) <= size &&
+                                Math.abs(p.z) <= size,
+                        );
+
+                    if (possibleMoves.length === 0) break;
+
+                    current =
+                        possibleMoves[
+                            Math.floor(Math.random() * possibleMoves.length)
+                        ];
+                    path.push(current);
+                }
+
+                return path;
+            }
+
+            function updateSpeed(newSpeed) {
+                speed = newSpeed;
+                frameRate(speed);
+                document.getElementById("speedValue").innerText = newSpeed;
+            }
+
+            function updateSize(newSize) {
+                size = newSize;
+                document.getElementById("sizeValue").innerText = newSize;
+                resetWalk();
+            }
+
+            function updateSteps(newSteps) {
+                steps = newSteps;
+                document.getElementById("stepsValue").innerText = newSteps;
+                resetWalk();
+            }
+
+            function updateColorScheme(newColorScheme) {
+                colorScheme = newColorScheme;
+            }
+
+            function updatePointSize(newPointSize) {
+                pointSize = newPointSize;
+                document.getElementById("pointSizeValue").innerText =
+                    newPointSize;
+            }
+
+            function toggleStyle(isChecked) {
+                drawPoints = isChecked;
+            }
+
+            function toggleUnlimitedSteps(isChecked) {
+                unlimitedSteps = isChecked;
+            }
+
+            function getColor(i, total) {
+                switch (colorScheme) {
+                    case "rainbow":
+                        return color(
+                            map(i, 0, total, 0, 255),
+                            map(i, 0, total, 255, 0),
+                            150,
+                        );
+                    case "grayscale":
+                        let gray = map(i, 0, total, 0, 255);
+                        return color(gray);
+                    case "heatmap":
+                        return color(map(i, 0, total, 255, 0), 0, 0);
+                    default:
+                        return color(255);
+                }
+            }
+
+            function saveWalk() {
+                saveJSON(walk, "self_avoiding_walk.json");
+            }
+
+            function importWalk(event) {
+                let file = event.target.files[0];
+                if (file) {
+                    let reader = new FileReader();
+                    reader.onload = function (e) {
+                        walk = JSON.parse(e.target.result);
+                        currentStep = walk.length - 1;
+                    };
+                    reader.readAsText(file);
+                }
+            }
+
+            function exportImage() {
+                saveCanvas("self_avoiding_walk", "png");
+            }
+
+            function loadBackgroundMusic(event) {
+                let file = event.target.files[0];
+                if (file && !bgMusic) {
+                    bgMusic = new Audio(URL.createObjectURL(file));
+                    bgMusic.loop = true;
+                    bgMusic.play();
+                }
+            }
+        </script>
+    </body>
+</html>
