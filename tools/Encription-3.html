@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enkripsi dan Dekripsi AES, Triple DES, dan RSA</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.23/jsrsasign-all-min.js"></script>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --background-color: #f0f0f0;
+        --text-color: #333;
+        --primary-color: #3498db;
+        --secondary-color: #2ecc71;
+        --error-color: #e74c3c;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        background-color: var(--background-color);
+        margin: 0;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      h1,
+      h2,
+      h3 {
+        color: var(--primary-color);
+      }
+
+      textarea,
+      input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+
+      button {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        margin: 5px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background-color: #2980b9;
+      }
+
+      .button-group {
+        margin-bottom: 15px;
+      }
+
+      .section {
+        background-color: white;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 10px 20px;
+        border-radius: 4px;
+        display: none;
+        z-index: 1000;
+      }
+
+      .toast.success {
+        background-color: var(--secondary-color);
+      }
+
+      .toast.error {
+        background-color: var(--error-color);
+      }
+
+      .toast.info {
+        background-color: var(--primary-color);
+      }
+
+      .tabs {
+        display: flex;
+        margin-bottom: 20px;
+      }
+
+      .tab {
+        padding: 10px 20px;
+        background-color: #f1f1f1;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .tab:first-child {
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+      }
+
+      .tab:last-child {
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+      }
+
+      .tab.active {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Enkripsi dan Dekripsi AES, Triple DES, dan RSA</h1>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('aes')">AES</div>
+        <div class="tab" onclick="switchTab('des')">Triple DES</div>
+        <div class="tab" onclick="switchTab('rsa')">RSA</div>
+      </div>
+
+      <div id="aesTab" class="tab-content active">
+        <div class="section">
+          <h2>Enkripsi</h2>
+          <h3>AES Enkripsi</h3>
+          <textarea
+            id="aesInputEnc"
+            placeholder="Teks untuk dienkripsi (AES)"
+          ></textarea>
+          <div class="button-group">
+            <button onclick="generateAESKey()">Generate AES Key</button>
+            <button onclick="aesEncrypt()">Enkripsi</button>
+            <button onclick="copyToClipboard('aesOutputEnc')">
+              Copy Hasil
+            </button>
+            <button onclick="pasteToDecryption('aesOutputEnc', 'aesInputDec')">
+              Paste ke Dekripsi
+            </button>
+          </div>
+          <textarea
+            id="aesOutputEnc"
+            placeholder="Hasil enkripsi (AES)"
+            readonly
+          ></textarea>
+          <input type="text" id="aesKeyEnc" placeholder="AES Key" />
+          <input type="text" id="aesIvEnc" placeholder="AES IV" />
+        </div>
+        <div class="section">
+          <h2>Dekripsi</h2>
+          <h3>AES Dekripsi</h3>
+          <textarea
+            id="aesInputDec"
+            placeholder="Teks terenkripsi untuk didekripsi (AES)"
+          ></textarea>
+          <div class="button-group">
+            <button onclick="aesDecrypt()">Dekripsi</button>
+          </div>
+          <textarea
+            id="aesOutputDec"
+            placeholder="Hasil dekripsi (AES)"
+            readonly
+          ></textarea>
+          <input type="text" id="aesKeyDec" placeholder="AES Key" />
+          <input type="text" id="aesIvDec" placeholder="AES IV" />
+        </div>
+      </div>
+
+      <div id="desTab" class="tab-content">
+        <div class="section">
+          <h2>Enkripsi</h2>
+          <h3>Triple DES Enkripsi</h3>
+          <textarea
+            id="desInputEnc"
+            placeholder="Teks untuk dienkripsi (Triple DES)"
+          ></textarea>
+          <div class="button-group">
+            <button onclick="generateDESKey()">Generate Triple DES Key</button>
+            <button onclick="desEncrypt()">Enkripsi</button>
+            <button onclick="copyToClipboard('desOutputEnc')">
+              Copy Hasil
+            </button>
+            <button onclick="pasteToDecryption('desOutputEnc', 'desInputDec')">
+              Paste ke Dekripsi
+            </button>
+          </div>
+          <textarea
+            id="desOutputEnc"
+            placeholder="Hasil enkripsi (Triple DES)"
+            readonly
+          ></textarea>
+          <input type="text" id="desKeyEnc" placeholder="Triple DES Key" />
+          <input type="text" id="desIvEnc" placeholder="Triple DES IV" />
+        </div>
+        <div class="section">
+          <h2>Dekripsi</h2>
+          <h3>Triple DES Dekripsi</h3>
+          <textarea
+            id="desInputDec"
+            placeholder="Teks terenkripsi untuk didekripsi (Triple DES)"
+          ></textarea>
+          <div class="button-group">
+            <button onclick="desDecrypt()">Dekripsi</button>
+          </div>
+          <textarea
+            id="desOutputDec"
+            placeholder="Hasil dekripsi (Triple DES)"
+            readonly
+          ></textarea>
+          <input type="text" id="desKeyDec" placeholder="Triple DES Key" />
+          <input type="text" id="desIvDec" placeholder="Triple DES IV" />
+        </div>
+      </div>
+
+      <div id="rsaTab" class="tab-content">
+        <div class="section">
+          <h2>Enkripsi</h2>
+          <h3>RSA Enkripsi</h3>
+          <textarea
+            id="rsaInputEnc"
+            placeholder="Teks untuk dienkripsi (RSA)"
+          ></textarea>
+          <div class="button-group">
+            <button onclick="generateRSAKey()">Generate RSA Key</button>
+            <button onclick="rsaEncrypt()">Enkripsi</button>
+            <button onclick="copyToClipboard('rsaOutputEnc')">
+              Copy Hasil
+            </button>
+            <button onclick="pasteToDecryption('rsaOutputEnc', 'rsaInputDec')">
+              Paste ke Dekripsi
+            </button>
+          </div>
+          <textarea
+            id="rsaOutputEnc"
+            placeholder="Hasil enkripsi (RSA)"
+            readonly
+          ></textarea>
+          <input
+            type="text"
+            id="rsaPublicKeyEnc"
+            placeholder="RSA Public Key"
+          />
+          <input
+            type="text"
+            id="rsaPrivateKeyEnc"
+            placeholder="RSA Private Key"
+          />
+        </div>
+        <div class="section">
+          <h2>Dekripsi</h2>
+          <h3>RSA Dekripsi</h3>
+          <textarea
+            id="rsaInputDec"
+            placeholder="Teks terenkripsi untuk didekripsi (RSA)"
+          ></textarea>
+          <div class="button-group">
+            <button onclick="rsaDecrypt()">Dekripsi</button>
+          </div>
+          <textarea
+            id="rsaOutputDec"
+            placeholder="Hasil dekripsi (RSA)"
+            readonly
+          ></textarea>
+          <input
+            type="text"
+            id="rsaPrivateKeyDec"
+            placeholder="RSA Private Key"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      function generateAESKey() {
+        try {
+          const key = CryptoJS.lib.WordArray.random(32);
+          const iv = CryptoJS.lib.WordArray.random(16);
+          document.getElementById("aesKeyEnc").value = key.toString();
+          document.getElementById("aesIvEnc").value = iv.toString();
+          document.getElementById("aesKeyDec").value = key.toString();
+          document.getElementById("aesIvDec").value = iv.toString();
+          showToast("AES key dan IV berhasil digenerate", "success");
+        } catch (error) {
+          showToast("Terjadi kesalahan saat generate AES key dan IV", "error");
+        }
+      }
+
+      function generateDESKey() {
+        try {
+          const key = CryptoJS.lib.WordArray.random(24);
+          const iv = CryptoJS.lib.WordArray.random(8);
+          document.getElementById("desKeyEnc").value = key.toString();
+          document.getElementById("desIvEnc").value = iv.toString();
+          document.getElementById("desKeyDec").value = key.toString();
+          document.getElementById("desIvDec").value = iv.toString();
+          showToast("Triple DES key dan IV berhasil digenerate", "success");
+        } catch (error) {
+          showToast(
+            "Terjadi kesalahan saat generate Triple DES key dan IV",
+            "error",
+          );
+        }
+      }
+
+      function generateRSAKey() {
+        try {
+          const rsaKey = KEYUTIL.generateKeypair("RSA", 2048);
+          const publicKey = KEYUTIL.getPEM(rsaKey.pubKeyObj);
+          const privateKey = KEYUTIL.getPEM(rsaKey.prvKeyObj, "PKCS1PRV");
+          document.getElementById("rsaPublicKeyEnc").value = publicKey;
+          document.getElementById("rsaPrivateKeyEnc").value = privateKey;
+          document.getElementById("rsaPrivateKeyDec").value = privateKey;
+          showToast("RSA key pair berhasil digenerate", "success");
+        } catch (error) {
+          showToast("Terjadi kesalahan saat generate RSA key pair", "error");
+        }
+      }
+
+      function aesEncrypt() {
+        const plaintext = document.getElementById("aesInputEnc").value;
+        const key = document.getElementById("aesKeyEnc").value;
+        const iv = document.getElementById("aesIvEnc").value;
+
+        if (!plaintext || !key || !iv) {
+          showToast("Mohon isi semua field", "error");
+          return;
+        }
+
+        try {
+          const encrypted = CryptoJS.AES.encrypt(
+            plaintext,
+            CryptoJS.enc.Hex.parse(key),
+            {
+              iv: CryptoJS.enc.Hex.parse(iv),
+              mode: CryptoJS.mode.CBC,
+              padding: CryptoJS.pad.Pkcs7,
+            },
+          );
+          document.getElementById("aesOutputEnc").value = encrypted.toString();
+          showToast("Enkripsi AES berhasil", "success");
+        } catch (error) {
+          showToast("Terjadi kesalahan saat enkripsi AES", "error");
+        }
+      }
+
+      function aesDecrypt() {
+        const ciphertext = document.getElementById("aesInputDec").value;
+        const key = document.getElementById("aesKeyDec").value;
+        const iv = document.getElementById("aesIvDec").value;
+
+        if (!ciphertext || !key || !iv) {
+          showToast("Mohon isi semua field", "error");
+          return;
+        }
+
+        try {
+          const decrypted = CryptoJS.AES.decrypt(
+            ciphertext,
+            CryptoJS.enc.Hex.parse(key),
+            {
+              iv: CryptoJS.enc.Hex.parse(iv),
+              mode: CryptoJS.mode.CBC,
+              padding: CryptoJS.pad.Pkcs7,
+            },
+          );
+          document.getElementById("aesOutputDec").value = decrypted.toString(
+            CryptoJS.enc.Utf8,
+          );
+          showToast("Dekripsi AES berhasil", "success");
+        } catch (error) {
+          showToast("Terjadi kesalahan saat dekripsi AES", "error");
+        }
+      }
+
+      function desEncrypt() {
+        const plaintext = document.getElementById("desInputEnc").value;
+        const key = document.getElementById("desKeyEnc").value;
+        const iv = document.getElementById("desIvEnc").value;
+
+        if (!plaintext || !key || !iv) {
+          showToast("Mohon isi semua field", "error");
+          return;
+        }
+
+        try {
+          const encrypted = CryptoJS.TripleDES.encrypt(
+            plaintext,
+            CryptoJS.enc.Hex.parse(key),
+            {
+              iv: CryptoJS.enc.Hex.parse(iv),
+              mode: CryptoJS.mode.CBC,
+              padding: CryptoJS.pad.Pkcs7,
+            },
+          );
+          document.getElementById("desOutputEnc").value = encrypted.toString();
+          showToast("Enkripsi Triple DES berhasil", "success");
+        } catch (error) {
+          showToast("Terjadi kesalahan saat enkripsi Triple DES", "error");
+        }
+      }
+
+      function desDecrypt() {
+        const ciphertext = document.getElementById("desInputDec").value;
+        const key = document.getElementById("desKeyDec").value;
+        const iv = document.getElementById("desIvDec").value;
+
+        if (!ciphertext || !key || !iv) {
+          showToast("Mohon isi semua field", "error");
+          return;
+        }
+
+        try {
+          const decrypted = CryptoJS.TripleDES.decrypt(
+            ciphertext,
+            CryptoJS.enc.Hex.parse(key),
+            {
+              iv: CryptoJS.enc.Hex.parse(iv),
+              mode: CryptoJS.mode.CBC,
+              padding: CryptoJS.pad.Pkcs7,
+            },
+          );
+          document.getElementById("desOutputDec").value = decrypted.toString(
+            CryptoJS.enc.Utf8,
+          );
+          showToast("Dekripsi Triple DES berhasil", "success");
+        } catch (error) {
+          showToast("Terjadi kesalahan saat dekripsi Triple DES", "error");
+        }
+      }
+
+      function rsaEncrypt() {
+        const plaintext = document.getElementById("rsaInputEnc").value;
+        const publicKeyPEM = document.getElementById("rsaPublicKeyEnc").value;
+
+        if (!plaintext || !publicKeyPEM) {
+          showToast("Mohon isi semua field", "error");
+          return;
+        }
+
+        try {
+          const publicKey = KEYUTIL.getKey(publicKeyPEM);
+          const encrypted = KJUR.crypto.Cipher.encrypt(
+            plaintext,
+            publicKey,
+            "RSAOAEP",
+          );
+          document.getElementById("rsaOutputEnc").value = hextob64(encrypted);
+          showToast("Enkripsi RSA berhasil", "success");
+        } catch (error) {
+          showToast("Terjadi kesalahan saat enkripsi RSA", "error");
+        }
+      }
+
+      function rsaDecrypt() {
+        const ciphertext = document.getElementById("rsaInputDec").value;
+        const privateKeyPEM = document.getElementById("rsaPrivateKeyDec").value;
+
+        if (!ciphertext || !privateKeyPEM) {
+          showToast("Mohon isi semua field", "error");
+          return;
+        }
+
+        try {
+          const privateKey = KEYUTIL.getKey(privateKeyPEM);
+          const decrypted = KJUR.crypto.Cipher.decrypt(
+            b64tohex(ciphertext),
+            privateKey,
+            "RSAOAEP",
+          );
+          document.getElementById("rsaOutputDec").value = decrypted;
+          showToast("Dekripsi RSA berhasil", "success");
+        } catch (error) {
+          showToast("Terjadi kesalahan saat dekripsi RSA", "error");
+        }
+      }
+
+      function copyToClipboard(elementId) {
+        const element = document.getElementById(elementId);
+        element.select();
+        document.execCommand("copy");
+        showToast("Teks berhasil disalin", "info");
+      }
+
+      function pasteToDecryption(sourceId, targetId) {
+        const source = document.getElementById(sourceId);
+        const target = document.getElementById(targetId);
+        target.value = source.value;
+        showToast("Teks berhasil dipaste ke dekripsi", "info");
+      }
+
+      function showToast(message, type) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.className = `toast ${type}`;
+        toast.style.display = "block";
+        setTimeout(() => {
+          toast.style.display = "none";
+        }, 3000);
+      }
+
+      function switchTab(tabName) {
+        const tabs = document.querySelectorAll(".tab");
+        const tabContents = document.querySelectorAll(".tab-content");
+
+        tabs.forEach((tab) => tab.classList.remove("active"));
+        tabContents.forEach((content) => content.classList.remove("active"));
+
+        const activeTab = document.querySelector(
+          `.tab:nth-child(${tabName === "aes" ? "1" : tabName === "des" ? "2" : "3"})`,
+        );
+        const activeContent = document.getElementById(`${tabName}Tab`);
+
+        activeTab.classList.add("active");
+        activeContent.classList.add("active");
+      }
+    </script>
+  </body>
+</html>

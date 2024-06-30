@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Kalkulator Nilai Tukar Mata Uang</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                background-color: #f0f0f0;
+            }
+            .container {
+                background-color: white;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                width: 350px;
+            }
+            h1,
+            h2 {
+                text-align: center;
+                font-size: 24px;
+            }
+            #exchange-rate {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            input,
+            select,
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+                padding: 5px;
+                box-sizing: border-box;
+            }
+            #result {
+                text-align: center;
+                font-weight: bold;
+                margin-top: 20px;
+            }
+            #country-list {
+                margin-top: 20px;
+                height: 200px;
+                overflow-y: auto;
+                border: 1px solid #ccc;
+                padding: 10px;
+            }
+            .currency-inputs {
+                display: flex;
+                align-items: center;
+            }
+            #switch-currencies {
+                margin: 0 10px;
+                padding: 5px 10px;
+                width: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Kalkulator Nilai Tukar Mata Uang</h1>
+            <div id="exchange-rate">Memuat...</div>
+            <input type="number" id="amount" placeholder="Masukkan jumlah" />
+            <div class="currency-inputs">
+                <select id="from-currency"></select>
+                <button id="switch-currencies">⇄</button>
+                <select id="to-currency"></select>
+            </div>
+            <button onclick="convert()">Konversi</button>
+            <div id="result"></div>
+            <h2>Daftar Negara dan Mata Uang</h2>
+            <input
+                type="text"
+                id="search-country"
+                placeholder="Cari negara..."
+            />
+            <div id="country-list"></div>
+        </div>
+
+        <script>
+            let exchangeRates = {};
+            let countries = [];
+
+            function populateCurrencySelects() {
+                const selects = document.querySelectorAll(
+                    "#from-currency, #to-currency",
+                );
+                selects.forEach((select) => {
+                    select.innerHTML = "";
+                    countries.forEach((country) => {
+                        if (country.currencies) {
+                            const currencyCode = Object.keys(
+                                country.currencies,
+                            )[0];
+                            const currencyName =
+                                country.currencies[currencyCode].name;
+                            let option = document.createElement("option");
+                            option.value = currencyCode;
+                            option.text = `${currencyCode} - ${currencyName} (${country.name.common})`;
+                            select.appendChild(option);
+                        }
+                    });
+                });
+            }
+
+            function getCountries() {
+                fetch("https://restcountries.com/v3.1/all")
+                    .then((response) => response.json())
+                    .then((data) => {
+                        countries = data;
+                        populateCurrencySelects();
+                        updateCountryList();
+                    })
+                    .catch((error) => {
+                        console.error("Error:", error);
+                        document.getElementById("country-list").innerHTML =
+                            "Gagal memuat daftar negara";
+                    });
+            }
+
+            function getExchangeRates() {
+                fetch("https://api.exchangerate-api.com/v4/latest/USD")
+                    .then((response) => response.json())
+                    .then((data) => {
+                        exchangeRates = data.rates;
+                        document.getElementById("exchange-rate").innerHTML =
+                            `1 USD = ${exchangeRates.IDR.toFixed(2)} IDR`;
+                    })
+                    .catch((error) => {
+                        console.error("Error:", error);
+                        document.getElementById("exchange-rate").innerHTML =
+                            "Gagal memuat data nilai tukar";
+                    });
+            }
+
+            function convert() {
+                const amount = parseFloat(
+                    document.getElementById("amount").value,
+                );
+                const fromCurrency =
+                    document.getElementById("from-currency").value;
+                const toCurrency = document.getElementById("to-currency").value;
+
+                if (isNaN(amount)) {
+                    alert("Masukkan jumlah yang valid");
+                    return;
+                }
+
+                if (
+                    !exchangeRates[fromCurrency] ||
+                    !exchangeRates[toCurrency]
+                ) {
+                    alert(
+                        "Data nilai tukar tidak tersedia untuk mata uang yang dipilih",
+                    );
+                    return;
+                }
+
+                const result =
+                    (amount / exchangeRates[fromCurrency]) *
+                    exchangeRates[toCurrency];
+                document.getElementById("result").innerHTML =
+                    `${amount} ${fromCurrency} = ${result.toFixed(2)} ${toCurrency}`;
+            }
+
+            function updateCountryList(searchTerm = "") {
+                const listElement = document.getElementById("country-list");
+                listElement.innerHTML = "";
+                countries.forEach((country) => {
+                    if (
+                        country.currencies &&
+                        country.name.common
+                            .toLowerCase()
+                            .includes(searchTerm.toLowerCase())
+                    ) {
+                        const currencyCode = Object.keys(country.currencies)[0];
+                        const currencyName =
+                            country.currencies[currencyCode].name;
+                        listElement.innerHTML += `<div>${country.name.common} - ${currencyCode} (${currencyName})</div>`;
+                    }
+                });
+            }
+
+            function switchCurrencies() {
+                const fromCurrency = document.getElementById("from-currency");
+                const toCurrency = document.getElementById("to-currency");
+                const temp = fromCurrency.value;
+                fromCurrency.value = toCurrency.value;
+                toCurrency.value = temp;
+            }
+
+            document
+                .getElementById("search-country")
+                .addEventListener("input", (e) => {
+                    updateCountryList(e.target.value);
+                });
+
+            document
+                .getElementById("switch-currencies")
+                .addEventListener("click", switchCurrencies);
+
+            getCountries();
+            getExchangeRates();
+            setInterval(getExchangeRates, 3600000); // Perbarui nilai tukar setiap 1 jam
+        </script>
+    </body>
+</html>
