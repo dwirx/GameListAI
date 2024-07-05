@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SRT Subtitle Translator</title>
+        <style>
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                margin: 0;
+                padding: 20px;
+                background-color: #f0f0f0;
+                color: #333;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                background-color: white;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            }
+            h1 {
+                text-align: center;
+                color: #2c3e50;
+                margin-bottom: 30px;
+            }
+            textarea {
+                width: 100%;
+                height: 200px;
+                margin-bottom: 20px;
+                padding: 15px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                resize: vertical;
+                font-size: 14px;
+                transition: border-color 0.3s;
+            }
+            textarea:focus {
+                outline: none;
+                border-color: #3498db;
+            }
+            select,
+            button,
+            input[type="file"] {
+                margin-bottom: 20px;
+                padding: 10px 15px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                font-size: 14px;
+            }
+            button {
+                background-color: #3498db;
+                color: white;
+                cursor: pointer;
+                transition: background-color 0.3s;
+                border: none;
+            }
+            button:hover {
+                background-color: #2980b9;
+            }
+            #progressBar {
+                width: 100%;
+                background-color: #ddd;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                display: none;
+                overflow: hidden;
+            }
+            #progressBar > div {
+                width: 0%;
+                height: 25px;
+                background-color: #3498db;
+                text-align: center;
+                line-height: 25px;
+                color: white;
+                transition: width 0.3s;
+            }
+            .button-group {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            #downloadBtn {
+                background-color: #2ecc71;
+                display: none;
+            }
+            #downloadBtn:hover {
+                background-color: #27ae60;
+            }
+            .file-input-wrapper {
+                position: relative;
+                overflow: hidden;
+                display: inline-block;
+            }
+            .file-input-wrapper input[type="file"] {
+                font-size: 100px;
+                position: absolute;
+                left: 0;
+                top: 0;
+                opacity: 0;
+            }
+            .file-input-wrapper .btn {
+                background-color: #95a5a6;
+                color: white;
+                padding: 10px 15px;
+                border-radius: 8px;
+                cursor: pointer;
+            }
+            .speed-mode {
+                margin-bottom: 20px;
+            }
+            .speed-mode label {
+                margin-right: 10px;
+            }
+            .translation-service {
+                margin-bottom: 20px;
+            }
+            .translation-service label {
+                margin-right: 10px;
+            }
+            .api-key-input {
+                width: 100%;
+                margin-bottom: 20px;
+                padding: 10px 15px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                font-size: 14px;
+            }
+            .api-key-controls {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            .api-key-controls input {
+                flex-grow: 1;
+                margin-right: 10px;
+            }
+            .api-key-controls button {
+                white-space: nowrap;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>SRT Subtitle Translator</h1>
+            <div class="file-input-wrapper">
+                <button class="btn">Choose File</button>
+                <input type="file" id="fileInput" accept=".srt" />
+            </div>
+            <textarea
+                id="inputText"
+                placeholder="Paste your SRT subtitle text here or upload a file"
+            ></textarea>
+            <div class="speed-mode">
+                <label>
+                    <input type="radio" name="speed" value="normal" />
+                    Normal Speed
+                </label>
+                <label>
+                    <input type="radio" name="speed" value="fast" /> Fast Speed
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        name="speed"
+                        value="super-turbo"
+                        checked
+                    />
+                    Super Turbo Speed
+                </label>
+                <label>
+                    <input type="radio" name="speed" value="goat" /> Goat Speed
+                </label>
+            </div>
+            <div class="translation-service">
+                <label>
+                    <input type="radio" name="service" value="google" checked />
+                    Google Translate
+                </label>
+                <label>
+                    <input type="radio" name="service" value="deepl" /> DeepL
+                </label>
+            </div>
+            <div class="api-key-controls" style="display: none">
+                <input
+                    type="password"
+                    id="deeplApiKey"
+                    class="api-key-input"
+                    placeholder="Enter DeepL API key"
+                />
+                <button onclick="toggleApiKeyVisibility()">Show</button>
+                <button onclick="saveApiKey()">Save</button>
+            </div>
+            <div class="button-group">
+                <select id="targetLang">
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="id">Indonesian</option>
+                </select>
+                <button onclick="translateText()">Translate</button>
+                <button id="downloadBtn" onclick="downloadSubtitle()">
+                    Download Translated Subtitle
+                </button>
+            </div>
+            <div id="progressBar"><div></div></div>
+            <textarea
+                id="outputText"
+                readonly
+                placeholder="Translated subtitles will appear here"
+            ></textarea>
+        </div>
+
+        <script>
+            let originalFileName = "";
+
+            document
+                .querySelectorAll('input[name="service"]')
+                .forEach((elem) => {
+                    elem.addEventListener("change", function () {
+                        const deeplApiKeyInput =
+                            document.querySelector(".api-key-controls");
+                        if (this.value === "deepl") {
+                            deeplApiKeyInput.style.display = "flex";
+                            loadApiKey();
+                        } else {
+                            deeplApiKeyInput.style.display = "none";
+                        }
+                    });
+                });
+
+            function loadApiKey() {
+                const savedApiKey = localStorage.getItem("deeplApiKey");
+                if (savedApiKey) {
+                    document.getElementById("deeplApiKey").value = savedApiKey;
+                }
+            }
+
+            function saveApiKey() {
+                const apiKey = document.getElementById("deeplApiKey").value;
+                localStorage.setItem("deeplApiKey", apiKey);
+                alert("API key saved!");
+            }
+
+            function toggleApiKeyVisibility() {
+                const apiKeyInput = document.getElementById("deeplApiKey");
+                const toggleButton = apiKeyInput.nextElementSibling;
+                if (apiKeyInput.type === "password") {
+                    apiKeyInput.type = "text";
+                    toggleButton.textContent = "Hide";
+                } else {
+                    apiKeyInput.type = "password";
+                    toggleButton.textContent = "Show";
+                }
+            }
+
+            async function translateText() {
+                const inputText = document.getElementById("inputText").value;
+                const targetLang = document.getElementById("targetLang").value;
+                const outputText = document.getElementById("outputText");
+                const progressBar = document.getElementById("progressBar");
+                const progressBarInner = progressBar.querySelector("div");
+                const downloadBtn = document.getElementById("downloadBtn");
+                const speedMode = document.querySelector(
+                    'input[name="speed"]:checked',
+                ).value;
+                const service = document.querySelector(
+                    'input[name="service"]:checked',
+                ).value;
+                const deeplApiKey =
+                    document.getElementById("deeplApiKey").value;
+
+                const subtitles = inputText
+                    .trim()
+                    .split("\n\n")
+                    .filter((subtitle) => subtitle.trim() !== "");
+
+                progressBar.style.display = "block";
+                outputText.value = "";
+                downloadBtn.style.display = "none";
+
+                let translatedSubtitles = [];
+                let index = 0;
+
+                async function translateBatch(batch) {
+                    const promises = batch.map(async (subtitle) => {
+                        const lines = subtitle.split("\n");
+                        const textToTranslate = lines.slice(2).join(" ").trim();
+
+                        if (textToTranslate) {
+                            let url;
+                            if (service === "google") {
+                                url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(
+                                    textToTranslate,
+                                )}`;
+                            } else if (service === "deepl") {
+                                url = `https://api-free.deepl.com/v2/translate?auth_key=${deeplApiKey}&text=${encodeURIComponent(
+                                    textToTranslate,
+                                )}&target_lang=${targetLang.toUpperCase()}`;
+                            }
+
+                            try {
+                                const response = await fetch(url);
+                                const data = await response.json();
+                                let translatedText = "";
+                                if (service === "google") {
+                                    if (
+                                        data &&
+                                        data[0] &&
+                                        data[0][0] &&
+                                        data[0][0][0]
+                                    ) {
+                                        translatedText = data[0]
+                                            .map((x) => x[0])
+                                            .join(" ");
+                                    } else {
+                                        translatedText = textToTranslate;
+                                    }
+                                } else if (service === "deepl") {
+                                    if (
+                                        data &&
+                                        data.translations &&
+                                        data.translations.length > 0
+                                    ) {
+                                        translatedText =
+                                            data.translations[0].text;
+                                    } else {
+                                        translatedText = textToTranslate;
+                                    }
+                                }
+
+                                lines.splice(
+                                    2,
+                                    lines.length - 2,
+                                    translatedText,
+                                );
+                                return lines.join("\n");
+                            } catch (error) {
+                                console.error("Translation error:", error);
+                                return subtitle;
+                            }
+                        } else {
+                            return subtitle;
+                        }
+                    });
+
+                    return Promise.all(promises);
+                }
+
+                async function translateNextBatch() {
+                    const batchSize =
+                        speedMode === "goat"
+                            ? subtitles.length
+                            : speedMode === "super-turbo"
+                              ? 20
+                              : speedMode === "fast"
+                                ? 10
+                                : 1;
+                    const batch = subtitles.slice(index, index + batchSize);
+
+                    if (batch.length > 0) {
+                        const translatedBatch = await translateBatch(batch);
+                        translatedSubtitles.push(...translatedBatch);
+                        index += batchSize;
+                        updateProgress();
+                        if (index < subtitles.length) {
+                            if (speedMode === "goat") {
+                                finishTranslation();
+                            } else {
+                                setTimeout(
+                                    translateNextBatch,
+                                    speedMode === "super-turbo"
+                                        ? 5
+                                        : speedMode === "fast"
+                                          ? 10
+                                          : 100,
+                                );
+                            }
+                        } else {
+                            finishTranslation();
+                        }
+                    } else {
+                        finishTranslation();
+                    }
+                }
+
+                function updateProgress() {
+                    const progress = (index / subtitles.length) * 100;
+                    progressBarInner.style.width = `${progress}%`;
+                    progressBarInner.textContent = `${Math.round(progress)}%`;
+                    outputText.value = translatedSubtitles.join("\n\n");
+                }
+
+                function finishTranslation() {
+                    progressBar.style.display = "none";
+                    downloadBtn.style.display = "block";
+                }
+
+                translateNextBatch();
+            }
+
+            function downloadSubtitle() {
+                const translatedText =
+                    document.getElementById("outputText").value;
+                const targetLang = document.getElementById("targetLang").value;
+                const fileName = originalFileName
+                    ? originalFileName.split(".").slice(0, -1).join(".")
+                    : "translated_subtitle";
+                const downloadFileName = `${fileName}.${targetLang}.srt`;
+                const blob = new Blob([translatedText], {
+                    type: "text/plain;charset=utf-8",
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.style.display = "none";
+                a.href = url;
+                a.download = downloadFileName;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }
+
+            document
+                .getElementById("fileInput")
+                .addEventListener("change", function (e) {
+                    const file = e.target.files[0];
+                    if (!file) {
+                        return;
+                    }
+                    originalFileName = file.name;
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        document.getElementById("inputText").value =
+                            e.target.result;
+                    };
+                    reader.readAsText(file);
+                });
+        </script>
+    </body>
+</html>
