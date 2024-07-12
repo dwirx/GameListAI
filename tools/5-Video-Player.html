@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Custom Video Player with Playlist and PiP</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .video-container {
+        background-color: #1a202c;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.25);
+      }
+      .video-title {
+        color: #e2e8f0;
+      }
+      .drop-area {
+        border: 2px dashed #4a5568;
+        padding: 2rem;
+        border-radius: 1rem;
+        color: #e2e8f0;
+        cursor: pointer;
+      }
+      .drop-area.dragover {
+        border-color: #4299e1;
+        background-color: #2d3748;
+      }
+      .playlist {
+        margin-top: 1rem;
+        color: #e2e8f0;
+      }
+      .playlist-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-bottom: 1px solid #4a5568;
+      }
+      .playlist-item:hover {
+        background-color: #4a5568;
+      }
+      .remove-btn {
+        background-color: #e53e3e;
+        color: #fff;
+        padding: 0.2rem 0.5rem;
+        border: none;
+        border-radius: 0.25rem;
+        cursor: pointer;
+      }
+      .remove-btn:hover {
+        background-color: #c53030;
+      }
+      .theater-mode {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-900 flex items-center justify-center min-h-screen">
+    <div
+      id="videoContainer"
+      class="video-container max-w-4xl mx-auto text-center"
+    >
+      <h1 class="video-title text-3xl mb-4">Custom Video Player</h1>
+      <input
+        type="file"
+        id="videoFileInput"
+        class="mb-4 p-2 bg-gray-700 text-gray-200"
+        accept="video/mp4,video/x-matroska"
+        multiple
+      />
+      <input
+        type="file"
+        id="subtitleFile"
+        class="mb-4 p-2 bg-gray-700 text-gray-200"
+        accept=".vtt,.srt"
+      />
+      <div id="dropArea" class="drop-area mb-4">
+        Drag and drop video files here or click to select
+      </div>
+      <video id="videoPlayer" class="w-full rounded mb-4" controls>
+        Your browser does not support the video tag.
+      </video>
+      <div class="flex justify-center items-center space-x-4">
+        <button id="pipButton" class="mt-4 p-2 bg-blue-600 text-white rounded">
+          Enable Picture-in-Picture
+        </button>
+        <button
+          id="theaterButton"
+          class="mt-4 p-2 bg-gray-700 text-white rounded"
+        >
+          Enable Theater Mode
+        </button>
+        <label class="mt-4 text-white"
+          >Playback Speed:
+          <select id="playbackSpeed" class="bg-gray-700 text-white rounded p-2">
+            <option value="0.5">0.5x</option>
+            <option value="1" selected>1x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+          </select>
+        </label>
+        <button
+          id="fullscreenButton"
+          class="mt-4 p-2 bg-green-600 text-white rounded"
+        >
+          Fullscreen
+        </button>
+        <button
+          id="skipBackButton"
+          class="mt-4 p-2 bg-yellow-600 text-white rounded"
+        >
+          -10s
+        </button>
+        <button
+          id="skipForwardButton"
+          class="mt-4 p-2 bg-yellow-600 text-white rounded"
+        >
+          +10s
+        </button>
+      </div>
+      <div class="flex justify-center items-center mt-4">
+        <input
+          type="range"
+          id="progressBar"
+          class="w-full"
+          min="0"
+          max="100"
+          value="0"
+        />
+      </div>
+      <div class="flex justify-center items-center space-x-4 mt-4">
+        <label class="text-white"
+          >Volume:
+          <input
+            type="range"
+            id="volumeControl"
+            class="bg-gray-700 text-white rounded p-2"
+            min="0"
+            max="1"
+            step="0.1"
+            value="1"
+          />
+        </label>
+      </div>
+      <div id="playlist" class="playlist"></div>
+    </div>
+    <script>
+      const videoPlayer = document.getElementById("videoPlayer");
+      const videoFileInput = document.getElementById("videoFileInput");
+      const subtitleFileInput = document.getElementById("subtitleFile");
+      const pipButton = document.getElementById("pipButton");
+      const dropArea = document.getElementById("dropArea");
+      const playlistElement = document.getElementById("playlist");
+      const theaterButton = document.getElementById("theaterButton");
+      const playbackSpeed = document.getElementById("playbackSpeed");
+      const videoContainer = document.getElementById("videoContainer");
+      const fullscreenButton = document.getElementById("fullscreenButton");
+      const skipBackButton = document.getElementById("skipBackButton");
+      const skipForwardButton = document.getElementById("skipForwardButton");
+      const progressBar = document.getElementById("progressBar");
+      const volumeControl = document.getElementById("volumeControl");
+
+      let playlist = [];
+      let currentVideoIndex = 0;
+
+      dropArea.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        dropArea.classList.add("dragover");
+      });
+
+      dropArea.addEventListener("dragleave", () => {
+        dropArea.classList.remove("dragover");
+      });
+
+      dropArea.addEventListener("drop", (event) => {
+        event.preventDefault();
+        dropArea.classList.remove("dragover");
+        handleFiles(event.dataTransfer.files);
+      });
+
+      videoFileInput.addEventListener("change", (event) => {
+        handleFiles(event.target.files);
+      });
+
+      subtitleFileInput.addEventListener("change", async function (event) {
+        try {
+          const file = event.target.files[0];
+          const url = URL.createObjectURL(file);
+          const track = document.createElement("track");
+          track.kind = "subtitles";
+          track.srclang = "en";
+          track.label = "English";
+
+          if (file.name.endsWith(".srt")) {
+            const response = await fetch(url);
+            const srtText = await response.text();
+            const vttText = srtToVtt(srtText);
+            const vttBlob = new Blob([vttText], { type: "text/vtt" });
+            track.src = URL.createObjectURL(vttBlob);
+          } else {
+            track.src = url;
+          }
+
+          videoPlayer.appendChild(track);
+        } catch (error) {
+          console.error("Failed to load subtitles:", error);
+          alert("Error loading subtitles. Please try again.");
+        }
+      });
+
+      pipButton.addEventListener("click", async function () {
+        try {
+          if (videoPlayer !== document.pictureInPictureElement) {
+            await videoPlayer.requestPictureInPicture();
+          } else {
+            await document.exitPictureInPicture();
+          }
+        } catch (error) {
+          console.error("Failed to enter Picture-in-Picture mode:", error);
+          alert("Error enabling Picture-in-Picture. Please try again.");
+        }
+      });
+
+      playbackSpeed.addEventListener("change", () => {
+        try {
+          videoPlayer.playbackRate = playbackSpeed.value;
+        } catch (error) {
+          console.error("Failed to change playback speed:", error);
+          alert("Error changing playback speed. Please try again.");
+        }
+      });
+
+      theaterButton.addEventListener("click", () => {
+        try {
+          videoContainer.classList.toggle("theater-mode");
+        } catch (error) {
+          console.error("Failed to toggle theater mode:", error);
+          alert("Error toggling theater mode. Please try again.");
+        }
+      });
+
+      fullscreenButton.addEventListener("click", () => {
+        try {
+          if (!document.fullscreenElement) {
+            videoContainer.requestFullscreen().catch((err) => {
+              throw new Error(
+                `Error attempting to enable full-screen mode: ${err.message}`,
+              );
+            });
+          } else {
+            document.exitFullscreen();
+          }
+        } catch (error) {
+          console.error("Failed to toggle fullscreen mode:", error);
+          alert("Error toggling fullscreen mode. Please try again.");
+        }
+      });
+
+      skipBackButton.addEventListener("click", () => {
+        try {
+          videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
+        } catch (error) {
+          console.error("Failed to skip backward:", error);
+          alert("Error skipping backward. Please try again.");
+        }
+      });
+
+      skipForwardButton.addEventListener("click", () => {
+        try {
+          videoPlayer.currentTime = Math.min(
+            videoPlayer.duration,
+            videoPlayer.currentTime + 10,
+          );
+        } catch (error) {
+          console.error("Failed to skip forward:", error);
+          alert("Error skipping forward. Please try again.");
+        }
+      });
+
+      volumeControl.addEventListener("input", () => {
+        try {
+          videoPlayer.volume = volumeControl.value;
+        } catch (error) {
+          console.error("Failed to change volume:", error);
+          alert("Error changing volume. Please try again.");
+        }
+      });
+
+      videoPlayer.addEventListener("timeupdate", () => {
+        try {
+          const progress =
+            (videoPlayer.currentTime / videoPlayer.duration) * 100;
+          progressBar.value = progress;
+        } catch (error) {
+          console.error("Failed to update progress bar:", error);
+        }
+      });
+
+      progressBar.addEventListener("input", () => {
+        try {
+          const time = (progressBar.value / 100) * videoPlayer.duration;
+          videoPlayer.currentTime = time;
+        } catch (error) {
+          console.error("Failed to seek video:", error);
+          alert("Error seeking video. Please try again.");
+        }
+      });
+
+      videoPlayer.addEventListener("ended", () => {
+        try {
+          currentVideoIndex++;
+          if (currentVideoIndex < playlist.length) {
+            playVideo(currentVideoIndex);
+          }
+        } catch (error) {
+          console.error("Failed to play next video:", error);
+          alert("Error playing next video. Please try again.");
+        }
+      });
+
+      function handleFiles(files) {
+        try {
+          const videoFiles = Array.from(files).filter((file) =>
+            file.type.startsWith("video/"),
+          );
+          videoFiles.forEach((file) => {
+            playlist.push({
+              file,
+              url: URL.createObjectURL(file),
+            });
+          });
+          updatePlaylistUI();
+          if (playlist.length > 0 && videoPlayer.src === "") {
+            playVideo(0);
+          }
+        } catch (error) {
+          console.error("Failed to handle files:", error);
+          alert("Error handling files. Please try again.");
+        }
+      }
+
+      function playVideo(index) {
+        try {
+          currentVideoIndex = index;
+          videoPlayer.src = playlist[index].url;
+          videoPlayer.play();
+          highlightCurrentVideo();
+        } catch (error) {
+          console.error("Failed to play video:", error);
+          alert("Error playing video. Please try again.");
+        }
+      }
+
+      function updatePlaylistUI() {
+        try {
+          playlistElement.innerHTML = "";
+          playlist.forEach((item, index) => {
+            const div = document.createElement("div");
+            div.className = "playlist-item";
+            div.innerHTML = `<span>${item.file.name} (${formatFileSize(item.file.size)})</span>
+                                 <button class="remove-btn" data-index="${index}">Remove</button>`;
+            div
+              .querySelector(".remove-btn")
+              .addEventListener("click", (event) => {
+                removeVideoFromPlaylist(
+                  event.target.getAttribute("data-index"),
+                );
+              });
+            div.addEventListener("click", () => playVideo(index));
+            playlistElement.appendChild(div);
+          });
+        } catch (error) {
+          console.error("Failed to update playlist UI:", error);
+          alert("Error updating playlist. Please try again.");
+        }
+      }
+
+      function highlightCurrentVideo() {
+        try {
+          const items = playlistElement.getElementsByClassName("playlist-item");
+          Array.from(items).forEach((item, index) => {
+            item.style.backgroundColor =
+              index === currentVideoIndex ? "#2d3748" : "transparent";
+          });
+        } catch (error) {
+          console.error("Failed to highlight current video:", error);
+        }
+      }
+
+      function removeVideoFromPlaylist(index) {
+        try {
+          playlist.splice(index, 1);
+          updatePlaylistUI();
+          if (index < currentVideoIndex) {
+            currentVideoIndex--;
+          } else if (
+            index === currentVideoIndex &&
+            currentVideoIndex < playlist.length
+          ) {
+            playVideo(currentVideoIndex);
+          } else if (playlist.length === 0) {
+            videoPlayer.src = "";
+          }
+        } catch (error) {
+          console.error("Failed to remove video from playlist:", error);
+          alert("Error removing video from playlist. Please try again.");
+        }
+      }
+
+      function formatFileSize(size) {
+        const units = ["B", "KB", "MB", "GB", "TB"];
+        let unitIndex = 0;
+        while (size >= 1024 && unitIndex < units.length - 1) {
+          size /= 1024;
+          unitIndex++;
+        }
+        return `${size.toFixed(2)} ${units[unitIndex]}`;
+      }
+
+      function srtToVtt(srt) {
+        let vtt = "WEBVTT\n\n";
+        const lines = srt.split(/\r?\n/);
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].match(/^\d+$/)) {
+            vtt += "\n";
+          } else if (
+            lines[i].match(
+              /(\d{2}):(\d{2}):(\d{2}),(\d{3}) --> (\d{2}):(\d{2}):(\d{2}),(\d{3})/,
+            )
+          ) {
+            vtt += lines[i].replace(/,/g, ".") + "\n";
+          } else {
+            vtt += lines[i] + "\n";
+          }
+        }
+        return vtt;
+      }
+
+      document.addEventListener("keydown", (event) => {
+        try {
+          switch (event.key) {
+            case " ":
+              if (videoPlayer.paused) {
+                videoPlayer.play();
+              } else {
+                videoPlayer.pause();
+              }
+              break;
+            case "ArrowRight":
+              skipForwardButton.click();
+              break;
+            case "ArrowLeft":
+              skipBackButton.click();
+              break;
+            case "ArrowUp":
+              volumeControl.value = Math.min(
+                1,
+                parseFloat(volumeControl.value) + 0.1,
+              );
+              volumeControl.dispatchEvent(new Event("input"));
+              break;
+            case "ArrowDown":
+              volumeControl.value = Math.max(
+                0,
+                parseFloat(volumeControl.value) - 0.1,
+              );
+              volumeControl.dispatchEvent(new Event("input"));
+              break;
+            case "f":
+              fullscreenButton.click();
+              break;
+            case "p":
+              pipButton.click();
+              break;
+          }
+        } catch (error) {
+          console.error("Failed to handle keyboard shortcut:", error);
+          alert("Error handling keyboard shortcut. Please try again.");
+        }
+      });
+    </script>
+  </body>
+</html>

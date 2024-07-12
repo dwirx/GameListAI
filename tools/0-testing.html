@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline-capable Live Preview Editor with Workspaces</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css"
+    />
+    <style>
+      body,
+      html,
+      #app {
+        height: 100%;
+        margin: 0;
+      }
+      #editor,
+      #preview {
+        height: 100%;
+      }
+      .CodeMirror {
+        height: 100%;
+      }
+      #full-preview {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        display: none;
+      }
+      #full-preview iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+      #close-preview {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1001;
+      }
+      #mobile-preview-toggle {
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1002;
+      }
+      @media (max-width: 768px) {
+        #app > div {
+          flex-direction: column;
+        }
+        #editor,
+        #preview {
+          height: 50vh;
+        }
+        #mobile-preview-toggle {
+          display: block;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-900 text-white">
+    <div id="app" class="flex flex-col h-full">
+      <header class="bg-gray-800 p-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold">Offline-capable Live Preview Editor</h1>
+        <div class="flex space-x-2">
+          <select
+            id="workspace-select"
+            class="bg-gray-700 text-white rounded px-2 py-1"
+          >
+            <option value="">Select Workspace</option>
+          </select>
+          <input
+            id="new-workspace-name"
+            type="text"
+            placeholder="New Workspace Name"
+            class="bg-gray-700 text-white rounded px-2 py-1"
+          />
+          <button
+            id="create-workspace"
+            class="bg-blue-500 hover:bg-blue-600 text-white rounded px-2 py-1"
+          >
+            Create
+          </button>
+          <button
+            id="save-workspace"
+            class="bg-green-500 hover:bg-green-600 text-white rounded px-2 py-1"
+          >
+            Save
+          </button>
+          <button
+            id="delete-workspace"
+            class="bg-red-500 hover:bg-red-600 text-white rounded px-2 py-1"
+          >
+            Delete
+          </button>
+          <button
+            id="download-workspace"
+            class="bg-purple-500 hover:bg-purple-600 text-white rounded px-2 py-1"
+          >
+            Download
+          </button>
+          <input
+            type="file"
+            id="upload-workspace"
+            accept=".json"
+            class="hidden"
+          />
+          <button
+            id="upload-workspace-btn"
+            class="bg-yellow-500 hover:bg-yellow-600 text-white rounded px-2 py-1"
+          >
+            Upload
+          </button>
+          <button
+            id="mobile-preview-toggle"
+            class="bg-blue-500 hover:bg-blue-600 text-white rounded px-4 py-2 md:hidden"
+          >
+            Toggle Preview
+          </button>
+        </div>
+      </header>
+      <div class="flex flex-1 overflow-hidden flex-col md:flex-row">
+        <div class="flex-1 p-4">
+          <div
+            class="bg-gray-800 rounded-lg overflow-hidden h-full flex flex-col"
+          >
+            <div
+              class="flex justify-between items-center bg-gray-700 px-4 py-2"
+            >
+              <span class="font-semibold">Editor</span>
+              <div class="flex space-x-2">
+                <select
+                  id="language-select"
+                  class="bg-gray-600 text-white rounded px-2 py-1"
+                >
+                  <option value="htmlmixed">HTML</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="css">CSS</option>
+                </select>
+                <button
+                  id="clear-editor"
+                  class="bg-yellow-500 hover:bg-yellow-600 text-white rounded px-2 py-1"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+            <div class="flex-1 overflow-hidden">
+              <textarea id="editor"></textarea>
+            </div>
+          </div>
+        </div>
+        <div id="preview-container" class="flex-1 p-4 hidden md:block">
+          <div class="bg-white rounded-lg overflow-hidden h-full flex flex-col">
+            <div
+              class="bg-gray-200 px-4 py-2 text-gray-700 font-semibold flex justify-between items-center"
+            >
+              <span>Preview</span>
+              <button
+                id="full-preview-btn"
+                class="bg-blue-500 hover:bg-blue-600 text-white rounded px-2 py-1"
+              >
+                Full Preview
+              </button>
+              <button
+                id="close-mobile-preview"
+                class="bg-red-500 hover:bg-red-600 text-white rounded px-2 py-1 md:hidden"
+              >
+                Close Preview
+              </button>
+            </div>
+            <div class="flex-1 overflow-hidden">
+              <iframe id="preview" class="w-full h-full border-none"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="full-preview">
+      <button
+        id="close-preview"
+        class="bg-red-500 hover:bg-red-600 text-white rounded px-2 py-1"
+      >
+        Close Preview
+      </button>
+      <iframe></iframe>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script>
+      const editor = CodeMirror.fromTextArea(
+        document.getElementById("editor"),
+        {
+          lineNumbers: true,
+          mode: "javascript",
+          theme: "dracula",
+          autoCloseBrackets: true,
+          matchBrackets: true,
+          indentUnit: 2,
+          tabSize: 2,
+          viewportMargin: Infinity,
+        },
+      );
+
+      const previewFrame = document.getElementById("preview");
+      const preview =
+        previewFrame.contentDocument || previewFrame.contentWindow.document;
+      const languageSelect = document.getElementById("language-select");
+      const workspaceSelect = document.getElementById("workspace-select");
+      const newWorkspaceName = document.getElementById("new-workspace-name");
+      const createWorkspaceBtn = document.getElementById("create-workspace");
+      const saveWorkspaceBtn = document.getElementById("save-workspace");
+      const deleteWorkspaceBtn = document.getElementById("delete-workspace");
+      const clearEditorBtn = document.getElementById("clear-editor");
+      const fullPreviewBtn = document.getElementById("full-preview-btn");
+      const fullPreviewContainer = document.getElementById("full-preview");
+      const closePreviewBtn = document.getElementById("close-preview");
+      const downloadWorkspaceBtn =
+        document.getElementById("download-workspace");
+      const uploadWorkspaceInput = document.getElementById("upload-workspace");
+      const uploadWorkspaceBtn = document.getElementById(
+        "upload-workspace-btn",
+      );
+      const mobilePreviewToggle = document.getElementById(
+        "mobile-preview-toggle",
+      );
+      const previewContainer = document.getElementById("preview-container");
+      const closeMobilePreviewBtn = document.getElementById(
+        "close-mobile-preview",
+      );
+
+      let currentWorkspace = "";
+      let isUpdating = false;
+      let workspaces = [];
+
+      // Load workspaces from localStorage
+      function loadWorkspaces() {
+        workspaces = JSON.parse(
+          localStorage.getItem("localWorkspaces") || "[]",
+        );
+        updateWorkspaceSelect();
+      }
+
+      function updateWorkspaceSelect() {
+        workspaceSelect.innerHTML =
+          '<option value="">Select Workspace</option>';
+        workspaces.forEach((workspace) => {
+          const option = document.createElement("option");
+          option.value = workspace.name;
+          option.textContent = workspace.name;
+          workspaceSelect.appendChild(option);
+        });
+      }
+
+      function loadWorkspace(name) {
+        const workspace = workspaces.find((w) => w.name === name);
+        if (workspace) {
+          updateEditor(workspace.code, workspace.mode);
+        }
+      }
+
+      function updateEditor(code, mode) {
+        editor.setValue(code);
+        editor.setOption("mode", mode);
+        languageSelect.value = mode;
+        updatePreview(code);
+      }
+
+      function createWorkspace(name) {
+        const newWorkspace = {
+          name,
+          code: editor.getValue(),
+          mode: editor.getMode().name,
+        };
+        workspaces.push(newWorkspace);
+        saveWorkspacesToLocal();
+        updateWorkspaceSelect();
+        currentWorkspace = name;
+        workspaceSelect.value = name;
+      }
+
+      function saveWorkspace(name) {
+        const index = workspaces.findIndex((w) => w.name === name);
+        if (index !== -1) {
+          workspaces[index] = {
+            name,
+            code: editor.getValue(),
+            mode: editor.getMode().name,
+          };
+          saveWorkspacesToLocal();
+          alert("Workspace saved successfully");
+        }
+      }
+
+      function deleteWorkspace(name) {
+        if (
+          confirm(`Are you sure you want to delete the workspace "${name}"?`)
+        ) {
+          workspaces = workspaces.filter((w) => w.name !== name);
+          saveWorkspacesToLocal();
+          updateWorkspaceSelect();
+          currentWorkspace = "";
+          workspaceSelect.value = "";
+          editor.setValue("");
+          updatePreview("");
+          alert("Workspace deleted successfully");
+        }
+      }
+
+      function saveWorkspacesToLocal() {
+        localStorage.setItem("localWorkspaces", JSON.stringify(workspaces));
+      }
+
+      function downloadWorkspace(name) {
+        const workspace = workspaces.find((w) => w.name === name);
+        if (workspace) {
+          const blob = new Blob([JSON.stringify(workspace)], {
+            type: "application/json",
+          });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = url;
+          a.download = `${name}.json`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+        } else {
+          alert("Workspace not found");
+        }
+      }
+
+      function uploadWorkspace(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const workspaceData = JSON.parse(e.target.result);
+            const existingIndex = workspaces.findIndex(
+              (w) => w.name === workspaceData.name,
+            );
+            if (existingIndex !== -1) {
+              workspaces[existingIndex] = workspaceData;
+            } else {
+              workspaces.push(workspaceData);
+            }
+            saveWorkspacesToLocal();
+            updateWorkspaceSelect();
+            currentWorkspace = workspaceData.name;
+            workspaceSelect.value = workspaceData.name;
+            loadWorkspace(workspaceData.name);
+            alert("Workspace uploaded successfully");
+          } catch (error) {
+            console.error("Failed to upload workspace:", error);
+            alert("Failed to upload workspace");
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      function updatePreview(code) {
+        const mode = editor.getMode().name;
+        preview.open();
+        if (mode === "htmlmixed") {
+          preview.write(code);
+        } else if (mode === "javascript") {
+          preview.write(`
+            <html>
+              <body>
+                <pre>${code}</pre>
+                <script>${code}<\/script>
+              </body>
+            </html>
+          `);
+        } else if (mode === "css") {
+          preview.write(`
+            <html>
+              <style>${code}</style>
+              <body>
+                <pre>${code}</pre>
+              </body>
+            </html>
+          `);
+        }
+        preview.close();
+      }
+
+      function updateFullPreview(code) {
+        const fullPreviewFrame = fullPreviewContainer.querySelector("iframe");
+        const fullPreview =
+          fullPreviewFrame.contentDocument ||
+          fullPreviewFrame.contentWindow.document;
+        fullPreview.open();
+        fullPreview.write(code);
+        fullPreview.close();
+      }
+
+      function adjustEditorSize() {
+        editor.setSize(null, "100%");
+      }
+
+      // Load last used workspace from localStorage
+      function loadLastUsedWorkspace() {
+        const lastWorkspace = localStorage.getItem("lastWorkspace");
+        if (lastWorkspace) {
+          currentWorkspace = lastWorkspace;
+          workspaceSelect.value = lastWorkspace;
+          loadWorkspace(lastWorkspace);
+        }
+      }
+
+      // Save current workspace to localStorage
+      function saveLastUsedWorkspace() {
+        if (currentWorkspace) {
+          localStorage.setItem("lastWorkspace", currentWorkspace);
+        } else {
+          localStorage.removeItem("lastWorkspace");
+        }
+      }
+
+      // Event listeners
+      workspaceSelect.addEventListener("change", (e) => {
+        currentWorkspace = e.target.value;
+        if (currentWorkspace) {
+          loadWorkspace(currentWorkspace);
+        } else {
+          editor.setValue("");
+          updatePreview("");
+        }
+        saveLastUsedWorkspace();
+      });
+
+      createWorkspaceBtn.addEventListener("click", () => {
+        const name = newWorkspaceName.value.trim();
+        if (name) {
+          createWorkspace(name);
+        }
+      });
+
+      saveWorkspaceBtn.addEventListener("click", () => {
+        if (currentWorkspace) {
+          saveWorkspace(currentWorkspace);
+        } else {
+          alert("Please select or create a workspace first");
+        }
+      });
+
+      deleteWorkspaceBtn.addEventListener("click", () => {
+        if (currentWorkspace) {
+          deleteWorkspace(currentWorkspace);
+        } else {
+          alert("Please select a workspace to delete");
+        }
+      });
+
+      clearEditorBtn.addEventListener("click", () => {
+        editor.setValue("");
+        updatePreview("");
+      });
+
+      fullPreviewBtn.addEventListener("click", () => {
+        fullPreviewContainer.style.display = "block";
+        updateFullPreview(editor.getValue());
+      });
+
+      closePreviewBtn.addEventListener("click", () => {
+        fullPreviewContainer.style.display = "none";
+      });
+
+      downloadWorkspaceBtn.addEventListener("click", () => {
+        if (currentWorkspace) {
+          downloadWorkspace(currentWorkspace);
+        } else {
+          alert("Please select a workspace to download");
+        }
+      });
+
+      uploadWorkspaceBtn.addEventListener("click", () => {
+        uploadWorkspaceInput.click();
+      });
+
+      uploadWorkspaceInput.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          uploadWorkspace(file);
+        }
+      });
+
+      languageSelect.addEventListener("change", (e) => {
+        const mode = e.target.value;
+        editor.setOption("mode", mode);
+        updatePreview(editor.getValue());
+      });
+
+      mobilePreviewToggle.addEventListener("click", () => {
+        previewContainer.classList.toggle("hidden");
+        mobilePreviewToggle.textContent = previewContainer.classList.contains(
+          "hidden",
+        )
+          ? "Show Preview"
+          : "Hide Preview";
+      });
+
+      closeMobilePreviewBtn.addEventListener("click", () => {
+        previewContainer.classList.add("hidden");
+        mobilePreviewToggle.textContent = "Show Preview";
+      });
+
+      window.addEventListener("load", adjustEditorSize);
+      window.addEventListener("resize", adjustEditorSize);
+
+      // Initialize
+      loadWorkspaces();
+      loadLastUsedWorkspace();
+
+      // Autosave functionality
+      let autosaveTimeout;
+      editor.on("change", () => {
+        if (isUpdating) return;
+        clearTimeout(autosaveTimeout);
+        autosaveTimeout = setTimeout(() => {
+          if (currentWorkspace) {
+            saveWorkspace(currentWorkspace);
+          }
+        }, 3000); // Autosave after 3 seconds of inactivity
+        updatePreview(editor.getValue());
+      });
+
+      // Prevent accidental page unload
+      window.addEventListener("beforeunload", (event) => {
+        if (editor.getValue().trim() !== "") {
+          event.preventDefault();
+          event.returnValue = "";
+        }
+      });
+    </script>
+  </body>
+</html>

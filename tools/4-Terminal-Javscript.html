@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>JavaScript Editor Interaktif</title>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/theme/dracula.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+        />
+        <style>
+            :root {
+                --primary-color: #6200ee;
+                --secondary-color: #03dac6;
+                --background-color: #121212;
+                --surface-color: #1e1e1e;
+                --on-surface-color: #ffffff;
+                --error-color: #cf6679;
+            }
+            body,
+            html {
+                font-family: "Roboto", sans-serif;
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                overflow: hidden;
+                background-color: var(--background-color);
+                color: var(--on-surface-color);
+            }
+            .container {
+                display: flex;
+                height: 100vh;
+                flex-direction: column;
+            }
+            @media (min-width: 768px) {
+                .container {
+                    flex-direction: row;
+                }
+            }
+            .editor-container,
+            .output-container {
+                display: flex;
+                flex-direction: column;
+                background-color: var(--surface-color);
+                overflow: hidden;
+            }
+            .editor-container {
+                flex: 1;
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            .output-container {
+                flex: 1;
+                max-width: 50%;
+            }
+            .CodeMirror {
+                height: calc(100% - 110px) !important;
+                font-size: 16px;
+            }
+            #output {
+                flex-grow: 1;
+                padding: 15px;
+                font-family: "Fira Code", monospace;
+                overflow-y: auto;
+                height: calc(100% - 110px);
+            }
+            .controls {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px;
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+            button {
+                background-color: var(--primary-color);
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition:
+                    background-color 0.3s,
+                    transform 0.1s;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+            button:hover {
+                background-color: #7c4dff;
+            }
+            button:active {
+                transform: scale(0.98);
+            }
+            h2 {
+                margin: 0;
+                padding: 15px;
+                background-color: rgba(255, 255, 255, 0.1);
+                color: var(--secondary-color);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .error {
+                color: var(--error-color);
+            }
+            .success {
+                color: var(--secondary-color);
+            }
+            .copy-notification {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background-color: var(--secondary-color);
+                color: var(--background-color);
+                padding: 10px 20px;
+                border-radius: 5px;
+                opacity: 0;
+                transition: opacity 0.3s;
+            }
+            .copy-notification.show {
+                opacity: 1;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="editor-container">
+                <h2><i class="fas fa-code"></i> Editor JavaScript</h2>
+                <textarea id="editor"></textarea>
+                <div class="controls">
+                    <button id="run">
+                        <i class="fas fa-play"></i> Jalankan Kode
+                    </button>
+                    <button id="clear-editor">
+                        <i class="fas fa-eraser"></i> Bersihkan Editor
+                    </button>
+                    <button id="copy-code">
+                        <i class="fas fa-copy"></i> Salin Kode
+                    </button>
+                </div>
+            </div>
+            <div class="output-container">
+                <h2><i class="fas fa-terminal"></i> Output</h2>
+                <div id="output"></div>
+                <div class="controls">
+                    <button id="clear-output">
+                        <i class="fas fa-trash-alt"></i> Bersihkan Output
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="copy-notification" id="copyNotification">
+            <i class="fas fa-check"></i> Kode berhasil disalin!
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/javascript/javascript.min.js"></script>
+        <script>
+            let editor = CodeMirror.fromTextArea(
+                document.getElementById("editor"),
+                {
+                    lineNumbers: true,
+                    mode: "javascript",
+                    theme: "dracula",
+                    autoCloseBrackets: true,
+                    matchBrackets: true,
+                    indentUnit: 4,
+                    tabSize: 4,
+                    indentWithTabs: true,
+                    extraKeys: { "Ctrl-Space": "autocomplete" },
+                },
+            );
+
+            const output = document.getElementById("output");
+            const runBtn = document.getElementById("run");
+            const clearEditorBtn = document.getElementById("clear-editor");
+            const clearOutputBtn = document.getElementById("clear-output");
+            const copyCodeBtn = document.getElementById("copy-code");
+            const copyNotification =
+                document.getElementById("copyNotification");
+
+            function addToOutput(content, isError = false, isSuccess = false) {
+                const div = document.createElement("div");
+                div.textContent = content;
+                if (isError) div.classList.add("error");
+                if (isSuccess) div.classList.add("success");
+                output.appendChild(div);
+                output.scrollTop = output.scrollHeight;
+            }
+
+            function runCode() {
+                const code = editor.getValue();
+                addToOutput("> Menjalankan kode...\n", false, true);
+
+                try {
+                    const result = eval(code);
+                    if (result !== undefined) {
+                        if (typeof result === "object") {
+                            addToOutput(JSON.stringify(result, null, 2));
+                        } else {
+                            addToOutput(String(result));
+                        }
+                    }
+                    addToOutput("\n> Kode berhasil dijalankan.\n", false, true);
+                } catch (error) {
+                    addToOutput(`${error.name}: ${error.message}`, true);
+                    addToOutput("\n> Kode gagal dijalankan.\n", true);
+                }
+            }
+
+            runBtn.addEventListener("click", runCode);
+            clearEditorBtn.addEventListener("click", () => {
+                editor.setValue("");
+                addToOutput("Editor dibersihkan.\n", false, true);
+            });
+            clearOutputBtn.addEventListener("click", () => {
+                output.innerHTML = "";
+                addToOutput("Output dibersihkan.\n", false, true);
+            });
+
+            copyCodeBtn.addEventListener("click", () => {
+                const code = editor.getValue();
+                navigator.clipboard.writeText(code).then(() => {
+                    copyNotification.classList.add("show");
+                    setTimeout(() => {
+                        copyNotification.classList.remove("show");
+                    }, 2000);
+                });
+            });
+
+            // Inisialisasi dengan contoh kode
+            editor.setValue(`// Contoh kode JavaScript
+function greet(name) {
+    return \`Halo, \${name}! Selamat datang di JavaScript Editor Interaktif.\`;
+}
+
+console.log(greet('Pengguna'));
+
+// Cobalah mengedit kode ini atau tulis kode Anda sendiri!
+// Klik tombol "Jalankan Kode" untuk melihat hasilnya.`);
+
+            // Override console.log
+            const originalLog = console.log;
+            console.log = function (...args) {
+                addToOutput(
+                    args
+                        .map((arg) =>
+                            typeof arg === "object"
+                                ? JSON.stringify(arg, null, 2)
+                                : String(arg),
+                        )
+                        .join(" ") + "\n",
+                );
+                originalLog.apply(console, args);
+            };
+
+            addToOutput(
+                "Selamat datang di JavaScript Editor Interaktif!\n",
+                false,
+                true,
+            );
+            addToOutput(
+                'Ketik atau edit kode di editor, lalu klik "Jalankan Kode" untuk melihat hasilnya.\n',
+                false,
+                true,
+            );
+        </script>
+    </body>
+</html>
