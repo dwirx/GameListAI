@@ -67,7 +67,477 @@
     </div>
 
     <script>
-      (function(_0x29be0a,_0x5d3c38){const _0x1ecc83=_0x11aa,_0x4bc176=_0x29be0a();while(!![]){try{const _0x12252d=-parseInt(_0x1ecc83(0x1b0))/0x1+-parseInt(_0x1ecc83(0x1a8))/0x2+parseInt(_0x1ecc83(0x19c))/0x3*(-parseInt(_0x1ecc83(0x1b3))/0x4)+parseInt(_0x1ecc83(0x181))/0x5*(parseInt(_0x1ecc83(0x19e))/0x6)+-parseInt(_0x1ecc83(0x18f))/0x7+parseInt(_0x1ecc83(0x19a))/0x8*(-parseInt(_0x1ecc83(0x1bb))/0x9)+-parseInt(_0x1ecc83(0x1af))/0xa*(-parseInt(_0x1ecc83(0x18a))/0xb);if(_0x12252d===_0x5d3c38)break;else _0x4bc176['push'](_0x4bc176['shift']());}catch(_0xaba40a){_0x4bc176['push'](_0x4bc176['shift']());}}}(_0x268f,0x47f8f));let currentLevel=0x1,lives=0x5,score=0x0,puzzle={},speedBonus=0x17,startTime,selectedInput=null;function initGame(){updateUI(),generatePuzzle(),initNumberPad();}function generatePuzzle(){const _0x228099=_0x11aa,_0x5996b4=['+','-'],_0x3f2a1f=_0x5996b4[Math[_0x228099(0x1d3)](Math[_0x228099(0x1cf)]()*_0x5996b4[_0x228099(0x188)])],_0x545468=Math[_0x228099(0x1d3)](Math[_0x228099(0x1cf)]()*0x64),_0x37d636=Math[_0x228099(0x1d3)](Math[_0x228099(0x1cf)]()*0x64),_0x27f873=_0x3f2a1f==='+'?_0x545468+_0x37d636:Math[_0x228099(0x180)](_0x545468,_0x37d636)-Math['min'](_0x545468,_0x37d636),_0x31b375=_0x228099(0x1b8),_0x4f1e8a=new Set();function _0xd9441f(){const _0x8bd170=_0x228099;let _0x3afc75;do{_0x3afc75=_0x31b375[Math[_0x8bd170(0x1d3)](Math[_0x8bd170(0x1cf)]()*_0x31b375[_0x8bd170(0x188)])];}while(_0x4f1e8a[_0x8bd170(0x1a5)](_0x3afc75));return _0x4f1e8a['add'](_0x3afc75),_0x3afc75;}const _0x54020b=_0x545468[_0x228099(0x182)]()[_0x228099(0x1ab)](0x2,'0'),_0x5ad5bf=_0x37d636[_0x228099(0x182)]()[_0x228099(0x1ab)](0x2,'0'),_0x3c4fc4=_0x27f873['toString']()['padStart'](0x2,'0'),_0x3a0dc6={};for(let _0x3ad04c of new Set(_0x54020b+_0x5ad5bf+_0x3c4fc4)){_0x3a0dc6[_0x3ad04c]=_0xd9441f();}const _0x884c54=_0x54020b[_0x228099(0x1c6)]('')['map'](_0x57058f=>_0x3a0dc6[_0x57058f])['join']('')+'\x20'+_0x3f2a1f+'\x20'+_0x5ad5bf[_0x228099(0x1c6)]('')[_0x228099(0x1a2)](_0x34facb=>_0x3a0dc6[_0x34facb])['join']('')+_0x228099(0x1a7)+_0x3c4fc4[_0x228099(0x1c6)]('')[_0x228099(0x1a2)](_0x48f2c6=>_0x3a0dc6[_0x48f2c6])[_0x228099(0x18b)]('');setPuzzle(_0x884c54);}function setPuzzle(_0x39c25d){const _0x646235=_0x11aa;puzzle={'equation':_0x39c25d,'solution':{}},displayPuzzle(),startTime=Date[_0x646235(0x192)]();}function displayPuzzle(){const _0x3f10c2=_0x11aa,_0x4cd44e=document[_0x3f10c2(0x1bd)](_0x3f10c2(0x1c8));_0x4cd44e['innerHTML']=puzzle[_0x3f10c2(0x1a3)];const _0x2d8776=document[_0x3f10c2(0x1bd)](_0x3f10c2(0x1d2));_0x2d8776['innerHTML']='';for(let _0x12838e of new Set(puzzle['equation'][_0x3f10c2(0x1c7)](/[A-Z]/g))){_0x2d8776[_0x3f10c2(0x18c)]+=_0x3f10c2(0x194)+_0x12838e+_0x3f10c2(0x1c1)+_0x12838e+_0x3f10c2(0x1c9);}document[_0x3f10c2(0x1bf)](_0x3f10c2(0x1a0))['forEach'](_0x150f21=>{const _0x3d179b=_0x3f10c2;_0x150f21['addEventListener'](_0x3d179b(0x1a1),()=>{const _0x6f283c=_0x3d179b;selectedInput=_0x150f21,document[_0x6f283c(0x1bf)](_0x6f283c(0x1a0))[_0x6f283c(0x189)](_0x4af380=>_0x4af380[_0x6f283c(0x1a6)][_0x6f283c(0x1b1)](_0x6f283c(0x1b4))),_0x150f21[_0x6f283c(0x1a6)][_0x6f283c(0x1ba)](_0x6f283c(0x1b4));});});}function updateUI(){const _0x4d9136=_0x11aa;document[_0x4d9136(0x1bd)]('score')[_0x4d9136(0x1b7)]=score,document[_0x4d9136(0x1bd)]('level')[_0x4d9136(0x1b7)]=currentLevel,document[_0x4d9136(0x1bd)](_0x4d9136(0x1aa))['textContent']=speedBonus;const _0x4f67ac=document['getElementById'](_0x4d9136(0x1bc));_0x4f67ac['innerHTML']='❤️'[_0x4d9136(0x1be)](lives);}function initNumberPad(){const _0x1bef22=_0x11aa,_0x13e4de=document[_0x1bef22(0x1bd)](_0x1bef22(0x193));_0x13e4de[_0x1bef22(0x18c)]='';for(let _0x99d992=0x0;_0x99d992<=0x9;_0x99d992++){_0x13e4de[_0x1bef22(0x18c)]+=_0x1bef22(0x195)+_0x99d992+_0x1bef22(0x196)+_0x99d992+_0x1bef22(0x1cb);}_0x13e4de[_0x1bef22(0x18c)]+='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22bg-red-500\x20p-2\x20rounded\x20text-xl\x22\x20onclick=\x22clearInput()\x22>✕</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22bg-green-500\x20p-2\x20rounded\x20text-xl\x22\x20onclick=\x22checkSolution()\x22>✓</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20';}function inputNumber(_0x3b73a6){selectedInput&&(selectedInput['value']=_0x3b73a6);}function clearInput(){selectedInput&&(selectedInput['value']='');}function checkSolution(){const _0x4d2443=_0x11aa,_0x13e607=document[_0x4d2443(0x1bf)](_0x4d2443(0x1a0)),_0xf7a9bb={};_0x13e607[_0x4d2443(0x189)](_0x30d630=>{const _0x45e6f8=_0x4d2443;_0xf7a9bb[_0x30d630['id'][_0x45e6f8(0x1c6)]('-')[0x1]]=parseInt(_0x30d630[_0x45e6f8(0x1a4)]);});if(isSolutionCorrect(_0xf7a9bb)){const _0x4ce6bb=(Date[_0x4d2443(0x192)]()-startTime)/0x3e8,_0x34ab9f=Math[_0x4d2443(0x180)](0x0,Math[_0x4d2443(0x1d3)](speedBonus-_0x4ce6bb));score+=0x64+_0x34ab9f,currentLevel++,document[_0x4d2443(0x1bd)]('message')[_0x4d2443(0x1b7)]='Correct!\x20+'+(0x64+_0x34ab9f)+_0x4d2443(0x1cd),document[_0x4d2443(0x1bd)](_0x4d2443(0x1c3))['classList'][_0x4d2443(0x1ba)](_0x4d2443(0x19b)),setTimeout(()=>{const _0x46151f=_0x4d2443;document[_0x46151f(0x1bd)]('message')[_0x46151f(0x1b7)]='',document['getElementById'](_0x46151f(0x1c3))[_0x46151f(0x1a6)][_0x46151f(0x1b1)]('text-green-500'),currentLevel>0x5?endGame(!![]):(generatePuzzle(),updateUI());},0x7d0);}else lives--,updateUI(),document['getElementById'](_0x4d2443(0x1c8))['classList'][_0x4d2443(0x1ba)]('shake'),setTimeout(()=>{const _0x48fab4=_0x4d2443;document[_0x48fab4(0x1bd)](_0x48fab4(0x1c8))[_0x48fab4(0x1a6)][_0x48fab4(0x1b1)](_0x48fab4(0x1d0));},0x1f4),lives===0x0?endGame(![]):(document[_0x4d2443(0x1bd)](_0x4d2443(0x1c3))[_0x4d2443(0x1b7)]='Incorrect.\x20Try\x20again!',document['getElementById'](_0x4d2443(0x1c3))[_0x4d2443(0x1a6)][_0x4d2443(0x1ba)](_0x4d2443(0x1c5)),setTimeout(()=>{const _0x223b11=_0x4d2443;document[_0x223b11(0x1bd)]('message')[_0x223b11(0x1b7)]='',document['getElementById'](_0x223b11(0x1c3))['classList'][_0x223b11(0x1b1)](_0x223b11(0x1c5));},0x7d0));}function _0x11aa(_0x3731fe,_0x52b8c3){const _0x268f49=_0x268f();return _0x11aa=function(_0x11aa5c,_0x20d124){_0x11aa5c=_0x11aa5c-0x17f;let _0x1d35cc=_0x268f49[_0x11aa5c];return _0x1d35cc;},_0x11aa(_0x3731fe,_0x52b8c3);}function endGame(_0x4d1788){const _0x1a4770=_0x11aa,_0x5a30dc=_0x4d1788?'Congratulations!\x20You\x27ve\x20completed\x20all\x20levels\x20with\x20a\x20score\x20of\x20'+score+'!':_0x1a4770(0x198)+score+'.';document[_0x1a4770(0x1bd)](_0x1a4770(0x1b5))[_0x1a4770(0x18c)]=_0x1a4770(0x1b2)+_0x5a30dc+_0x1a4770(0x1ce);}function restartGame(){const _0x46cb2e=_0x11aa;currentLevel=0x1,lives=0x5,score=0x0,speedBonus=0x17,document[_0x46cb2e(0x1bd)]('game-container')[_0x46cb2e(0x18c)]=_0x46cb2e(0x1d1),initGame();}function setCustomPuzzle(){const _0x376a35=_0x11aa,_0x4fac12=document[_0x376a35(0x1bd)](_0x376a35(0x191))[_0x376a35(0x1a4)][_0x376a35(0x184)]();isValidEquation(_0x4fac12)?(setPuzzle(_0x4fac12),document[_0x376a35(0x1bd)](_0x376a35(0x1c3))[_0x376a35(0x1b7)]=_0x376a35(0x1c2),document[_0x376a35(0x1bd)](_0x376a35(0x1c3))['classList']['add'](_0x376a35(0x19b)),setTimeout(()=>{const _0x147e12=_0x376a35;document['getElementById']('message')[_0x147e12(0x1b7)]='',document[_0x147e12(0x1bd)]('message')[_0x147e12(0x1a6)]['remove'](_0x147e12(0x19b));},0x7d0)):(document[_0x376a35(0x1bd)](_0x376a35(0x1c3))[_0x376a35(0x1b7)]=_0x376a35(0x1b6),document[_0x376a35(0x1bd)](_0x376a35(0x1c3))[_0x376a35(0x1a6)][_0x376a35(0x1ba)](_0x376a35(0x1c5)),setTimeout(()=>{const _0x224da3=_0x376a35;document['getElementById'](_0x224da3(0x1c3))[_0x224da3(0x1b7)]='',document[_0x224da3(0x1bd)](_0x224da3(0x1c3))[_0x224da3(0x1a6)]['remove'](_0x224da3(0x1c5));},0x7d0));}function isValidEquation(_0x5ef727){const _0x4c69d0=_0x11aa;return/^[A-Z]+ [+\-] [A-Z]+ = [A-Z]+$/[_0x4c69d0(0x183)](_0x5ef727);}async function solvePuzzleWithDualAI(){const _0x3ba14d=_0x11aa,_0x2f2e27=performance[_0x3ba14d(0x192)](),_0xc0ee0c=solveCryptarithmBacktracking(puzzle[_0x3ba14d(0x1a3)]),_0x5d180b=solveCryptarithmConstraintSatisfaction(puzzle['equation']),_0x13ab7d=performance[_0x3ba14d(0x192)](),_0x2ea43d=document[_0x3ba14d(0x1bd)](_0x3ba14d(0x199)),_0x3a53c4=document['getElementById'](_0x3ba14d(0x19f)),_0x274650=document[_0x3ba14d(0x1bd)](_0x3ba14d(0x190)),_0x5373ac=document[_0x3ba14d(0x1bd)]('final-result');_0x2ea43d[_0x3ba14d(0x1a6)][_0x3ba14d(0x1b1)](_0x3ba14d(0x187)),_0x3a53c4[_0x3ba14d(0x1b7)]='AI\x201\x20(Backtracking):\x20'+JSON[_0x3ba14d(0x186)](_0xc0ee0c),_0x274650[_0x3ba14d(0x1b7)]=_0x3ba14d(0x18e)+JSON[_0x3ba14d(0x186)](_0x5d180b);if(JSON[_0x3ba14d(0x186)](_0xc0ee0c)===JSON[_0x3ba14d(0x186)](_0x5d180b))_0x5373ac['textContent']=_0x3ba14d(0x1ac)+JSON['stringify'](_0xc0ee0c),displaySolution(_0xc0ee0c);else{const _0x17e39b=isSolutionCorrect(_0xc0ee0c)?_0xc0ee0c:isSolutionCorrect(_0x5d180b)?_0x5d180b:null;_0x17e39b?(_0x5373ac[_0x3ba14d(0x1b7)]=_0x3ba14d(0x1cc)+JSON[_0x3ba14d(0x186)](_0x17e39b),displaySolution(_0x17e39b)):_0x5373ac[_0x3ba14d(0x1b7)]='AIs\x20disagree\x20and\x20neither\x20solution\x20is\x20correct.\x20Please\x20try\x20again.';}const _0x3f430d=((_0x13ab7d-_0x2f2e27)/0x3e8)[_0x3ba14d(0x1c0)](0x2);_0x5373ac[_0x3ba14d(0x1b7)]+=_0x3ba14d(0x185)+_0x3f430d+'s)';}function solveCryptarithmBacktracking(_0x21d30c){const _0x18f389=_0x21d30c['split']('\x20'),_0x299567=[...new Set(_0x21d30c['match'](/[A-Z]/g))],_0x1ce4ff=new Set();function _0x4387f1(_0x486e4c){const _0x57cc4c=_0x11aa;if(_0x486e4c===_0x299567[_0x57cc4c(0x188)])return _0x5e07cc();const _0x47f937=_0x299567[_0x486e4c];for(let _0x50676f=0x0;_0x50676f<=0x9;_0x50676f++){if(_0x1ce4ff[_0x57cc4c(0x1a5)](_0x50676f))continue;if(_0x50676f===0x0&&(_0x18f389[0x0][0x0]===_0x47f937||_0x18f389[0x2][0x0]===_0x47f937||_0x18f389[0x4][0x0]===_0x47f937))continue;_0x1ce4ff[_0x57cc4c(0x1ba)](_0x50676f),puzzle[_0x57cc4c(0x1ad)][_0x47f937]=_0x50676f;if(_0x4387f1(_0x486e4c+0x1))return puzzle[_0x57cc4c(0x1ad)];_0x1ce4ff[_0x57cc4c(0x197)](_0x50676f),delete puzzle[_0x57cc4c(0x1ad)][_0x47f937];}return![];}function _0x5e07cc(){const _0x30cdc9=_0x11aa,_0x468571=parseInt(_0x18f389[0x0][_0x30cdc9(0x1c6)]('')['map'](_0x58f277=>puzzle[_0x30cdc9(0x1ad)][_0x58f277])[_0x30cdc9(0x18b)]('')),_0x129e24=parseInt(_0x18f389[0x2]['split']('')[_0x30cdc9(0x1a2)](_0x48da4d=>puzzle[_0x30cdc9(0x1ad)][_0x48da4d])[_0x30cdc9(0x18b)]('')),_0x5adf73=parseInt(_0x18f389[0x4][_0x30cdc9(0x1c6)]('')[_0x30cdc9(0x1a2)](_0x209f8b=>puzzle['solution'][_0x209f8b])[_0x30cdc9(0x18b)](''));return _0x18f389[0x1]==='+'?_0x468571+_0x129e24===_0x5adf73:_0x468571-_0x129e24===_0x5adf73;}return _0x4387f1(0x0);}function _0x268f(){const _0x4ea6c6=['3055759sTQsXo','ai-2-result','custom-equation','now','number-pad','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22bg-gray-700\x20p-2\x20rounded\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22text-xl\x20text-center\x22>','<button\x20class=\x22bg-blue-500\x20p-2\x20rounded\x20text-xl\x22\x20onclick=\x22inputNumber(',')\x22>','delete','Game\x20Over.\x20Your\x20final\x20score\x20is\x20','ai-results','90696DxepxC','text-green-500','652374xJQtVz','find','29514lfLWfP','ai-1-result','#input-container\x20input','click','map','equation','value','has','classList','\x20=\x20','386438EKHfOP','includes','speed-bonus','padStart','Both\x20AIs\x20agree.\x20Solution:\x20','solution','values','10HYvVhT','1085zzRetU','remove','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22text-2xl\x20text-center\x20mb-4\x22>','4oJNeqW','bg-blue-500','game-container','Invalid\x20equation\x20format!','textContent','ABCDEFGHIJKLMNOPQRSTUVWXYZ','every','add','171nlzpqd','lives','getElementById','repeat','querySelectorAll','toFixed','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22input-','Custom\x20puzzle\x20set!','message','parse','text-red-500','split','match','puzzle-container','\x22\x20class=\x22w-full\x20bg-gray-600\x20text-center\x20text-xl\x22\x20maxlength=\x221\x22\x20readonly>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','filter','</button>','AIs\x20disagree.\x20Correct\x20solution:\x20','\x20points','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22restartGame()\x22\x20class=\x22bg-blue-500\x20p-2\x20rounded\x20text-xl\x20w-full\x22>Play\x20Again</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','random','shake','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22game-header\x22\x20class=\x22flex\x20justify-between\x20mb-4\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>Speed\x20Bonus:\x20<span\x20id=\x22speed-bonus\x22>23</span></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>Score:\x20<span\x20id=\x22score\x22>0</span></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>Level:\x20<span\x20id=\x22level\x22>1</span></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22lives\x22\x20class=\x22mb-4\x20text-2xl\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22puzzle-container\x22\x20class=\x22bg-gray-800\x20p-4\x20rounded-lg\x20mb-4\x20text-2xl\x20text-center\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22input-container\x22\x20class=\x22grid\x20grid-cols-3\x20gap-4\x20mb-4\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22number-pad\x22\x20class=\x22grid\x20grid-cols-6\x20gap-2\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22message\x22\x20class=\x22mt-4\x20text-center\x20text-xl\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22custom-puzzle\x22\x20class=\x22mt-4\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22custom-equation\x22\x20placeholder=\x22Enter\x20custom\x20equation\x20(e.g.\x20SEND\x20+\x20MORE\x20=\x20MONEY)\x22\x20class=\x22w-full\x20p-2\x20bg-gray-700\x20rounded\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22setCustomPuzzle()\x22\x20class=\x22mt-2\x20bg-purple-500\x20p-2\x20rounded\x20text-xl\x20w-full\x22>Set\x20Custom\x20Puzzle</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22solvePuzzleWithDualAI()\x22\x20class=\x22mt-2\x20bg-yellow-500\x20p-2\x20rounded\x20text-xl\x20w-full\x22>Solve\x20with\x20Dual\x20AI</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22ai-results\x22\x20class=\x22mt-4\x20bg-gray-800\x20p-4\x20rounded-lg\x20hidden\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20class=\x22text-xl\x20font-bold\x20mb-2\x22>AI\x20Results:</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22ai-1-result\x22\x20class=\x22mb-2\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22ai-2-result\x22\x20class=\x22mb-2\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22final-result\x22\x20class=\x22font-bold\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','input-container','floor','reduce','entries','max','355izuFsD','toString','test','toUpperCase','\x20(Time\x20taken:\x20','stringify','hidden','length','forEach','11101772jqBSVT','join','innerHTML','some','AI\x202\x20(Constraint\x20Satisfaction):\x20'];_0x268f=function(){return _0x4ea6c6;};return _0x268f();}function solveCryptarithmConstraintSatisfaction(_0x3aa2fe){const _0x4e9cfd=_0x11aa,_0x365d9d=_0x3aa2fe[_0x4e9cfd(0x1c6)]('\x20'),_0x78f1c3=[...new Set(_0x3aa2fe[_0x4e9cfd(0x1c7)](/[A-Z]/g))],_0x3cc260=_0x78f1c3[_0x4e9cfd(0x1d4)]((_0x551174,_0x3755dd)=>{return _0x551174[_0x3755dd]=[0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9],_0x551174;},{});for(const _0x92358e of[_0x365d9d[0x0],_0x365d9d[0x2],_0x365d9d[0x4]]){_0x3cc260[_0x92358e[0x0]][_0x4e9cfd(0x1a9)](0x0)&&(_0x3cc260[_0x92358e[0x0]]=_0x3cc260[_0x92358e[0x0]][_0x4e9cfd(0x1ca)](_0x52ade0=>_0x52ade0!==0x0));}function _0x234c7f(_0x61e23c,_0x70cec6,_0x3b8d98){const _0x2e5bde=_0x4e9cfd,_0x1c5a16=JSON[_0x2e5bde(0x1c4)](JSON[_0x2e5bde(0x186)](_0x61e23c));_0x1c5a16[_0x70cec6]=[_0x3b8d98];for(const _0x4d715a in _0x1c5a16){_0x4d715a!==_0x70cec6&&(_0x1c5a16[_0x4d715a]=_0x1c5a16[_0x4d715a][_0x2e5bde(0x1ca)](_0x382d8a=>_0x382d8a!==_0x3b8d98));}return _0x1c5a16;}function _0x5ab645(_0x3ca174){const _0x41821e=_0x4e9cfd;return Object['values'](_0x3ca174)[_0x41821e(0x1b9)](_0xac50b3=>_0xac50b3['length']===0x1);}function _0x597162(_0x1f3dd1){const _0x11ce4c=_0x4e9cfd;if(_0x5ab645(_0x1f3dd1)){const _0x4d335e=Object['fromEntries'](Object[_0x11ce4c(0x17f)](_0x1f3dd1)['map'](([_0x1a81e2,_0x140455])=>[_0x1a81e2,_0x140455[0x0]]));return isSolutionCorrect(_0x4d335e)?_0x4d335e:![];}const _0x574579=Object['entries'](_0x1f3dd1)[_0x11ce4c(0x19d)](([_0x44fbf3,_0x487378])=>_0x487378[_0x11ce4c(0x188)]>0x1)[0x0];for(const _0x443714 of _0x1f3dd1[_0x574579]){const _0x189b42=_0x234c7f(_0x1f3dd1,_0x574579,_0x443714);if(Object[_0x11ce4c(0x1ae)](_0x189b42)[_0x11ce4c(0x18d)](_0x288a59=>_0x288a59[_0x11ce4c(0x188)]===0x0))continue;const _0x32cd3b=_0x597162(_0x189b42);if(_0x32cd3b)return _0x32cd3b;}return![];}return _0x597162(_0x3cc260);}function isSolutionCorrect(_0x506fa5){const _0x908dc=_0x11aa,_0xc88389=puzzle[_0x908dc(0x1a3)][_0x908dc(0x1c6)]('\x20'),_0x4079fe=parseInt(_0xc88389[0x0][_0x908dc(0x1c6)]('')[_0x908dc(0x1a2)](_0x3b8640=>_0x506fa5[_0x3b8640])[_0x908dc(0x18b)]('')),_0x311e67=parseInt(_0xc88389[0x2][_0x908dc(0x1c6)]('')[_0x908dc(0x1a2)](_0x5a37fe=>_0x506fa5[_0x5a37fe])[_0x908dc(0x18b)]('')),_0x40a31e=parseInt(_0xc88389[0x4][_0x908dc(0x1c6)]('')[_0x908dc(0x1a2)](_0x1e14b5=>_0x506fa5[_0x1e14b5])[_0x908dc(0x18b)](''));return _0xc88389[0x1]==='+'?_0x4079fe+_0x311e67===_0x40a31e:_0x4079fe-_0x311e67===_0x40a31e;}function displaySolution(_0x227c41){const _0x26cd38=_0x11aa;for(let [_0x9a5f69,_0x1e63a9]of Object[_0x26cd38(0x17f)](_0x227c41)){const _0x355db9=document[_0x26cd38(0x1bd)]('input-'+_0x9a5f69);_0x355db9&&(_0x355db9[_0x26cd38(0x1a4)]=_0x1e63a9);}}initGame();
+      // Game state
+      let currentLevel = 1;
+      let lives = 5;
+      let score = 0;
+      let puzzle = {};
+      let speedBonus = 23;
+      let startTime;
+      let selectedInput = null;
+
+      // Initialize game
+      function initGame() {
+        updateUI();
+        generatePuzzle();
+        initNumberPad();
+      }
+
+      // Generate a new puzzle
+      function generatePuzzle() {
+        const operations = ["+", "-"];
+        const operation =
+          operations[Math.floor(Math.random() * operations.length)];
+        const num1 = Math.floor(Math.random() * 100);
+        const num2 = Math.floor(Math.random() * 100);
+        const result =
+          operation === "+"
+            ? num1 + num2
+            : Math.max(num1, num2) - Math.min(num1, num2);
+
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const usedLetters = new Set();
+        function getRandomLetter() {
+          let letter;
+          do {
+            letter = letters[Math.floor(Math.random() * letters.length)];
+          } while (usedLetters.has(letter));
+          usedLetters.add(letter);
+          return letter;
+        }
+
+        const num1Str = num1.toString().padStart(2, "0");
+        const num2Str = num2.toString().padStart(2, "0");
+        const resultStr = result.toString().padStart(2, "0");
+
+        const letterMap = {};
+        for (let digit of new Set(num1Str + num2Str + resultStr)) {
+          letterMap[digit] = getRandomLetter();
+        }
+
+        const equation = `${num1Str
+          .split("")
+          .map((d) => letterMap[d])
+          .join("")} ${operation} ${num2Str
+          .split("")
+          .map((d) => letterMap[d])
+          .join("")} = ${resultStr
+          .split("")
+          .map((d) => letterMap[d])
+          .join("")}`;
+
+        setPuzzle(equation);
+      }
+
+      // Set puzzle (used for both generated and custom puzzles)
+      function setPuzzle(equation) {
+        puzzle = {
+          equation: equation,
+          solution: {},
+        };
+        displayPuzzle();
+        startTime = Date.now();
+      }
+
+      // Display the puzzle
+      function displayPuzzle() {
+        const puzzleContainer = document.getElementById("puzzle-container");
+        puzzleContainer.innerHTML = puzzle.equation;
+
+        const inputContainer = document.getElementById("input-container");
+        inputContainer.innerHTML = "";
+        for (let letter of new Set(puzzle.equation.match(/[A-Z]/g))) {
+          inputContainer.innerHTML += `
+                    <div class="bg-gray-700 p-2 rounded">
+                        <div class="text-xl text-center">${letter}</div>
+                        <input type="text" id="input-${letter}" class="w-full bg-gray-600 text-center text-xl" maxlength="1" readonly>
+                    </div>
+                `;
+        }
+
+        document.querySelectorAll("#input-container input").forEach((input) => {
+          input.addEventListener("click", () => {
+            selectedInput = input;
+            document
+              .querySelectorAll("#input-container input")
+              .forEach((i) => i.classList.remove("bg-blue-500"));
+            input.classList.add("bg-blue-500");
+          });
+        });
+      }
+
+      // Update UI elements
+      function updateUI() {
+        document.getElementById("score").textContent = score;
+        document.getElementById("level").textContent = currentLevel;
+        document.getElementById("speed-bonus").textContent = speedBonus;
+
+        const livesContainer = document.getElementById("lives");
+        livesContainer.innerHTML = "❤️".repeat(lives);
+      }
+
+      // Initialize number pad
+      function initNumberPad() {
+        const numberPad = document.getElementById("number-pad");
+        numberPad.innerHTML = "";
+        for (let i = 0; i <= 9; i++) {
+          numberPad.innerHTML += `<button class="bg-blue-500 p-2 rounded text-xl" onclick="inputNumber(${i})">${i}</button>`;
+        }
+        numberPad.innerHTML += `
+                <button class="bg-red-500 p-2 rounded text-xl" onclick="clearInput()">✕</button>
+                <button class="bg-green-500 p-2 rounded text-xl" onclick="checkSolution()">✓</button>
+            `;
+      }
+
+      // Input number
+      function inputNumber(num) {
+        if (selectedInput) {
+          selectedInput.value = num;
+        }
+      }
+
+      // Clear input
+      function clearInput() {
+        if (selectedInput) {
+          selectedInput.value = "";
+        }
+      }
+
+      // Check solution
+      function checkSolution() {
+        const inputs = document.querySelectorAll("#input-container input");
+        const userSolution = {};
+        inputs.forEach((input) => {
+          userSolution[input.id.split("-")[1]] = parseInt(input.value);
+        });
+
+        if (isSolutionCorrect(userSolution)) {
+          const timeTaken = (Date.now() - startTime) / 1000;
+          const timeBonus = Math.max(0, Math.floor(speedBonus - timeTaken));
+          score += 100 + timeBonus;
+          currentLevel++;
+          document.getElementById("message").textContent =
+            `Correct! +${100 + timeBonus} points`;
+          document.getElementById("message").classList.add("text-green-500");
+          setTimeout(() => {
+            document.getElementById("message").textContent = "";
+            document
+              .getElementById("message")
+              .classList.remove("text-green-500");
+            if (currentLevel > 5) {
+              endGame(true);
+            } else {
+              generatePuzzle();
+              updateUI();
+            }
+          }, 2000);
+        } else {
+          lives--;
+          updateUI();
+          document.getElementById("puzzle-container").classList.add("shake");
+          setTimeout(() => {
+            document
+              .getElementById("puzzle-container")
+              .classList.remove("shake");
+          }, 500);
+          if (lives === 0) {
+            endGame(false);
+          } else {
+            document.getElementById("message").textContent =
+              "Incorrect. Try again!";
+            document.getElementById("message").classList.add("text-red-500");
+            setTimeout(() => {
+              document.getElementById("message").textContent = "";
+              document
+                .getElementById("message")
+                .classList.remove("text-red-500");
+            }, 2000);
+          }
+        }
+      }
+
+      // End game
+      function endGame(isWin) {
+        const message = isWin
+          ? `Congratulations! You've completed all levels with a score of ${score}!`
+          : `Game Over. Your final score is ${score}.`;
+        document.getElementById("game-container").innerHTML = `
+                <div class="text-2xl text-center mb-4">${message}</div>
+                <button onclick="restartGame()" class="bg-blue-500 p-2 rounded text-xl w-full">Play Again</button>
+            `;
+      }
+
+      // Restart game
+      function restartGame() {
+        currentLevel = 1;
+        lives = 5;
+        score = 0;
+        speedBonus = 23;
+        document.getElementById("game-container").innerHTML = `
+                <div id="game-header" class="flex justify-between mb-4">
+                    <div>Speed Bonus: <span id="speed-bonus">23</span></div>
+                    <div>Score: <span id="score">0</span></div>
+                    <div>Level: <span id="level">1</span></div>
+                </div>
+                <div id="lives" class="mb-4 text-2xl"></div>
+                <div id="puzzle-container" class="bg-gray-800 p-4 rounded-lg mb-4 text-2xl text-center"></div>
+                <div id="input-container" class="grid grid-cols-3 gap-4 mb-4"></div>
+                <div id="number-pad" class="grid grid-cols-6 gap-2"></div>
+                <div id="message" class="mt-4 text-center text-xl"></div>
+                <div id="custom-puzzle" class="mt-4">
+                    <input type="text" id="custom-equation" placeholder="Enter custom equation (e.g. SEND + MORE = MONEY)" class="w-full p-2 bg-gray-700 rounded">
+                    <button onclick="setCustomPuzzle()" class="mt-2 bg-purple-500 p-2 rounded text-xl w-full">Set Custom Puzzle</button>
+                </div>
+                <button onclick="solvePuzzleWithDualAI()" class="mt-2 bg-yellow-500 p-2 rounded text-xl w-full">Solve with Dual AI</button>
+                <div id="ai-results" class="mt-4 bg-gray-800 p-4 rounded-lg hidden">
+                    <h3 class="text-xl font-bold mb-2">AI Results:</h3>
+                    <div id="ai-1-result" class="mb-2"></div>
+                    <div id="ai-2-result" class="mb-2"></div>
+                    <div id="final-result" class="font-bold"></div>
+                </div>
+            `;
+        initGame();
+      }
+
+      // Set custom puzzle
+      function setCustomPuzzle() {
+        const customEquation = document
+          .getElementById("custom-equation")
+          .value.toUpperCase();
+        if (isValidEquation(customEquation)) {
+          setPuzzle(customEquation);
+          document.getElementById("message").textContent = "Custom puzzle set!";
+          document.getElementById("message").classList.add("text-green-500");
+          setTimeout(() => {
+            document.getElementById("message").textContent = "";
+            document
+              .getElementById("message")
+              .classList.remove("text-green-500");
+          }, 2000);
+        } else {
+          document.getElementById("message").textContent =
+            "Invalid equation format!";
+          document.getElementById("message").classList.add("text-red-500");
+          setTimeout(() => {
+            document.getElementById("message").textContent = "";
+            document.getElementById("message").classList.remove("text-red-500");
+          }, 2000);
+        }
+      }
+
+      // Validate equation format
+      function isValidEquation(equation) {
+        return /^[A-Z]+ [+\-] [A-Z]+ = [A-Z]+$/.test(equation);
+      }
+
+      // Solve puzzle with dual AI
+      async function solvePuzzleWithDualAI() {
+        const startTime = performance.now();
+        const solution1 = solveCryptarithmBacktracking(puzzle.equation);
+        const solution2 = solveCryptarithmConstraintSatisfaction(
+          puzzle.equation,
+        );
+        const endTime = performance.now();
+
+        const aiResultsDiv = document.getElementById("ai-results");
+        const ai1ResultDiv = document.getElementById("ai-1-result");
+        const ai2ResultDiv = document.getElementById("ai-2-result");
+        const finalResultDiv = document.getElementById("final-result");
+
+        aiResultsDiv.classList.remove("hidden");
+
+        ai1ResultDiv.textContent = `AI 1 (Backtracking): ${JSON.stringify(solution1)}`;
+        ai2ResultDiv.textContent = `AI 2 (Constraint Satisfaction): ${JSON.stringify(solution2)}`;
+
+        if (JSON.stringify(solution1) === JSON.stringify(solution2)) {
+          finalResultDiv.textContent = `Both AIs agree. Solution: ${JSON.stringify(solution1)}`;
+          displaySolution(solution1);
+        } else {
+          const correctSolution = isSolutionCorrect(solution1)
+            ? solution1
+            : isSolutionCorrect(solution2)
+              ? solution2
+              : null;
+          if (correctSolution) {
+            finalResultDiv.textContent = `AIs disagree. Correct solution: ${JSON.stringify(correctSolution)}`;
+            displaySolution(correctSolution);
+          } else {
+            finalResultDiv.textContent =
+              "AIs disagree and neither solution is correct. Please try again.";
+          }
+        }
+
+        const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
+        finalResultDiv.textContent += ` (Time taken: ${timeTaken}s)`;
+      }
+
+      // Backtracking algorithm
+      function solveCryptarithmBacktracking(equation) {
+        const parts = equation.split(" ");
+        const uniqueLetters = [...new Set(equation.match(/[A-Z]/g))];
+        const usedDigits = new Set();
+
+        function backtrack(index) {
+          if (index === uniqueLetters.length) {
+            return evaluateEquation();
+          }
+
+          const letter = uniqueLetters[index];
+          for (let digit = 0; digit <= 9; digit++) {
+            if (usedDigits.has(digit)) continue;
+            if (
+              digit === 0 &&
+              (parts[0][0] === letter ||
+                parts[2][0] === letter ||
+                parts[4][0] === letter)
+            )
+              continue;
+
+            usedDigits.add(digit);
+            puzzle.solution[letter] = digit;
+
+            if (backtrack(index + 1)) {
+              return puzzle.solution;
+            }
+
+            usedDigits.delete(digit);
+            delete puzzle.solution[letter];
+          }
+
+          return false;
+        }
+
+        function evaluateEquation() {
+          const num1 = parseInt(
+            parts[0]
+              .split("")
+              .map((c) => puzzle.solution[c])
+              .join(""),
+          );
+          const num2 = parseInt(
+            parts[2]
+              .split("")
+              .map((c) => puzzle.solution[c])
+              .join(""),
+          );
+          const result = parseInt(
+            parts[4]
+              .split("")
+              .map((c) => puzzle.solution[c])
+              .join(""),
+          );
+          return parts[1] === "+"
+            ? num1 + num2 === result
+            : num1 - num2 === result;
+        }
+
+        return backtrack(0);
+      }
+
+      // Constraint Satisfaction algorithm
+      function solveCryptarithmConstraintSatisfaction(equation) {
+        const parts = equation.split(" ");
+        const uniqueLetters = [...new Set(equation.match(/[A-Z]/g))];
+        const variables = uniqueLetters.reduce((acc, letter) => {
+          acc[letter] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+          return acc;
+        }, {});
+
+        // Apply initial constraints
+        for (const word of [parts[0], parts[2], parts[4]]) {
+          if (variables[word[0]].includes(0)) {
+            variables[word[0]] = variables[word[0]].filter((v) => v !== 0);
+          }
+        }
+
+        function assignValue(variables, letter, value) {
+          const newVariables = JSON.parse(JSON.stringify(variables));
+          newVariables[letter] = [value];
+          for (const otherLetter in newVariables) {
+            if (otherLetter !== letter) {
+              newVariables[otherLetter] = newVariables[otherLetter].filter(
+                (v) => v !== value,
+              );
+            }
+          }
+          return newVariables;
+        }
+
+        function isComplete(variables) {
+          return Object.values(variables).every(
+            (domain) => domain.length === 1,
+          );
+        }
+
+        function backtrack(variables) {
+          if (isComplete(variables)) {
+            const solution = Object.fromEntries(
+              Object.entries(variables).map(([k, v]) => [k, v[0]]),
+            );
+            return isSolutionCorrect(solution) ? solution : false;
+          }
+
+          const unassignedLetter = Object.entries(variables).find(
+            ([_, domain]) => domain.length > 1,
+          )[0];
+          for (const value of variables[unassignedLetter]) {
+            const newVariables = assignValue(
+              variables,
+              unassignedLetter,
+              value,
+            );
+            if (
+              Object.values(newVariables).some((domain) => domain.length === 0)
+            )
+              continue;
+            const result = backtrack(newVariables);
+            if (result) return result;
+          }
+
+          return false;
+        }
+
+        return backtrack(variables);
+      }
+
+      // Check if solution is correct
+      function isSolutionCorrect(solution) {
+        const equationParts = puzzle.equation.split(" ");
+        const num1 = parseInt(
+          equationParts[0]
+            .split("")
+            .map((c) => solution[c])
+            .join(""),
+        );
+        const num2 = parseInt(
+          equationParts[2]
+            .split("")
+            .map((c) => solution[c])
+            .join(""),
+        );
+        const result = parseInt(
+          equationParts[4]
+            .split("")
+            .map((c) => solution[c])
+            .join(""),
+        );
+        return equationParts[1] === "+"
+          ? num1 + num2 === result
+          : num1 - num2 === result;
+      }
+
+      // Display solution
+      function displaySolution(solution) {
+        for (let [letter, digit] of Object.entries(solution)) {
+          const input = document.getElementById(`input-${letter}`);
+          if (input) {
+            input.value = digit;
+          }
+        }
+      }
+
+      // Start the game
+      initGame();
     </script>
   </body>
 </html>
