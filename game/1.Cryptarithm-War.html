@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cryptarithm War</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-5px);
+        }
+        75% {
+          transform: translateX(5px);
+        }
+      }
+      .shake {
+        animation: shake 0.5s;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-900 text-white">
+    <div id="game-container" class="max-w-2xl mx-auto mt-8 p-4">
+      <div id="game-header" class="flex justify-between mb-4">
+        <div>Speed Bonus: <span id="speed-bonus">23</span></div>
+        <div>Score: <span id="score">0</span></div>
+        <div>Level: <span id="level">1</span></div>
+      </div>
+      <div id="lives" class="mb-4 text-2xl"></div>
+      <div
+        id="puzzle-container"
+        class="bg-gray-800 p-4 rounded-lg mb-4 text-2xl text-center"
+      ></div>
+      <div id="input-container" class="grid grid-cols-3 gap-4 mb-4"></div>
+      <div id="number-pad" class="grid grid-cols-6 gap-2"></div>
+      <div id="message" class="mt-4 text-center text-xl"></div>
+      <div id="custom-puzzle" class="mt-4">
+        <input
+          type="text"
+          id="custom-equation"
+          placeholder="Enter custom equation (e.g. SEND + MORE = MONEY)"
+          class="w-full p-2 bg-gray-700 rounded"
+        />
+        <button
+          onclick="setCustomPuzzle()"
+          class="mt-2 bg-purple-500 p-2 rounded text-xl w-full"
+        >
+          Set Custom Puzzle
+        </button>
+      </div>
+      <button
+        onclick="solvePuzzleWithDualAI()"
+        class="mt-2 bg-yellow-500 p-2 rounded text-xl w-full"
+      >
+        Solve with Dual AI
+      </button>
+      <div id="ai-results" class="mt-4 bg-gray-800 p-4 rounded-lg hidden">
+        <h3 class="text-xl font-bold mb-2">AI Results:</h3>
+        <div id="ai-1-result" class="mb-2"></div>
+        <div id="ai-2-result" class="mb-2"></div>
+        <div id="final-result" class="font-bold"></div>
+      </div>
+    </div>
+
+    <script>
+      // Game state
+      let currentLevel = 1;
+      let lives = 5;
+      let score = 0;
+      let puzzle = {};
+      let speedBonus = 23;
+      let startTime;
+      let selectedInput = null;
+
+      // Initialize game
+      function initGame() {
+        updateUI();
+        generatePuzzle();
+        initNumberPad();
+      }
+
+      // Generate a new puzzle
+      function generatePuzzle() {
+        const operations = ["+", "-"];
+        const operation =
+          operations[Math.floor(Math.random() * operations.length)];
+        const num1 = Math.floor(Math.random() * 100);
+        const num2 = Math.floor(Math.random() * 100);
+        const result =
+          operation === "+"
+            ? num1 + num2
+            : Math.max(num1, num2) - Math.min(num1, num2);
+
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const usedLetters = new Set();
+        function getRandomLetter() {
+          let letter;
+          do {
+            letter = letters[Math.floor(Math.random() * letters.length)];
+          } while (usedLetters.has(letter));
+          usedLetters.add(letter);
+          return letter;
+        }
+
+        const num1Str = num1.toString().padStart(2, "0");
+        const num2Str = num2.toString().padStart(2, "0");
+        const resultStr = result.toString().padStart(2, "0");
+
+        const letterMap = {};
+        for (let digit of new Set(num1Str + num2Str + resultStr)) {
+          letterMap[digit] = getRandomLetter();
+        }
+
+        const equation = `${num1Str
+          .split("")
+          .map((d) => letterMap[d])
+          .join("")} ${operation} ${num2Str
+          .split("")
+          .map((d) => letterMap[d])
+          .join("")} = ${resultStr
+          .split("")
+          .map((d) => letterMap[d])
+          .join("")}`;
+
+        setPuzzle(equation);
+      }
+
+      // Set puzzle (used for both generated and custom puzzles)
+      function setPuzzle(equation) {
+        puzzle = {
+          equation: equation,
+          solution: {},
+        };
+        displayPuzzle();
+        startTime = Date.now();
+      }
+
+      // Display the puzzle
+      function displayPuzzle() {
+        const puzzleContainer = document.getElementById("puzzle-container");
+        puzzleContainer.innerHTML = puzzle.equation;
+
+        const inputContainer = document.getElementById("input-container");
+        inputContainer.innerHTML = "";
+        for (let letter of new Set(puzzle.equation.match(/[A-Z]/g))) {
+          inputContainer.innerHTML += `
+                    <div class="bg-gray-700 p-2 rounded">
+                        <div class="text-xl text-center">${letter}</div>
+                        <input type="text" id="input-${letter}" class="w-full bg-gray-600 text-center text-xl" maxlength="1" readonly>
+                    </div>
+                `;
+        }
+
+        document.querySelectorAll("#input-container input").forEach((input) => {
+          input.addEventListener("click", () => {
+            selectedInput = input;
+            document
+              .querySelectorAll("#input-container input")
+              .forEach((i) => i.classList.remove("bg-blue-500"));
+            input.classList.add("bg-blue-500");
+          });
+        });
+      }
+
+      // Update UI elements
+      function updateUI() {
+        document.getElementById("score").textContent = score;
+        document.getElementById("level").textContent = currentLevel;
+        document.getElementById("speed-bonus").textContent = speedBonus;
+
+        const livesContainer = document.getElementById("lives");
+        livesContainer.innerHTML = "❤️".repeat(lives);
+      }
+
+      // Initialize number pad
+      function initNumberPad() {
+        const numberPad = document.getElementById("number-pad");
+        numberPad.innerHTML = "";
+        for (let i = 0; i <= 9; i++) {
+          numberPad.innerHTML += `<button class="bg-blue-500 p-2 rounded text-xl" onclick="inputNumber(${i})">${i}</button>`;
+        }
+        numberPad.innerHTML += `
+                <button class="bg-red-500 p-2 rounded text-xl" onclick="clearInput()">✕</button>
+                <button class="bg-green-500 p-2 rounded text-xl" onclick="checkSolution()">✓</button>
+            `;
+      }
+
+      // Input number
+      function inputNumber(num) {
+        if (selectedInput) {
+          selectedInput.value = num;
+        }
+      }
+
+      // Clear input
+      function clearInput() {
+        if (selectedInput) {
+          selectedInput.value = "";
+        }
+      }
+
+      // Check solution
+      function checkSolution() {
+        const inputs = document.querySelectorAll("#input-container input");
+        const userSolution = {};
+        inputs.forEach((input) => {
+          userSolution[input.id.split("-")[1]] = parseInt(input.value);
+        });
+
+        if (isSolutionCorrect(userSolution)) {
+          const timeTaken = (Date.now() - startTime) / 1000;
+          const timeBonus = Math.max(0, Math.floor(speedBonus - timeTaken));
+          score += 100 + timeBonus;
+          currentLevel++;
+          document.getElementById("message").textContent =
+            `Correct! +${100 + timeBonus} points`;
+          document.getElementById("message").classList.add("text-green-500");
+          setTimeout(() => {
+            document.getElementById("message").textContent = "";
+            document
+              .getElementById("message")
+              .classList.remove("text-green-500");
+            if (currentLevel > 5) {
+              endGame(true);
+            } else {
+              generatePuzzle();
+              updateUI();
+            }
+          }, 2000);
+        } else {
+          lives--;
+          updateUI();
+          document.getElementById("puzzle-container").classList.add("shake");
+          setTimeout(() => {
+            document
+              .getElementById("puzzle-container")
+              .classList.remove("shake");
+          }, 500);
+          if (lives === 0) {
+            endGame(false);
+          } else {
+            document.getElementById("message").textContent =
+              "Incorrect. Try again!";
+            document.getElementById("message").classList.add("text-red-500");
+            setTimeout(() => {
+              document.getElementById("message").textContent = "";
+              document
+                .getElementById("message")
+                .classList.remove("text-red-500");
+            }, 2000);
+          }
+        }
+      }
+
+      // End game
+      function endGame(isWin) {
+        const message = isWin
+          ? `Congratulations! You've completed all levels with a score of ${score}!`
+          : `Game Over. Your final score is ${score}.`;
+        document.getElementById("game-container").innerHTML = `
+                <div class="text-2xl text-center mb-4">${message}</div>
+                <button onclick="restartGame()" class="bg-blue-500 p-2 rounded text-xl w-full">Play Again</button>
+            `;
+      }
+
+      // Restart game
+      function restartGame() {
+        currentLevel = 1;
+        lives = 5;
+        score = 0;
+        speedBonus = 23;
+        document.getElementById("game-container").innerHTML = `
+                <div id="game-header" class="flex justify-between mb-4">
+                    <div>Speed Bonus: <span id="speed-bonus">23</span></div>
+                    <div>Score: <span id="score">0</span></div>
+                    <div>Level: <span id="level">1</span></div>
+                </div>
+                <div id="lives" class="mb-4 text-2xl"></div>
+                <div id="puzzle-container" class="bg-gray-800 p-4 rounded-lg mb-4 text-2xl text-center"></div>
+                <div id="input-container" class="grid grid-cols-3 gap-4 mb-4"></div>
+                <div id="number-pad" class="grid grid-cols-6 gap-2"></div>
+                <div id="message" class="mt-4 text-center text-xl"></div>
+                <div id="custom-puzzle" class="mt-4">
+                    <input type="text" id="custom-equation" placeholder="Enter custom equation (e.g. SEND + MORE = MONEY)" class="w-full p-2 bg-gray-700 rounded">
+                    <button onclick="setCustomPuzzle()" class="mt-2 bg-purple-500 p-2 rounded text-xl w-full">Set Custom Puzzle</button>
+                </div>
+                <button onclick="solvePuzzleWithDualAI()" class="mt-2 bg-yellow-500 p-2 rounded text-xl w-full">Solve with Dual AI</button>
+                <div id="ai-results" class="mt-4 bg-gray-800 p-4 rounded-lg hidden">
+                    <h3 class="text-xl font-bold mb-2">AI Results:</h3>
+                    <div id="ai-1-result" class="mb-2"></div>
+                    <div id="ai-2-result" class="mb-2"></div>
+                    <div id="final-result" class="font-bold"></div>
+                </div>
+            `;
+        initGame();
+      }
+
+      // Set custom puzzle
+      function setCustomPuzzle() {
+        const customEquation = document
+          .getElementById("custom-equation")
+          .value.toUpperCase();
+        if (isValidEquation(customEquation)) {
+          setPuzzle(customEquation);
+          document.getElementById("message").textContent = "Custom puzzle set!";
+          document.getElementById("message").classList.add("text-green-500");
+          setTimeout(() => {
+            document.getElementById("message").textContent = "";
+            document
+              .getElementById("message")
+              .classList.remove("text-green-500");
+          }, 2000);
+        } else {
+          document.getElementById("message").textContent =
+            "Invalid equation format!";
+          document.getElementById("message").classList.add("text-red-500");
+          setTimeout(() => {
+            document.getElementById("message").textContent = "";
+            document.getElementById("message").classList.remove("text-red-500");
+          }, 2000);
+        }
+      }
+
+      // Validate equation format
+      function isValidEquation(equation) {
+        return /^[A-Z]+ [+\-] [A-Z]+ = [A-Z]+$/.test(equation);
+      }
+
+      // Solve puzzle with dual AI
+      async function solvePuzzleWithDualAI() {
+        const startTime = performance.now();
+        const solution1 = solveCryptarithmBacktracking(puzzle.equation);
+        const solution2 = solveCryptarithmConstraintSatisfaction(
+          puzzle.equation,
+        );
+        const endTime = performance.now();
+
+        const aiResultsDiv = document.getElementById("ai-results");
+        const ai1ResultDiv = document.getElementById("ai-1-result");
+        const ai2ResultDiv = document.getElementById("ai-2-result");
+        const finalResultDiv = document.getElementById("final-result");
+
+        aiResultsDiv.classList.remove("hidden");
+
+        ai1ResultDiv.textContent = `AI 1 (Backtracking): ${JSON.stringify(solution1)}`;
+        ai2ResultDiv.textContent = `AI 2 (Constraint Satisfaction): ${JSON.stringify(solution2)}`;
+
+        if (JSON.stringify(solution1) === JSON.stringify(solution2)) {
+          finalResultDiv.textContent = `Both AIs agree. Solution: ${JSON.stringify(solution1)}`;
+          displaySolution(solution1);
+        } else {
+          const correctSolution = isSolutionCorrect(solution1)
+            ? solution1
+            : isSolutionCorrect(solution2)
+              ? solution2
+              : null;
+          if (correctSolution) {
+            finalResultDiv.textContent = `AIs disagree. Correct solution: ${JSON.stringify(correctSolution)}`;
+            displaySolution(correctSolution);
+          } else {
+            finalResultDiv.textContent =
+              "AIs disagree and neither solution is correct. Please try again.";
+          }
+        }
+
+        const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
+        finalResultDiv.textContent += ` (Time taken: ${timeTaken}s)`;
+      }
+
+      // Backtracking algorithm
+      function solveCryptarithmBacktracking(equation) {
+        const parts = equation.split(" ");
+        const uniqueLetters = [...new Set(equation.match(/[A-Z]/g))];
+        const usedDigits = new Set();
+
+        function backtrack(index) {
+          if (index === uniqueLetters.length) {
+            return evaluateEquation();
+          }
+
+          const letter = uniqueLetters[index];
+          for (let digit = 0; digit <= 9; digit++) {
+            if (usedDigits.has(digit)) continue;
+            if (
+              digit === 0 &&
+              (parts[0][0] === letter ||
+                parts[2][0] === letter ||
+                parts[4][0] === letter)
+            )
+              continue;
+
+            usedDigits.add(digit);
+            puzzle.solution[letter] = digit;
+
+            if (backtrack(index + 1)) {
+              return puzzle.solution;
+            }
+
+            usedDigits.delete(digit);
+            delete puzzle.solution[letter];
+          }
+
+          return false;
+        }
+
+        function evaluateEquation() {
+          const num1 = parseInt(
+            parts[0]
+              .split("")
+              .map((c) => puzzle.solution[c])
+              .join(""),
+          );
+          const num2 = parseInt(
+            parts[2]
+              .split("")
+              .map((c) => puzzle.solution[c])
+              .join(""),
+          );
+          const result = parseInt(
+            parts[4]
+              .split("")
+              .map((c) => puzzle.solution[c])
+              .join(""),
+          );
+          return parts[1] === "+"
+            ? num1 + num2 === result
+            : num1 - num2 === result;
+        }
+
+        return backtrack(0);
+      }
+
+      // Constraint Satisfaction algorithm
+      function solveCryptarithmConstraintSatisfaction(equation) {
+        const parts = equation.split(" ");
+        const uniqueLetters = [...new Set(equation.match(/[A-Z]/g))];
+        const variables = uniqueLetters.reduce((acc, letter) => {
+          acc[letter] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+          return acc;
+        }, {});
+
+        // Apply initial constraints
+        for (const word of [parts[0], parts[2], parts[4]]) {
+          if (variables[word[0]].includes(0)) {
+            variables[word[0]] = variables[word[0]].filter((v) => v !== 0);
+          }
+        }
+
+        function assignValue(variables, letter, value) {
+          const newVariables = JSON.parse(JSON.stringify(variables));
+          newVariables[letter] = [value];
+          for (const otherLetter in newVariables) {
+            if (otherLetter !== letter) {
+              newVariables[otherLetter] = newVariables[otherLetter].filter(
+                (v) => v !== value,
+              );
+            }
+          }
+          return newVariables;
+        }
+
+        function isComplete(variables) {
+          return Object.values(variables).every(
+            (domain) => domain.length === 1,
+          );
+        }
+
+        function backtrack(variables) {
+          if (isComplete(variables)) {
+            const solution = Object.fromEntries(
+              Object.entries(variables).map(([k, v]) => [k, v[0]]),
+            );
+            return isSolutionCorrect(solution) ? solution : false;
+          }
+
+          const unassignedLetter = Object.entries(variables).find(
+            ([_, domain]) => domain.length > 1,
+          )[0];
+          for (const value of variables[unassignedLetter]) {
+            const newVariables = assignValue(
+              variables,
+              unassignedLetter,
+              value,
+            );
+            if (
+              Object.values(newVariables).some((domain) => domain.length === 0)
+            )
+              continue;
+            const result = backtrack(newVariables);
+            if (result) return result;
+          }
+
+          return false;
+        }
+
+        return backtrack(variables);
+      }
+
+      // Check if solution is correct
+      function isSolutionCorrect(solution) {
+        const equationParts = puzzle.equation.split(" ");
+        const num1 = parseInt(
+          equationParts[0]
+            .split("")
+            .map((c) => solution[c])
+            .join(""),
+        );
+        const num2 = parseInt(
+          equationParts[2]
+            .split("")
+            .map((c) => solution[c])
+            .join(""),
+        );
+        const result = parseInt(
+          equationParts[4]
+            .split("")
+            .map((c) => solution[c])
+            .join(""),
+        );
+        return equationParts[1] === "+"
+          ? num1 + num2 === result
+          : num1 - num2 === result;
+      }
+
+      // Display solution
+      function displaySolution(solution) {
+        for (let [letter, digit] of Object.entries(solution)) {
+          const input = document.getElementById(`input-${letter}`);
+          if (input) {
+            input.value = digit;
+          }
+        }
+      }
+
+      // Start the game
+      initGame();
+    </script>
+  </body>
+</html>
