@@ -25,6 +25,46 @@
   </head>
   <body class="bg-gray-900 text-white">
     <div id="game-container" class="max-w-2xl mx-auto mt-8 p-4">
+      <div id="mode-selector" class="mb-4">
+        <button
+          onclick="setMode('normal')"
+          class="bg-blue-500 p-2 rounded text-xl mr-2"
+        >
+          Normal Mode
+        </button>
+        <button
+          onclick="setMode('solo')"
+          class="bg-green-500 p-2 rounded text-xl"
+        >
+          SOLO Mode
+        </button>
+      </div>
+      <div id="solo-settings" class="mb-4 hidden">
+        <input
+          type="number"
+          id="solo-level"
+          min="1"
+          max="10"
+          value="1"
+          class="bg-gray-700 p-2 rounded mr-2"
+          placeholder="Level"
+        />
+        <input
+          type="number"
+          id="solo-questions"
+          min="1"
+          max="20"
+          value="5"
+          class="bg-gray-700 p-2 rounded mr-2"
+          placeholder="Questions"
+        />
+        <button
+          onclick="startSoloMode()"
+          class="bg-yellow-500 p-2 rounded text-xl"
+        >
+          Start SOLO Mode
+        </button>
+      </div>
       <div id="game-header" class="flex justify-between mb-4">
         <div>Speed Bonus: <span id="speed-bonus">23</span></div>
         <div>Score: <span id="score">0</span></div>
@@ -42,7 +82,7 @@
         <input
           type="text"
           id="custom-equation"
-          placeholder="Enter custom equation (e.g. SEND + MORE = MONEY)"
+          placeholder="Enter custom equation (e.g. SEND + MORE = MONEY or 1E2D + M0R3 = M0N3Y)"
           class="w-full p-2 bg-gray-700 rounded"
         />
         <button
@@ -53,6 +93,7 @@
         </button>
       </div>
       <button
+        id="solve-button"
         onclick="solvePuzzleWithDualAI()"
         class="mt-2 bg-yellow-500 p-2 rounded text-xl w-full"
       >
@@ -75,12 +116,35 @@
       let speedBonus = 23;
       let startTime;
       let selectedInput = null;
+      let gameMode = "normal";
+      let soloQuestions = 5;
+      let currentSoloQuestion = 0;
 
       // Initialize game
       function initGame() {
         updateUI();
         generatePuzzle();
         initNumberPad();
+      }
+
+      // Set game mode
+      function setMode(mode) {
+        gameMode = mode;
+        document.getElementById("solo-settings").style.display =
+          mode === "solo" ? "block" : "none";
+        document.getElementById("solve-button").style.display =
+          mode === "normal" ? "block" : "none";
+        restartGame();
+      }
+
+      // Start SOLO mode
+      function startSoloMode() {
+        currentLevel = parseInt(document.getElementById("solo-level").value);
+        soloQuestions = parseInt(
+          document.getElementById("solo-questions").value,
+        );
+        currentSoloQuestion = 0;
+        restartGame();
       }
 
       // Generate a new puzzle
@@ -95,35 +159,35 @@
             ? num1 + num2
             : Math.max(num1, num2) - Math.min(num1, num2);
 
-        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        const usedLetters = new Set();
-        function getRandomLetter() {
-          let letter;
+        const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const usedCharacters = new Set();
+        function getRandomCharacter() {
+          let char;
           do {
-            letter = letters[Math.floor(Math.random() * letters.length)];
-          } while (usedLetters.has(letter));
-          usedLetters.add(letter);
-          return letter;
+            char = characters[Math.floor(Math.random() * characters.length)];
+          } while (usedCharacters.has(char));
+          usedCharacters.add(char);
+          return char;
         }
 
         const num1Str = num1.toString().padStart(2, "0");
         const num2Str = num2.toString().padStart(2, "0");
         const resultStr = result.toString().padStart(2, "0");
 
-        const letterMap = {};
+        const charMap = {};
         for (let digit of new Set(num1Str + num2Str + resultStr)) {
-          letterMap[digit] = getRandomLetter();
+          charMap[digit] = getRandomCharacter();
         }
 
         const equation = `${num1Str
           .split("")
-          .map((d) => letterMap[d])
+          .map((d) => charMap[d])
           .join("")} ${operation} ${num2Str
           .split("")
-          .map((d) => letterMap[d])
+          .map((d) => charMap[d])
           .join("")} = ${resultStr
           .split("")
-          .map((d) => letterMap[d])
+          .map((d) => charMap[d])
           .join("")}`;
 
         setPuzzle(equation);
@@ -146,13 +210,13 @@
 
         const inputContainer = document.getElementById("input-container");
         inputContainer.innerHTML = "";
-        for (let letter of new Set(puzzle.equation.match(/[A-Z]/g))) {
+        for (let char of new Set(puzzle.equation.match(/[A-Z0-9]/g))) {
           inputContainer.innerHTML += `
-                    <div class="bg-gray-700 p-2 rounded">
-                        <div class="text-xl text-center">${letter}</div>
-                        <input type="text" id="input-${letter}" class="w-full bg-gray-600 text-center text-xl" maxlength="1" readonly>
-                    </div>
-                `;
+            <div class="bg-gray-700 p-2 rounded">
+              <div class="text-xl text-center">${char}</div>
+              <input type="text" id="input-${char}" class="w-full bg-gray-600 text-center text-xl" maxlength="1" readonly>
+            </div>
+          `;
         }
 
         document.querySelectorAll("#input-container input").forEach((input) => {
@@ -184,9 +248,9 @@
           numberPad.innerHTML += `<button class="bg-blue-500 p-2 rounded text-xl" onclick="inputNumber(${i})">${i}</button>`;
         }
         numberPad.innerHTML += `
-                <button class="bg-red-500 p-2 rounded text-xl" onclick="clearInput()">✕</button>
-                <button class="bg-green-500 p-2 rounded text-xl" onclick="checkSolution()">✓</button>
-            `;
+          <button class="bg-red-500 p-2 rounded text-xl" onclick="clearInput()">✕</button>
+          <button class="bg-green-500 p-2 rounded text-xl" onclick="checkSolution()">✓</button>
+        `;
       }
 
       // Input number
@@ -215,7 +279,6 @@
           const timeTaken = (Date.now() - startTime) / 1000;
           const timeBonus = Math.max(0, Math.floor(speedBonus - timeTaken));
           score += 100 + timeBonus;
-          currentLevel++;
           document.getElementById("message").textContent =
             `Correct! +${100 + timeBonus} points`;
           document.getElementById("message").classList.add("text-green-500");
@@ -224,11 +287,22 @@
             document
               .getElementById("message")
               .classList.remove("text-green-500");
-            if (currentLevel > 5) {
-              endGame(true);
+            if (gameMode === "solo") {
+              currentSoloQuestion++;
+              if (currentSoloQuestion >= soloQuestions) {
+                endGame(true);
+              } else {
+                generatePuzzle();
+                updateUI();
+              }
             } else {
-              generatePuzzle();
-              updateUI();
+              currentLevel++;
+              if (currentLevel > 5) {
+                endGame(true);
+              } else {
+                generatePuzzle();
+                updateUI();
+              }
             }
           }, 2000);
         } else {
@@ -258,44 +332,64 @@
 
       // End game
       function endGame(isWin) {
-        const message = isWin
-          ? `Congratulations! You've completed all levels with a score of ${score}!`
-          : `Game Over. Your final score is ${score}.`;
+        let message;
+        if (gameMode === "solo") {
+          message = isWin
+            ? `Congratulations! You've completed all ${soloQuestions} questions at level ${currentLevel} with a score of ${score}!`
+            : `Game Over. Your final score is ${score}.`;
+        } else {
+          message = isWin
+            ? `Congratulations! You've completed all levels with a score of ${score}!`
+            : `Game Over. Your final score is ${score}.`;
+        }
         document.getElementById("game-container").innerHTML = `
-                <div class="text-2xl text-center mb-4">${message}</div>
-                <button onclick="restartGame()" class="bg-blue-500 p-2 rounded text-xl w-full">Play Again</button>
-            `;
+          <div class="text-2xl text-center mb-4">${message}</div>
+          <button onclick="restartGame()" class="bg-blue-500 p-2 rounded text-xl w-full">Play Again</button>
+        `;
       }
 
       // Restart game
       function restartGame() {
-        currentLevel = 1;
+        currentLevel =
+          gameMode === "solo"
+            ? parseInt(document.getElementById("solo-level").value)
+            : 1;
         lives = 5;
         score = 0;
         speedBonus = 23;
+        currentSoloQuestion = 0;
         document.getElementById("game-container").innerHTML = `
-                <div id="game-header" class="flex justify-between mb-4">
-                    <div>Speed Bonus: <span id="speed-bonus">23</span></div>
-                    <div>Score: <span id="score">0</span></div>
-                    <div>Level: <span id="level">1</span></div>
-                </div>
-                <div id="lives" class="mb-4 text-2xl"></div>
-                <div id="puzzle-container" class="bg-gray-800 p-4 rounded-lg mb-4 text-2xl text-center"></div>
-                <div id="input-container" class="grid grid-cols-3 gap-4 mb-4"></div>
-                <div id="number-pad" class="grid grid-cols-6 gap-2"></div>
-                <div id="message" class="mt-4 text-center text-xl"></div>
-                <div id="custom-puzzle" class="mt-4">
-                    <input type="text" id="custom-equation" placeholder="Enter custom equation (e.g. SEND + MORE = MONEY)" class="w-full p-2 bg-gray-700 rounded">
-                    <button onclick="setCustomPuzzle()" class="mt-2 bg-purple-500 p-2 rounded text-xl w-full">Set Custom Puzzle</button>
-                </div>
-                <button onclick="solvePuzzleWithDualAI()" class="mt-2 bg-yellow-500 p-2 rounded text-xl w-full">Solve with Dual AI</button>
-                <div id="ai-results" class="mt-4 bg-gray-800 p-4 rounded-lg hidden">
-                    <h3 class="text-xl font-bold mb-2">AI Results:</h3>
-                    <div id="ai-1-result" class="mb-2"></div>
-                    <div id="ai-2-result" class="mb-2"></div>
-                    <div id="final-result" class="font-bold"></div>
-                </div>
-            `;
+          <div id="mode-selector" class="mb-4">
+            <button onclick="setMode('normal')" class="bg-blue-500 p-2 rounded text-xl mr-2">Normal Mode</button>
+            <button onclick="setMode('solo')" class="bg-green-500 p-2 rounded text-xl">SOLO Mode</button>
+          </div>
+          <div id="solo-settings" class="mb-4 ${gameMode === "solo" ? "" : "hidden"}">
+            <input type="number" id="solo-level" min="1" max="10" value="${currentLevel}" class="bg-gray-700 p-2 rounded mr-2" placeholder="Level">
+            <input type="number" id="solo-questions" min="1" max="20" value="${soloQuestions}" class="bg-gray-700 p-2 rounded mr-2" placeholder="Questions">
+            <button onclick="startSoloMode()" class="bg-yellow-500 p-2 rounded text-xl">Start SOLO Mode</button>
+          </div>
+          <div id="game-header" class="flex justify-between mb-4">
+            <div>Speed Bonus: <span id="speed-bonus">23</span></div>
+            <div>Score: <span id="score">0</span></div>
+            <div>Level: <span id="level">1</span></div>
+          </div>
+          <div id="lives" class="mb-4 text-2xl"></div>
+          <div id="puzzle-container" class="bg-gray-800 p-4 rounded-lg mb-4 text-2xl text-center"></div>
+          <div id="input-container" class="grid grid-cols-3 gap-4 mb-4"></div>
+          <div id="number-pad" class="grid grid-cols-6 gap-2"></div>
+          <div id="message" class="mt-4 text-center text-xl"></div>
+          <div id="custom-puzzle" class="mt-4">
+            <input type="text" id="custom-equation" placeholder="Enter custom equation (e.g. SEND + MORE = MONEY or 1E2D + M0R3 = M0N3Y)" class="w-full p-2 bg-gray-700 rounded">
+            <button onclick="setCustomPuzzle()" class="mt-2 bg-purple-500 p-2 rounded text-xl w-full">Set Custom Puzzle</button>
+          </div>
+          <button id="solve-button" onclick="solvePuzzleWithDualAI()" class="mt-2 bg-yellow-500 p-2 rounded text-xl w-full ${gameMode === "solo" ? "hidden" : ""}">Solve with Dual AI</button>
+          <div id="ai-results" class="mt-4 bg-gray-800 p-4 rounded-lg hidden">
+            <h3 class="text-xl font-bold mb-2">AI Results:</h3>
+            <div id="ai-1-result" class="mb-2"></div>
+            <div id="ai-2-result" class="mb-2"></div>
+            <div id="final-result" class="font-bold"></div>
+          </div>
+        `;
         initGame();
       }
 
@@ -327,7 +421,7 @@
 
       // Validate equation format
       function isValidEquation(equation) {
-        return /^[A-Z]+ [+\-] [A-Z]+ = [A-Z]+$/.test(equation);
+        return /^[A-Z0-9]+ [+\-] [A-Z0-9]+ = [A-Z0-9]+$/.test(equation);
       }
 
       // Solve puzzle with dual AI
@@ -374,34 +468,39 @@
       // Backtracking algorithm
       function solveCryptarithmBacktracking(equation) {
         const parts = equation.split(" ");
-        const uniqueLetters = [...new Set(equation.match(/[A-Z]/g))];
+        const uniqueChars = [...new Set(equation.match(/[A-Z0-9]/g))];
         const usedDigits = new Set();
 
         function backtrack(index) {
-          if (index === uniqueLetters.length) {
+          if (index === uniqueChars.length) {
             return evaluateEquation();
           }
 
-          const letter = uniqueLetters[index];
+          const char = uniqueChars[index];
+          if (/[0-9]/.test(char)) {
+            puzzle.solution[char] = parseInt(char);
+            return backtrack(index + 1);
+          }
+
           for (let digit = 0; digit <= 9; digit++) {
             if (usedDigits.has(digit)) continue;
             if (
               digit === 0 &&
-              (parts[0][0] === letter ||
-                parts[2][0] === letter ||
-                parts[4][0] === letter)
+              (parts[0][0] === char ||
+                parts[2][0] === char ||
+                parts[4][0] === char)
             )
               continue;
 
             usedDigits.add(digit);
-            puzzle.solution[letter] = digit;
+            puzzle.solution[char] = digit;
 
             if (backtrack(index + 1)) {
               return puzzle.solution;
             }
 
             usedDigits.delete(digit);
-            delete puzzle.solution[letter];
+            delete puzzle.solution[char];
           }
 
           return false;
@@ -437,25 +536,27 @@
       // Constraint Satisfaction algorithm
       function solveCryptarithmConstraintSatisfaction(equation) {
         const parts = equation.split(" ");
-        const uniqueLetters = [...new Set(equation.match(/[A-Z]/g))];
-        const variables = uniqueLetters.reduce((acc, letter) => {
-          acc[letter] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        const uniqueChars = [...new Set(equation.match(/[A-Z0-9]/g))];
+        const variables = uniqueChars.reduce((acc, char) => {
+          acc[char] = /[0-9]/.test(char)
+            ? [parseInt(char)]
+            : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
           return acc;
         }, {});
 
         // Apply initial constraints
         for (const word of [parts[0], parts[2], parts[4]]) {
-          if (variables[word[0]].includes(0)) {
+          if (variables[word[0]].includes(0) && !/[0-9]/.test(word[0])) {
             variables[word[0]] = variables[word[0]].filter((v) => v !== 0);
           }
         }
 
-        function assignValue(variables, letter, value) {
+        function assignValue(variables, char, value) {
           const newVariables = JSON.parse(JSON.stringify(variables));
-          newVariables[letter] = [value];
-          for (const otherLetter in newVariables) {
-            if (otherLetter !== letter) {
-              newVariables[otherLetter] = newVariables[otherLetter].filter(
+          newVariables[char] = [value];
+          for (const otherChar in newVariables) {
+            if (otherChar !== char && !/[0-9]/.test(otherChar)) {
+              newVariables[otherChar] = newVariables[otherChar].filter(
                 (v) => v !== value,
               );
             }
@@ -477,15 +578,11 @@
             return isSolutionCorrect(solution) ? solution : false;
           }
 
-          const unassignedLetter = Object.entries(variables).find(
+          const unassignedChar = Object.entries(variables).find(
             ([_, domain]) => domain.length > 1,
           )[0];
-          for (const value of variables[unassignedLetter]) {
-            const newVariables = assignValue(
-              variables,
-              unassignedLetter,
-              value,
-            );
+          for (const value of variables[unassignedChar]) {
+            const newVariables = assignValue(variables, unassignedChar, value);
             if (
               Object.values(newVariables).some((domain) => domain.length === 0)
             )
@@ -528,8 +625,8 @@
 
       // Display solution
       function displaySolution(solution) {
-        for (let [letter, digit] of Object.entries(solution)) {
-          const input = document.getElementById(`input-${letter}`);
+        for (let [char, digit] of Object.entries(solution)) {
+          const input = document.getElementById(`input-${char}`);
           if (input) {
             input.value = digit;
           }
