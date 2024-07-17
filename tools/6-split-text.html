@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Unggah, Tampilkan, dan Kelola File</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/default.min.css"
+        />
+        <style>
+            .scrollbar-custom::-webkit-scrollbar {
+                width: 8px;
+            }
+            .scrollbar-custom::-webkit-scrollbar-track {
+                background: #f1f1f1;
+            }
+            .scrollbar-custom::-webkit-scrollbar-thumb {
+                background: #888;
+                border-radius: 4px;
+            }
+            .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+                background: #555;
+            }
+            .drag-handle {
+                cursor: move;
+            }
+            .file-container.dragging {
+                opacity: 0.5;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-100 min-h-screen p-8">
+        <div class="max-w-4xl mx-auto bg-white shadow-xl rounded-lg p-6">
+            <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">
+                Unggah, Tampilkan, dan Kelola File
+            </h1>
+            <div
+                id="dropZone"
+                class="border-4 border-dashed border-gray-300 rounded-lg p-8 mb-6 text-center"
+            >
+                <p class="text-gray-600 mb-2">
+                    Seret dan lepas file di sini atau
+                </p>
+                <input
+                    type="file"
+                    id="fileInput"
+                    multiple
+                    class="hidden"
+                    onchange="handleFiles(this.files)"
+                />
+                <label
+                    for="fileInput"
+                    class="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300 inline-block"
+                >
+                    Pilih File
+                </label>
+            </div>
+            <div class="flex space-x-4 mb-6">
+                <button
+                    id="mergeButton"
+                    onclick="mergeAndCopy()"
+                    class="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300"
+                >
+                    Gabung & Salin Semua
+                </button>
+                <button
+                    id="deleteSelectedButton"
+                    onclick="deleteSelected()"
+                    class="flex-1 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                >
+                    Hapus File Terpilih
+                </button>
+                <button
+                    id="toggleDragModeButton"
+                    onclick="toggleDragMode()"
+                    class="flex-1 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition duration-300"
+                >
+                    Mode Seret
+                </button>
+                <button
+                    id="clearStorageButton"
+                    onclick="clearLocalStorage()"
+                    class="flex-1 bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition duration-300"
+                >
+                    Hapus Penyimpanan
+                </button>
+            </div>
+            <div id="fileList" class="mb-6"></div>
+            <div id="previewContainer" class="hidden mb-6">
+                <h2 class="text-2xl font-semibold mb-3 text-gray-700">
+                    Preview Gabungan
+                </h2>
+                <pre
+                    id="mergePreview"
+                    class="bg-gray-100 p-4 rounded-lg max-h-96 overflow-y-auto scrollbar-custom text-sm"
+                ></pre>
+                <p id="charCount" class="mt-2 text-gray-600"></p>
+            </div>
+            <div id="filesContent" class="mt-6 space-y-4"></div>
+        </div>
+
+        <script>
+            let allFiles = [];
+            let dragMode = false;
+
+            // Load files from local storage on page load
+            document.addEventListener("DOMContentLoaded", () => {
+                loadFromLocalStorage();
+            });
+
+            function handleFiles(files) {
+                const filesContent = document.getElementById("filesContent");
+                const fileList = document.getElementById("fileList");
+                filesContent.innerHTML = "";
+                fileList.innerHTML = "";
+                allFiles = [];
+
+                if (files.length > 0) {
+                    fileList.innerHTML = `<p class="text-gray-600 mb-2">File terpilih:</p>`;
+                    for (let file of files) {
+                        fileList.innerHTML += `<span class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">${file.name}</span>`;
+                    }
+                }
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const fileContainer = document.createElement("div");
+                    fileContainer.className =
+                        "bg-white shadow rounded-lg p-4 file-container";
+                    fileContainer.setAttribute("data-filename", file.name);
+
+                    const fileHeader = document.createElement("div");
+                    fileHeader.className =
+                        "flex justify-between items-center mb-2";
+                    fileHeader.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="drag-handle mr-2 hidden">&#9776;</span>
+                        <input type="checkbox" class="mr-2 file-checkbox" data-filename="${file.name}">
+                        <strong class="text-lg text-gray-800">${file.name}</strong>
+                    </div>
+                `;
+
+                    const buttonContainer = document.createElement("div");
+                    buttonContainer.className = "space-x-2";
+
+                    const copyBtn = document.createElement("button");
+                    copyBtn.textContent = "Salin";
+                    copyBtn.className =
+                        "bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition duration-300";
+
+                    const deleteBtn = document.createElement("button");
+                    deleteBtn.textContent = "Hapus";
+                    deleteBtn.className =
+                        "bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition duration-300";
+
+                    const fileContentElem = document.createElement("pre");
+                    fileContentElem.className =
+                        "whitespace-pre-wrap break-all mt-2 p-2 bg-gray-100 rounded max-h-40 overflow-y-auto scrollbar-custom text-sm";
+
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const content = e.target.result;
+                        fileContentElem.textContent = content;
+                        allFiles.push({ name: file.name, content: content });
+                        updateMergePreview();
+                        saveToLocalStorage();
+                        applySyntaxHighlighting(fileContentElem, file.name);
+                    };
+                    reader.readAsText(file);
+
+                    copyBtn.onclick = function () {
+                        const fullContent = `${file.name}\n${fileContentElem.textContent}`;
+                        navigator.clipboard.writeText(fullContent).then(() => {
+                            alert("File disalin!");
+                        });
+                    };
+
+                    deleteBtn.onclick = function () {
+                        deleteFile(file.name);
+                    };
+
+                    buttonContainer.appendChild(copyBtn);
+                    buttonContainer.appendChild(deleteBtn);
+                    fileHeader.appendChild(buttonContainer);
+                    fileContainer.appendChild(fileHeader);
+                    fileContainer.appendChild(fileContentElem);
+                    filesContent.appendChild(fileContainer);
+                }
+
+                initSortable();
+            }
+
+            function updateMergePreview() {
+                const previewContainer =
+                    document.getElementById("previewContainer");
+                const mergePreview = document.getElementById("mergePreview");
+                const charCount = document.getElementById("charCount");
+                if (allFiles.length > 0) {
+                    let mergedContent = allFiles
+                        .map((file) => `${file.name}\n${file.content}`)
+                        .join("\n\n");
+                    mergePreview.textContent = mergedContent;
+                    previewContainer.classList.remove("hidden");
+                    charCount.textContent = `Total karakter: ${mergedContent.length}`;
+                } else {
+                    previewContainer.classList.add("hidden");
+                }
+            }
+
+            function mergeAndCopy() {
+                if (allFiles.length === 0) {
+                    alert("Silakan unggah file terlebih dahulu.");
+                    return;
+                }
+
+                let mergedContent = allFiles
+                    .map((file) => `${file.name}\n${file.content}`)
+                    .join("\n\n");
+                navigator.clipboard.writeText(mergedContent).then(() => {
+                    alert("Semua file telah digabung dan disalin!");
+                });
+            }
+
+            function deleteFile(fileName) {
+                allFiles = allFiles.filter((file) => file.name !== fileName);
+                updateMergePreview();
+                const fileElement = document.querySelector(
+                    `[data-filename="${fileName}"]`,
+                );
+                fileElement.remove();
+                if (allFiles.length === 0) {
+                    document.getElementById("fileList").innerHTML = "";
+                }
+                saveToLocalStorage();
+            }
+
+            function deleteSelected() {
+                const selectedCheckboxes = document.querySelectorAll(
+                    ".file-checkbox:checked",
+                );
+                if (selectedCheckboxes.length === 0) {
+                    alert("Pilih file yang ingin dihapus terlebih dahulu.");
+                    return;
+                }
+                selectedCheckboxes.forEach((checkbox) => {
+                    deleteFile(checkbox.getAttribute("data-filename"));
+                });
+            }
+
+            // Drag and drop functionality
+            const dropZone = document.getElementById("dropZone");
+
+            ["dragenter", "dragover", "dragleave", "drop"].forEach(
+                (eventName) => {
+                    dropZone.addEventListener(
+                        eventName,
+                        preventDefaults,
+                        false,
+                    );
+                },
+            );
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ["dragenter", "dragover"].forEach((eventName) => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ["dragleave", "drop"].forEach((eventName) => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                dropZone.classList.add("bg-blue-100");
+            }
+
+            function unhighlight() {
+                dropZone.classList.remove("bg-blue-100");
+            }
+
+            dropZone.addEventListener("drop", handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }
+
+            // Local Storage functions
+            function saveToLocalStorage() {
+                localStorage.setItem("allFiles", JSON.stringify(allFiles));
+            }
+
+            function loadFromLocalStorage() {
+                const savedFiles = localStorage.getItem("allFiles");
+                if (savedFiles) {
+                    allFiles = JSON.parse(savedFiles);
+                    displaySavedFiles();
+                }
+            }
+
+            function displaySavedFiles() {
+                const filesContent = document.getElementById("filesContent");
+                filesContent.innerHTML = "";
+
+                allFiles.forEach((file) => {
+                    const fileContainer = document.createElement("div");
+                    fileContainer.className =
+                        "bg-white shadow rounded-lg p-4 file-container";
+                    fileContainer.setAttribute("data-filename", file.name);
+
+                    const fileHeader = document.createElement("div");
+                    fileHeader.className =
+                        "flex justify-between items-center mb-2";
+                    fileHeader.innerHTML = `
+                        <div class="flex items-center">
+                            <span class="drag-handle mr-2 hidden">&#9776;</span>
+                            <input type="checkbox" class="mr-2 file-checkbox" data-filename="${file.name}">
+                            <strong class="text-lg text-gray-800">${file.name}</strong>
+                        </div>
+                    `;
+
+                    const buttonContainer = document.createElement("div");
+                    buttonContainer.className = "space-x-2";
+
+                    const copyBtn = document.createElement("button");
+                    copyBtn.textContent = "Salin";
+                    copyBtn.className =
+                        "bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition duration-300";
+
+                    const deleteBtn = document.createElement("button");
+                    deleteBtn.textContent = "Hapus";
+                    deleteBtn.className =
+                        "bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition duration-300";
+
+                    const fileContentElem = document.createElement("pre");
+                    fileContentElem.className =
+                        "whitespace-pre-wrap break-all mt-2 p-2 bg-gray-100 rounded max-h-40 overflow-y-auto scrollbar-custom text-sm";
+                    fileContentElem.textContent = file.content;
+
+                    copyBtn.onclick = function () {
+                        const fullContent = `${file.name}\n${file.content}`;
+                        navigator.clipboard.writeText(fullContent).then(() => {
+                            alert("File disalin!");
+                        });
+                    };
+
+                    deleteBtn.onclick = function () {
+                        deleteFile(file.name);
+                    };
+
+                    buttonContainer.appendChild(copyBtn);
+                    buttonContainer.appendChild(deleteBtn);
+                    fileHeader.appendChild(buttonContainer);
+                    fileContainer.appendChild(fileHeader);
+                    fileContainer.appendChild(fileContentElem);
+                    filesContent.appendChild(fileContainer);
+
+                    applySyntaxHighlighting(fileContentElem, file.name);
+                });
+
+                updateMergePreview();
+                initSortable();
+            }
+
+            function clearLocalStorage() {
+                localStorage.removeItem("allFiles");
+                allFiles = [];
+                document.getElementById("filesContent").innerHTML = "";
+                document.getElementById("fileList").innerHTML = "";
+                updateMergePreview();
+                alert("Penyimpanan lokal telah dihapus.");
+            }
+
+            function toggleDragMode() {
+                dragMode = !dragMode;
+                const dragHandles = document.querySelectorAll(".drag-handle");
+                const toggleButton = document.getElementById(
+                    "toggleDragModeButton",
+                );
+
+                if (dragMode) {
+                    dragHandles.forEach((handle) =>
+                        handle.classList.remove("hidden"),
+                    );
+                    toggleButton.textContent = "Matikan Mode Seret";
+                    toggleButton.classList.remove(
+                        "bg-yellow-500",
+                        "hover:bg-yellow-600",
+                    );
+                    toggleButton.classList.add(
+                        "bg-blue-500",
+                        "hover:bg-blue-600",
+                    );
+                } else {
+                    dragHandles.forEach((handle) =>
+                        handle.classList.add("hidden"),
+                    );
+                    toggleButton.textContent = "Mode Seret";
+                    toggleButton.classList.remove(
+                        "bg-blue-500",
+                        "hover:bg-blue-600",
+                    );
+                    toggleButton.classList.add(
+                        "bg-yellow-500",
+                        "hover:bg-yellow-600",
+                    );
+                }
+            }
+
+            function initSortable() {
+                const filesContent = document.getElementById("filesContent");
+                new Sortable(filesContent, {
+                    animation: 150,
+                    handle: ".drag-handle",
+                    onEnd: function () {
+                        // Update allFiles array based on new order
+                        const fileContainers =
+                            filesContent.querySelectorAll(".file-container");
+                        allFiles = Array.from(fileContainers).map(
+                            (container) => {
+                                const fileName =
+                                    container.getAttribute("data-filename");
+                                return allFiles.find(
+                                    (file) => file.name === fileName,
+                                );
+                            },
+                        );
+                        saveToLocalStorage();
+                        updateMergePreview();
+                    },
+                });
+            }
+
+            function applySyntaxHighlighting(element, fileName) {
+                const extension = fileName.split(".").pop().toLowerCase();
+                let language;
+
+                switch (extension) {
+                    case "js":
+                    case "ts":
+                        language = "javascript";
+                        break;
+                    case "html":
+                        language = "html";
+                        break;
+                    case "css":
+                        language = "css";
+                        break;
+                    case "py":
+                        language = "python";
+                        break;
+                    case "json":
+                        language = "json";
+                        break;
+                    default:
+                        language = "plaintext";
+                }
+
+                element.classList.add(`language-${language}`);
+                hljs.highlightElement(element);
+            }
+
+            // Initialize highlight.js
+            document.addEventListener("DOMContentLoaded", (event) => {
+                document.querySelectorAll("pre").forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+            });
+        </script>
+    </body>
+</html>
