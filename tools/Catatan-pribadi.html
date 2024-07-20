@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="id" class="transition-colors duration-300">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Aplikasi Catatan Pribadi</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+            rel="stylesheet"
+        />
+        <script>
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: {
+                                50: "#eff6ff",
+                                100: "#dbeafe",
+                                200: "#bfdbfe",
+                                300: "#93c5fd",
+                                400: "#60a5fa",
+                                500: "#3b82f6",
+                                600: "#2563eb",
+                                700: "#1d4ed8",
+                                800: "#1e40af",
+                                900: "#1e3a8a",
+                                950: "#172554",
+                            },
+                        },
+                    },
+                    fontFamily: {
+                        body: [
+                            "Inter",
+                            "ui-sans-serif",
+                            "system-ui",
+                            "-apple-system",
+                            "system-ui",
+                            "Segoe UI",
+                            "Roboto",
+                            "Helvetica Neue",
+                            "Arial",
+                            "Noto Sans",
+                            "sans-serif",
+                            "Apple Color Emoji",
+                            "Segoe UI Emoji",
+                            "Segoe UI Symbol",
+                            "Noto Color Emoji",
+                        ],
+                        sans: [
+                            "Inter",
+                            "ui-sans-serif",
+                            "system-ui",
+                            "-apple-system",
+                            "system-ui",
+                            "Segoe UI",
+                            "Roboto",
+                            "Helvetica Neue",
+                            "Arial",
+                            "Noto Sans",
+                            "sans-serif",
+                            "Apple Color Emoji",
+                            "Segoe UI Emoji",
+                            "Segoe UI Symbol",
+                            "Noto Color Emoji",
+                        ],
+                    },
+                },
+            };
+        </script>
+    </head>
+    <body
+        class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white transition-colors duration-300"
+    >
+        <div class="container mx-auto p-4 max-w-5xl">
+            <header
+                class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8"
+            >
+                <h1
+                    class="text-3xl font-bold text-center text-primary-600 dark:text-primary-400"
+                >
+                    Aplikasi Catatan Pribadi
+                </h1>
+            </header>
+
+            <nav class="mb-6">
+                <ul
+                    class="flex space-x-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow"
+                >
+                    <li>
+                        <button
+                            class="category-btn px-4 py-2 rounded-md"
+                            data-category="all"
+                        >
+                            Semua
+                        </button>
+                    </li>
+                    <li>
+                        <button
+                            class="category-btn px-4 py-2 rounded-md"
+                            data-category="personal"
+                        >
+                            Pribadi
+                        </button>
+                    </li>
+                    <li>
+                        <button
+                            class="category-btn px-4 py-2 rounded-md"
+                            data-category="work"
+                        >
+                            Pekerjaan
+                        </button>
+                    </li>
+                    <li>
+                        <button
+                            class="category-btn px-4 py-2 rounded-md"
+                            data-category="study"
+                        >
+                            Belajar
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+
+            <div
+                class="flex items-center mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow"
+            >
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Cari catatan..."
+                    class="flex-grow p-2 mr-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <button
+                    id="addButton"
+                    class="bg-primary-500 text-white px-4 py-2 rounded-md hover:bg-primary-600 transition duration-300"
+                >
+                    Tambah Catatan
+                </button>
+                <div class="flex items-center ml-4 space-x-2">
+                    <button
+                        id="darkModeToggle"
+                        class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition duration-300"
+                    >
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button
+                        id="downloadJsonBtn"
+                        class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition duration-300"
+                    >
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <label
+                        for="uploadJsonInput"
+                        class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition duration-300 cursor-pointer"
+                    >
+                        <i class="fas fa-upload"></i>
+                    </label>
+                    <input
+                        type="file"
+                        id="uploadJsonInput"
+                        accept=".json"
+                        class="hidden"
+                    />
+                </div>
+            </div>
+
+            <div class="flex items-center mb-4">
+                <input type="checkbox" id="showCompleted" class="mr-2" />
+                <label for="showCompleted" class="text-sm"
+                    >Tampilkan catatan yang sudah selesai</label
+                >
+            </div>
+
+            <div
+                id="notesList"
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+                <!-- Notes will be dynamically added here -->
+            </div>
+        </div>
+
+        <!-- Modal for adding/editing notes -->
+        <div
+            id="noteModal"
+            class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
+        >
+            <div
+                class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md"
+            >
+                <h2
+                    id="modalTitle"
+                    class="text-2xl font-bold mb-4 text-gray-800 dark:text-white"
+                >
+                    Tambah Catatan Baru
+                </h2>
+                <input
+                    type="text"
+                    id="noteTitle"
+                    placeholder="Judul"
+                    class="w-full p-2 mb-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
+                />
+                <textarea
+                    id="noteDescription"
+                    placeholder="Deskripsi"
+                    class="w-full p-2 mb-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
+                    rows="4"
+                ></textarea>
+                <select
+                    id="noteCategory"
+                    class="w-full p-2 mb-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
+                >
+                    <option value="personal">Pribadi</option>
+                    <option value="work">Pekerjaan</option>
+                    <option value="study">Belajar</option>
+                </select>
+                <div class="flex justify-end space-x-2">
+                    <button
+                        id="cancelNote"
+                        class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white rounded-md hover:bg-gray-400 dark:hover:bg-gray-500"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        id="saveNote"
+                        class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600"
+                    >
+                        Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // DOM Elements
+            const notesList = document.getElementById("notesList");
+            const addButton = document.getElementById("addButton");
+            const noteModal = document.getElementById("noteModal");
+            const modalTitle = document.getElementById("modalTitle");
+            const noteTitle = document.getElementById("noteTitle");
+            const noteDescription = document.getElementById("noteDescription");
+            const noteCategory = document.getElementById("noteCategory");
+            const saveNote = document.getElementById("saveNote");
+            const cancelNote = document.getElementById("cancelNote");
+            const searchInput = document.getElementById("searchInput");
+            const showCompletedCheckbox =
+                document.getElementById("showCompleted");
+            const categoryButtons = document.querySelectorAll(".category-btn");
+            const darkModeToggle = document.getElementById("darkModeToggle");
+            const downloadJsonBtn = document.getElementById("downloadJsonBtn");
+            const uploadJsonInput = document.getElementById("uploadJsonInput");
+
+            // Variables
+            let notes = JSON.parse(localStorage.getItem("notes")) || [];
+            let editingNoteId = null;
+
+            // Functions
+            function renderNotes() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const showCompleted = showCompletedCheckbox.checked;
+                const selectedCategory =
+                    document.querySelector(".category-btn.bg-blue-100")?.dataset
+                        .category || "all";
+
+                const filteredNotes = notes.filter(
+                    (note) =>
+                        (note.title.toLowerCase().includes(searchTerm) ||
+                            note.description
+                                .toLowerCase()
+                                .includes(searchTerm)) &&
+                        (showCompleted || !note.completed) &&
+                        (selectedCategory === "all" ||
+                            note.category === selectedCategory),
+                );
+
+                notesList.innerHTML = "";
+                filteredNotes.forEach((note) => {
+                    const noteElement = createNoteElement(note);
+                    notesList.appendChild(noteElement);
+                });
+            }
+
+            function createNoteElement(note) {
+                const noteDiv = document.createElement("div");
+                noteDiv.className = `bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 ${note.completed ? "opacity-60" : ""}`;
+                noteDiv.innerHTML = `
+                <div class="flex justify-between items-start mb-3">
+                    <span class="px-3 py-1 text-sm font-medium rounded-full ${getCategoryColor(note.category)}">${getCategoryName(note.category)}</span>
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" ${note.completed ? "checked" : ""} onchange="toggleComplete(${note.id})" class="form-checkbox h-5 w-5 text-blue-600">
+                        <button onclick="editNote(${note.id})" class="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteNote(${note.id})" class="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <h3 class="font-bold text-lg mb-2 text-gray-800 dark:text-white">${note.title}</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-3">${note.description}</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500">${note.date}</p>
+            `;
+                return noteDiv;
+            }
+
+            function getCategoryColor(category) {
+                switch (category) {
+                    case "personal":
+                        return "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400";
+                    case "work":
+                        return "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400";
+                    case "study":
+                        return "bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-400";
+                    default:
+                        return "bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-400";
+                }
+            }
+
+            function getCategoryName(category) {
+                switch (category) {
+                    case "personal":
+                        return "Pribadi";
+                    case "work":
+                        return "Pekerjaan";
+                    case "study":
+                        return "Belajar";
+                    default:
+                        return "Lainnya";
+                }
+            }
+
+            function addNote() {
+                editingNoteId = null;
+                modalTitle.textContent = "Tambah Catatan Baru";
+                noteTitle.value = "";
+                noteDescription.value = "";
+                noteCategory.value = "personal";
+                noteModal.classList.remove("hidden");
+                noteModal.classList.add("flex");
+            }
+
+            function saveNoteHandler() {
+                const title = noteTitle.value.trim();
+                const description = noteDescription.value.trim();
+                const category = noteCategory.value;
+
+                if (title && description) {
+                    if (editingNoteId === null) {
+                        const newNote = {
+                            id: Date.now(),
+                            title,
+                            description,
+                            category,
+                            date: new Date().toLocaleString(),
+                            completed: false,
+                        };
+                        notes.push(newNote);
+                    } else {
+                        const noteIndex = notes.findIndex(
+                            (note) => note.id === editingNoteId,
+                        );
+                        if (noteIndex !== -1) {
+                            notes[noteIndex] = {
+                                ...notes[noteIndex],
+                                title,
+                                description,
+                                category,
+                                date: new Date().toLocaleString(),
+                            };
+                        }
+                    }
+                    localStorage.setItem("notes", JSON.stringify(notes));
+                    closeModal();
+                    renderNotes();
+                }
+            }
+
+            function closeModal() {
+                noteModal.classList.add("hidden");
+                noteModal.classList.remove("flex");
+            }
+
+            function editNote(id) {
+                const note = notes.find((note) => note.id === id);
+                if (note) {
+                    editingNoteId = id;
+                    modalTitle.textContent = "Edit Catatan";
+                    noteTitle.value = note.title;
+                    noteDescription.value = note.description;
+                    noteCategory.value = note.category;
+                    noteModal.classList.remove("hidden");
+                    noteModal.classList.add("flex");
+                }
+            }
+
+            function deleteNote(id) {
+                if (confirm("Apakah Anda yakin ingin menghapus catatan ini?")) {
+                    notes = notes.filter((note) => note.id !== id);
+                    localStorage.setItem("notes", JSON.stringify(notes));
+                    renderNotes();
+                }
+            }
+
+            function toggleComplete(id) {
+                const noteIndex = notes.findIndex((note) => note.id === id);
+                if (noteIndex !== -1) {
+                    notes[noteIndex].completed = !notes[noteIndex].completed;
+                    localStorage.setItem("notes", JSON.stringify(notes));
+                    renderNotes();
+                }
+            }
+
+            function toggleDarkMode() {
+                document.documentElement.classList.toggle("dark");
+                localStorage.setItem(
+                    "darkMode",
+                    document.documentElement.classList.contains("dark"),
+                );
+                updateDarkModeIcon();
+            }
+
+            function updateDarkModeIcon() {
+                const icon = darkModeToggle.querySelector("i");
+                if (document.documentElement.classList.contains("dark")) {
+                    icon.classList.remove("fa-moon");
+                    icon.classList.add("fa-sun");
+                } else {
+                    icon.classList.remove("fa-sun");
+                    icon.classList.add("fa-moon");
+                }
+            }
+
+            function downloadJson() {
+                const dataStr =
+                    "data:text/json;charset=utf-8," +
+                    encodeURIComponent(JSON.stringify(notes));
+                const downloadAnchorNode = document.createElement("a");
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "notes.json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+            }
+
+            function uploadJson(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        try {
+                            const uploadedNotes = JSON.parse(e.target.result);
+                            if (Array.isArray(uploadedNotes)) {
+                                notes = uploadedNotes;
+                                localStorage.setItem(
+                                    "notes",
+                                    JSON.stringify(notes),
+                                );
+                                renderNotes();
+                                alert("Catatan berhasil diimpor!");
+                            } else {
+                                throw new Error("Format file tidak valid");
+                            }
+                        } catch (error) {
+                            alert(
+                                "Terjadi kesalahan saat mengimpor file: " +
+                                    error.message,
+                            );
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            }
+
+            // Event Listeners
+            addButton.addEventListener("click", addNote);
+            saveNote.addEventListener("click", saveNoteHandler);
+            cancelNote.addEventListener("click", closeModal);
+            searchInput.addEventListener("input", renderNotes);
+            showCompletedCheckbox.addEventListener("change", renderNotes);
+            categoryButtons.forEach((button) => {
+                button.addEventListener("click", (e) => {
+                    categoryButtons.forEach((btn) =>
+                        btn.classList.remove("bg-blue-100", "dark:bg-blue-900"),
+                    );
+                    e.target.classList.add("bg-blue-100", "dark:bg-blue-900");
+                    renderNotes();
+                });
+            });
+            darkModeToggle.addEventListener("click", toggleDarkMode);
+            downloadJsonBtn.addEventListener("click", downloadJson);
+            uploadJsonInput.addEventListener("change", uploadJson);
+
+            // Initialize
+            renderNotes();
+            if (localStorage.getItem("darkMode") === "true") {
+                document.documentElement.classList.add("dark");
+            }
+            updateDarkModeIcon();
+        </script>
+    </body>
+</html>
