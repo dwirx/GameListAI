@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Hacker News Clone - Tech News Hub</title>
+        <meta
+            name="description"
+            content="Stay updated with the latest tech news from Hacker News"
+        />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+            rel="stylesheet"
+        />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/framer-motion/4.1.17/framer-motion.min.js"></script>
+        <script>
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            dark: {
+                                bg: "#1a202c",
+                                text: "#e2e8f0",
+                            },
+                        },
+                    },
+                },
+            };
+        </script>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap");
+            body {
+                font-family: "Roboto", sans-serif;
+            }
+            .loader {
+                border-top-color: #3498db;
+                -webkit-animation: spinner 1.5s linear infinite;
+                animation: spinner 1.5s linear infinite;
+            }
+            @-webkit-keyframes spinner {
+                0% {
+                    -webkit-transform: rotate(0deg);
+                }
+                100% {
+                    -webkit-transform: rotate(360deg);
+                }
+            }
+            @keyframes spinner {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+            .category-btn {
+                white-space: nowrap;
+            }
+            .category-scroll {
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            .category-scroll::-webkit-scrollbar {
+                display: none;
+            }
+        </style>
+    </head>
+    <body
+        class="bg-gray-100 text-gray-900 dark:bg-dark-bg dark:text-dark-text transition-colors duration-300"
+    >
+        <header class="bg-orange-500 text-white shadow-lg sticky top-0 z-50">
+            <div
+                class="container mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center"
+            >
+                <h1 class="text-2xl sm:text-3xl font-bold mb-2 sm:mb-0">
+                    Hacker News Clone
+                </h1>
+                <div
+                    class="flex items-center space-x-2 sm:space-x-4 flex-wrap justify-center"
+                >
+                    <button
+                        id="refreshBtn"
+                        class="bg-white text-orange-500 hover:bg-orange-100 font-bold py-2 px-3 sm:px-4 rounded transition duration-300 text-sm sm:text-base"
+                    >
+                        <i class="fas fa-sync-alt mr-1 sm:mr-2"></i>Refresh
+                    </button>
+                    <button
+                        id="bookmarksBtn"
+                        class="bg-white text-orange-500 hover:bg-orange-100 font-bold py-2 px-3 sm:px-4 rounded transition duration-300 text-sm sm:text-base"
+                    >
+                        <i class="fas fa-bookmark mr-1 sm:mr-2"></i>Bookmarks
+                    </button>
+                    <button
+                        id="darkModeToggle"
+                        class="bg-white text-orange-500 hover:bg-orange-100 font-bold py-2 px-3 sm:px-4 rounded transition duration-300 text-sm sm:text-base"
+                    >
+                        <i class="fas fa-moon mr-1 sm:mr-2"></i>Dark Mode
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <nav class="bg-gray-200 dark:bg-gray-800 py-2 sm:py-4 overflow-hidden">
+            <div class="container mx-auto px-4">
+                <div
+                    class="flex flex-col sm:flex-row justify-between items-center"
+                >
+                    <ul
+                        class="category-scroll flex space-x-2 sm:space-x-4 overflow-x-auto mb-2 sm:mb-0 w-full sm:w-auto pb-2 sm:pb-0"
+                    >
+                        <li>
+                            <button
+                                class="category-btn bg-blue-500 text-white px-3 py-1 sm:px-4 sm:py-2 rounded text-sm sm:text-base"
+                                data-category="featured"
+                            >
+                                Featured
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                class="category-btn bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 sm:px-4 sm:py-2 rounded text-sm sm:text-base"
+                                data-category="mostpopular"
+                            >
+                                Most Popular
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                class="category-btn bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 sm:px-4 sm:py-2 rounded text-sm sm:text-base"
+                                data-category="newest"
+                            >
+                                Newest
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                class="category-btn bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 sm:px-4 sm:py-2 rounded text-sm sm:text-base"
+                                data-category="past"
+                            >
+                                Past
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                class="category-btn bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 sm:px-4 sm:py-2 rounded text-sm sm:text-base"
+                                data-category="ask"
+                            >
+                                Ask
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                class="category-btn bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 sm:px-4 sm:py-2 rounded text-sm sm:text-base"
+                                data-category="show"
+                            >
+                                Show
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                class="category-btn bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 sm:px-4 sm:py-2 rounded text-sm sm:text-base"
+                                data-category="jobs"
+                            >
+                                Jobs
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="w-full sm:w-64 mt-2 sm:mt-0">
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Search stories..."
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="container mx-auto px-4 py-4 sm:py-8">
+            <div
+                id="loader"
+                class="hidden loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16 mx-auto mb-4"
+            ></div>
+            <div
+                id="newsList"
+                class="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+            ></div>
+            <div class="text-center mt-8">
+                <button
+                    id="loadMoreBtn"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                >
+                    Load More
+                </button>
+            </div>
+        </main>
+
+        <footer class="bg-gray-800 text-white py-4 mt-8">
+            <div class="container mx-auto px-4 text-center">
+                <p>&copy; 2023 Hacker News Clone. All rights reserved.</p>
+            </div>
+        </footer>
+
+        <script>
+            const apiUrl = "https://hacker-news.firebaseio.com/v0";
+            const newsContainer = document.getElementById("newsList");
+            const loader = document.getElementById("loader");
+            const refreshBtn = document.getElementById("refreshBtn");
+            const bookmarksBtn = document.getElementById("bookmarksBtn");
+            const loadMoreBtn = document.getElementById("loadMoreBtn");
+            const darkModeToggle = document.getElementById("darkModeToggle");
+            const categoryButtons = document.querySelectorAll(".category-btn");
+            const searchInput = document.getElementById("searchInput");
+            let currentStories = [];
+            let currentIndex = 0;
+            const storiesPerPage = 15;
+            let currentCategory = "featured";
+            let isBookmarkView = false;
+            let searchTerm = "";
+
+            async function fetchTopStories() {
+                const response = await fetch(`${apiUrl}/topstories.json`);
+                return await response.json();
+            }
+
+            async function fetchNewStories() {
+                const response = await fetch(`${apiUrl}/newstories.json`);
+                return await response.json();
+            }
+
+            async function fetchBestStories() {
+                const response = await fetch(`${apiUrl}/beststories.json`);
+                return await response.json();
+            }
+
+            async function fetchAskStories() {
+                const response = await fetch(`${apiUrl}/askstories.json`);
+                return await response.json();
+            }
+
+            async function fetchShowStories() {
+                const response = await fetch(`${apiUrl}/showstories.json`);
+                return await response.json();
+            }
+
+            async function fetchJobStories() {
+                const response = await fetch(`${apiUrl}/jobstories.json`);
+                return await response.json();
+            }
+
+            async function fetchStory(id) {
+                const response = await fetch(`${apiUrl}/item/${id}.json`);
+                return await response.json();
+            }
+
+            function formatDate(timestamp) {
+                const date = new Date(timestamp * 1000);
+                return date.toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                });
+            }
+
+            function createStoryElement(story) {
+                const storyElement = document.createElement("article");
+                storyElement.className =
+                    "bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105";
+
+                const savedStories = JSON.parse(
+                    localStorage.getItem("savedStories") || "[]",
+                );
+                const isBookmarked = savedStories.includes(story.id.toString());
+
+                storyElement.innerHTML = `
+                    <div class="p-4 sm:p-6">
+                        <h2 class="text-lg sm:text-xl font-semibold mb-2">
+                            <a href="${story.url || `https://news.ycombinator.com/item?id=${story.id}`}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">${story.title}</a>
+                        </h2>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">By ${story.by} | Score: ${story.score}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-500 mb-2">
+                            <i class="far fa-clock mr-1"></i> Published: ${formatDate(story.time)}
+                        </p>
+                        ${story.text ? `<p class="text-sm text-gray-700 dark:text-gray-300 mt-2">${story.text}</p>` : ""}
+                    </div>
+                    <div class="bg-gray-100 dark:bg-gray-700 px-4 sm:px-6 py-3 flex justify-between items-center">
+                        <a href="https://news.ycombinator.com/item?id=${story.id}" target="_blank" class="text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 text-sm">
+                            <i class="far fa-comment mr-1"></i> ${story.descendants || 0} comments
+                        </a>
+                        <button class="${isBookmarked ? "deleteBookmarkBtn bg-red-500 hover:bg-red-600" : "saveBtn bg-green-500 hover:bg-green-600"} text-white text-xs sm:text-sm py-1 px-2 rounded transition duration-300" data-id="${story.id}">
+                            <i class="${isBookmarked ? "fas fa-trash" : "far fa-bookmark"} mr-1"></i> ${isBookmarked ? "Delete" : "Save"}
+                        </button>
+                    </div>
+                `;
+
+                framerMotion(storyElement);
+
+                return storyElement;
+            }
+
+            function framerMotion(element) {
+                element.style.transform = "scale(0)";
+                element.style.opacity = "0";
+                element.animate(
+                    [
+                        { transform: "scale(0)", opacity: 0 },
+                        { transform: "scale(1)", opacity: 1 },
+                    ],
+                    {
+                        duration: 500,
+                        easing: "ease-in-out",
+                        fill: "forwards",
+                    },
+                );
+            }
+
+            async function loadNews(append = false) {
+                if (!append) {
+                    newsContainer.innerHTML = "";
+                    currentIndex = 0;
+                }
+                loader.classList.remove("hidden");
+
+                if (currentStories.length === 0) {
+                    switch (currentCategory) {
+                        case "featured":
+                            currentStories = await fetchBestStories();
+                            break;
+                        case "mostpopular":
+                            currentStories = await fetchTopStories();
+                            break;
+                        case "newest":
+                            currentStories = await fetchNewStories();
+                            break;
+                        case "past":
+                            currentStories = await fetchNewStories();
+                            break;
+                        case "ask":
+                            currentStories = await fetchAskStories();
+                            break;
+                        case "show":
+                            currentStories = await fetchShowStories();
+                            break;
+                        case "jobs":
+                            currentStories = await fetchJobStories();
+                            break;
+                    }
+                }
+
+                const storiesToLoad = currentStories.slice(
+                    currentIndex,
+                    currentIndex + storiesPerPage,
+                );
+                const stories = await Promise.all(
+                    storiesToLoad.map(fetchStory),
+                );
+
+                // Filter out duplicates
+                const uniqueStories = stories.reduce((acc, story) => {
+                    if (!acc.find((s) => s.id === story.id)) {
+                        acc.push(story);
+                    }
+                    return acc;
+                }, []);
+
+                const filteredStories = uniqueStories.filter(
+                    (story) =>
+                        story.title
+                            .toLowerCase()
+                            .includes(searchTerm.toLowerCase()) ||
+                        (story.text &&
+                            story.text
+                                .toLowerCase()
+                                .includes(searchTerm.toLowerCase())),
+                );
+
+                filteredStories.forEach((story) => {
+                    const storyElement = createStoryElement(story);
+                    newsContainer.appendChild(storyElement);
+                });
+
+                currentIndex += storiesPerPage;
+                loader.classList.add("hidden");
+                loadMoreBtn.classList.toggle(
+                    "hidden",
+                    currentIndex >= currentStories.length ||
+                        filteredStories.length === 0,
+                );
+
+                if (filteredStories.length === 0 && !append) {
+                    newsContainer.innerHTML =
+                        '<p class="text-center text-gray-500 dark:text-gray-400">No stories found matching your search.</p>';
+                }
+            }
+
+            function toggleDarkMode() {
+                document.documentElement.classList.toggle("dark");
+                const isDarkMode =
+                    document.documentElement.classList.contains("dark");
+                localStorage.setItem("darkMode", isDarkMode);
+                darkModeToggle.innerHTML = isDarkMode
+                    ? '<i class="fas fa-sun mr-2"></i>Light Mode'
+                    : '<i class="fas fa-moon mr-2"></i>Dark Mode';
+            }
+
+            function initDarkMode() {
+                if (localStorage.getItem("darkMode") === "true") {
+                    document.documentElement.classList.add("dark");
+                    darkModeToggle.innerHTML =
+                        '<i class="fas fa-sun mr-2"></i>Light Mode';
+                }
+            }
+
+            async function loadBookmarks() {
+                isBookmarkView = true;
+                const savedStories = JSON.parse(
+                    localStorage.getItem("savedStories") || "[]",
+                );
+                newsContainer.innerHTML = "";
+                loader.classList.remove("hidden");
+
+                if (savedStories.length === 0) {
+                    newsContainer.innerHTML =
+                        '<p class="text-center text-gray-500 dark:text-gray-400">No bookmarks saved yet.</p>';
+                } else {
+                    const bookmarkedStories = await Promise.all(
+                        savedStories.map(fetchStory),
+                    );
+                    // Filter out duplicates
+                    const uniqueBookmarks = bookmarkedStories.reduce(
+                        (acc, story) => {
+                            if (!acc.find((s) => s.id === story.id)) {
+                                acc.push(story);
+                            }
+                            return acc;
+                        },
+                        [],
+                    );
+                    const filteredBookmarks = uniqueBookmarks.filter(
+                        (story) =>
+                            story.title
+                                .toLowerCase()
+                                .includes(searchTerm.toLowerCase()) ||
+                            (story.text &&
+                                story.text
+                                    .toLowerCase()
+                                    .includes(searchTerm.toLowerCase())),
+                    );
+
+                    if (filteredBookmarks.length === 0) {
+                        newsContainer.innerHTML =
+                            '<p class="text-center text-gray-500 dark:text-gray-400">No bookmarks found matching your search.</p>';
+                    } else {
+                        filteredBookmarks.forEach((story) => {
+                            if (story) {
+                                const storyElement = createStoryElement(story);
+                                newsContainer.appendChild(storyElement);
+                            }
+                        });
+                    }
+                }
+
+                loader.classList.add("hidden");
+                loadMoreBtn.classList.add("hidden");
+            }
+
+            function saveBookmark(storyId) {
+                let savedStories = JSON.parse(
+                    localStorage.getItem("savedStories") || "[]",
+                );
+                if (!savedStories.includes(storyId)) {
+                    savedStories.push(storyId);
+                    localStorage.setItem(
+                        "savedStories",
+                        JSON.stringify(savedStories),
+                    );
+                }
+            }
+
+            function deleteBookmark(storyId) {
+                let savedStories = JSON.parse(
+                    localStorage.getItem("savedStories") || "[]",
+                );
+                savedStories = savedStories.filter((id) => id !== storyId);
+                localStorage.setItem(
+                    "savedStories",
+                    JSON.stringify(savedStories),
+                );
+                if (isBookmarkView) {
+                    loadBookmarks();
+                }
+            }
+
+            refreshBtn.addEventListener("click", () => {
+                isBookmarkView = false;
+                refreshBtn.disabled = true;
+                refreshBtn.classList.add("opacity-50", "cursor-not-allowed");
+                currentStories = [];
+                loadNews().then(() => {
+                    refreshBtn.disabled = false;
+                    refreshBtn.classList.remove(
+                        "opacity-50",
+                        "cursor-not-allowed",
+                    );
+                });
+            });
+
+            bookmarksBtn.addEventListener("click", loadBookmarks);
+            loadMoreBtn.addEventListener("click", () => loadNews(true));
+            darkModeToggle.addEventListener("click", toggleDarkMode);
+
+            categoryButtons.forEach((button) => {
+                button.addEventListener("click", () => {
+                    isBookmarkView = false;
+                    categoryButtons.forEach((btn) =>
+                        btn.classList.remove("bg-blue-500", "text-white"),
+                    );
+                    button.classList.add("bg-blue-500", "text-white");
+                    currentCategory = button.dataset.category;
+                    currentStories = [];
+                    loadNews();
+                });
+            });
+
+            searchInput.addEventListener("input", (e) => {
+                searchTerm = e.target.value;
+                if (isBookmarkView) {
+                    loadBookmarks();
+                } else {
+                    loadNews();
+                }
+            });
+
+            document.addEventListener("click", (e) => {
+                if (e.target.classList.contains("saveBtn")) {
+                    const storyId = e.target.getAttribute("data-id");
+                    saveBookmark(storyId);
+                    e.target.innerHTML =
+                        '<i class="fas fa-bookmark mr-1"></i> Saved';
+                    e.target.classList.replace("saveBtn", "deleteBookmarkBtn");
+                    e.target.classList.replace("bg-green-500", "bg-red-500");
+                    e.target.classList.replace(
+                        "hover:bg-green-600",
+                        "hover:bg-red-600",
+                    );
+                } else if (e.target.classList.contains("deleteBookmarkBtn")) {
+                    const storyId = e.target.getAttribute("data-id");
+                    deleteBookmark(storyId);
+                    if (!isBookmarkView) {
+                        e.target.innerHTML =
+                            '<i class="far fa-bookmark mr-1"></i> Save';
+                        e.target.classList.replace(
+                            "deleteBookmarkBtn",
+                            "saveBtn",
+                        );
+                        e.target.classList.replace(
+                            "bg-red-500",
+                            "bg-green-500",
+                        );
+                        e.target.classList.replace(
+                            "hover:bg-red-600",
+                            "hover:bg-green-600",
+                        );
+                    }
+                }
+            });
+
+            // Initial load
+            initDarkMode();
+            loadNews();
+        </script>
+    </body>
+</html>
