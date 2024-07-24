@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enhanced ElevenLabs TTS Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      @keyframes fillAnimation {
+        from {
+          width: 0;
+        }
+        to {
+          width: var(--fill-width);
+        }
+      }
+      .animate-fill {
+        animation: fillAnimation 1s ease-out forwards;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-r from-blue-500 to-purple-600 min-h-screen p-4 md:p-8"
+  >
+    <div class="bg-white p-4 md:p-8 rounded-lg shadow-2xl max-w-4xl mx-auto">
+      <h1 class="text-2xl md:text-3xl font-bold mb-6 text-center text-gray-800">
+        ElevenLabs TTS Demo
+      </h1>
+
+      <!-- API Key Input -->
+      <div class="mb-6">
+        <label for="apiKey" class="block text-sm font-medium text-gray-700 mb-2"
+          >API Key:</label
+        >
+        <div class="flex">
+          <input
+            type="password"
+            id="apiKey"
+            class="flex-grow px-3 py-2 text-gray-700 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+            placeholder="Enter your API key"
+          />
+          <button
+            id="toggleApiKey"
+            class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 transition duration-300"
+          >
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Usage Monitoring -->
+      <div id="usageContainer" class="mb-6 hidden">
+        <button
+          id="showUsage"
+          class="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-300 flex items-center justify-center mb-2"
+        >
+          <i class="fas fa-chart-bar mr-2"></i> Show Usage Details
+        </button>
+        <div id="usageDetails" class="hidden bg-gray-100 p-4 rounded-lg">
+          <h3 class="font-semibold mb-4 text-center">Usage Details</h3>
+          <div class="flex justify-around text-center">
+            <div>
+              <p class="font-bold text-gray-700">Total</p>
+              <p
+                id="totalCharacters"
+                class="text-2xl font-bold text-blue-600"
+              ></p>
+            </div>
+            <div>
+              <p class="font-bold text-gray-700">Remaining</p>
+              <p
+                id="remainingCharacters"
+                class="text-2xl font-bold text-green-600"
+              ></p>
+            </div>
+            <div>
+              <p class="font-bold text-gray-700">Used</p>
+              <p
+                id="usagePercentage"
+                class="text-2xl font-bold text-orange-600"
+              ></p>
+            </div>
+          </div>
+          <div class="mt-4">
+            <div class="bg-gray-200 h-4 rounded-full overflow-hidden">
+              <div
+                id="usageBar"
+                class="bg-blue-500 h-full animate-fill"
+                style="--fill-width: 0%"
+              ></div>
+            </div>
+          </div>
+          <div
+            id="additionalUsageInfo"
+            class="mt-4 text-sm text-gray-600"
+          ></div>
+          <div
+            id="resetCountdown"
+            class="mt-4 text-sm font-bold text-blue-600"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Text Input -->
+      <div class="mb-6">
+        <label for="text" class="block text-sm font-medium text-gray-700 mb-2">
+          Enter text to convert to speech:
+        </label>
+        <textarea
+          id="text"
+          rows="4"
+          class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+          placeholder="Enter your text here..."
+        ></textarea>
+        <div id="textStats" class="mt-2 text-sm text-gray-600"></div>
+      </div>
+
+      <!-- Voice Selection -->
+      <div class="mb-6">
+        <label for="voice" class="block text-sm font-medium text-gray-700 mb-2">
+          Select voice:
+        </label>
+        <select
+          id="voice"
+          class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+        ></select>
+      </div>
+
+      <!-- Voice Preview -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Preview voice:
+        </label>
+        <audio id="preview" controls class="w-full"></audio>
+      </div>
+
+      <!-- Convert Button -->
+      <button
+        id="convert"
+        class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition duration-300 flex items-center justify-center"
+      >
+        <i class="fas fa-microphone mr-2"></i> Convert to Speech
+      </button>
+
+      <!-- Generated Audio -->
+      <div id="audioContainer" class="mt-6 hidden">
+        <div class="bg-gray-100 p-4 rounded-lg">
+          <h2 class="text-xl font-semibold mb-2 text-gray-800">
+            Generated Audio
+          </h2>
+          <audio id="audio" controls class="w-full mb-4"></audio>
+          <button
+            id="download"
+            class="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-300 flex items-center justify-center"
+          >
+            <i class="fas fa-download mr-2"></i> Download Audio
+          </button>
+          <button
+            id="saveToHistory"
+            class="w-full mt-2 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-300 flex items-center justify-center"
+          >
+            <i class="fas fa-history mr-2"></i> Save to History
+          </button>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div id="historyContainer" class="mt-6">
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="text-xl font-semibold text-gray-800">History</h2>
+          <button
+            id="clearHistory"
+            class="bg-red-500 text-white py-1 px-3 rounded-lg hover:bg-red-600 transition duration-300 text-sm"
+          >
+            Clear History
+          </button>
+        </div>
+        <div id="historyList" class="space-y-2"></div>
+      </div>
+    </div>
+
+    <script>
+      // Initialize variables
+      let apiKey = localStorage.getItem("elevenlabsApiKey") || "";
+      let audioBlob = null;
+      let currentVoiceId = "";
+
+      const apiKeyInput = document.getElementById("apiKey");
+      const toggleApiKeyBtn = document.getElementById("toggleApiKey");
+      const textArea = document.getElementById("text");
+      const textStats = document.getElementById("textStats");
+      const voiceSelect = document.getElementById("voice");
+      const previewAudio = document.getElementById("preview");
+      const convertBtn = document.getElementById("convert");
+      const audioContainer = document.getElementById("audioContainer");
+      const audioElement = document.getElementById("audio");
+      const downloadBtn = document.getElementById("download");
+      const saveToHistoryBtn = document.getElementById("saveToHistory");
+      const historyList = document.getElementById("historyList");
+      const clearHistoryBtn = document.getElementById("clearHistory");
+      const usageContainer = document.getElementById("usageContainer");
+      const showUsageBtn = document.getElementById("showUsage");
+      const usageDetails = document.getElementById("usageDetails");
+      const usageInfo = document.getElementById("usageInfo");
+      const usageBar = document.getElementById("usageBar");
+
+      // Set initial API key
+      apiKeyInput.value = apiKey;
+
+      // Toggle API key visibility
+      toggleApiKeyBtn.addEventListener("click", () => {
+        apiKeyInput.type =
+          apiKeyInput.type === "password" ? "text" : "password";
+        toggleApiKeyBtn.innerHTML =
+          apiKeyInput.type === "password"
+            ? '<i class="fas fa-eye"></i>'
+            : '<i class="fas fa-eye-slash"></i>';
+      });
+
+      // Save API key to localStorage and fetch usage
+      apiKeyInput.addEventListener("change", () => {
+        apiKey = apiKeyInput.value;
+        localStorage.setItem("elevenlabsApiKey", apiKey);
+        fetchUsage();
+      });
+
+      // Text stats calculation
+      textArea.addEventListener("input", updateTextStats);
+
+      function updateTextStats() {
+        const text = textArea.value;
+        const charCount = text.length;
+        const wordCount = text.trim().split(/\s+/).length;
+        const paragraphCount = text.split(/\n\s*\n/).length;
+
+        textStats.textContent = `Characters: ${charCount} | Words: ${wordCount} | Paragraphs: ${paragraphCount}`;
+      }
+
+      // Voice data
+      const voices = [
+        {
+          id: "EXAVITQu4vr4xnSDxMaL",
+          name: "Sarah",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/EXAVITQu4vr4xnSDxMaL/01a3e33c-6e99-4ee7-8543-ff2216a32186.mp3",
+        },
+        {
+          id: "FGY2WhTYpPnrIDTdsKH5",
+          name: "Laura",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/FGY2WhTYpPnrIDTdsKH5/67341759-ad08-41a5-be6e-de12fe448618.mp3",
+        },
+        {
+          id: "IKne3meq5aSn9XLyUdCD",
+          name: "Charlie",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/IKne3meq5aSn9XLyUdCD/102de6f2-22ed-43e0-a1f1-111fa75c5481.mp3",
+        },
+        {
+          id: "JBFqnCBsd6RMkjVDRZzb",
+          name: "George",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/JBFqnCBsd6RMkjVDRZzb/e6206d1a-0721-4787-aafb-06a6e705cac5.mp3",
+        },
+        {
+          id: "N2lVS1w4EtoT3dr4eOWO",
+          name: "Callum",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/N2lVS1w4EtoT3dr4eOWO/ac833bd8-ffda-4938-9ebc-b0f99ca25481.mp3",
+        },
+        {
+          id: "TX3LPaxmHKxFdv7VOQHJ",
+          name: "Liam",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/TX3LPaxmHKxFdv7VOQHJ/63148076-6363-42db-aea8-31424308b92c.mp3",
+        },
+        {
+          id: "XB0fDUnXU5powFXDhCwa",
+          name: "Charlotte",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/XB0fDUnXU5powFXDhCwa/942356dc-f10d-4d89-bda5-4f8505ee038b.mp3",
+        },
+        {
+          id: "Xb7hH8MSUJpSbSDYk0k2",
+          name: "Alice",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/Xb7hH8MSUJpSbSDYk0k2/d10f7534-11f6-41fe-a012-2de1e482d336.mp3",
+        },
+        {
+          id: "XrExE9yKIg1WjnnlVkGX",
+          name: "Matilda",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/XrExE9yKIg1WjnnlVkGX/b930e18d-6b4d-466e-bab2-0ae97c6d8535.mp3",
+        },
+        {
+          id: "bIHbv24MWmeRgasZH58o",
+          name: "Will",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/bIHbv24MWmeRgasZH58o/8caf8f3d-ad29-4980-af41-53f20c72d7a4.mp3",
+        },
+        {
+          id: "cgSgspJ2msm6clMCkdW9",
+          name: "Jessica",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/cgSgspJ2msm6clMCkdW9/56a97bf8-b69b-448f-846c-c3a11683d45a.mp3",
+        },
+        {
+          id: "cjVigY5qzO86Huf0OWal",
+          name: "Eric",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/cjVigY5qzO86Huf0OWal/d098fda0-6456-4030-b3d8-63aa048c9070.mp3",
+        },
+        {
+          id: "iP95p4xoKVk53GoZ742B",
+          name: "Chris",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/iP95p4xoKVk53GoZ742B/3f4bde72-cc48-40dd-829f-57fbf906f4d7.mp3",
+        },
+        {
+          id: "nPczCjzI2devNBz1zQrb",
+          name: "Brian",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/nPczCjzI2devNBz1zQrb/2dd3e72c-4fd3-42f1-93ea-abc5d4e5aa1d.mp3",
+        },
+        {
+          id: "onwK4e9ZLuTAKqWW03F9",
+          name: "Daniel",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/onwK4e9ZLuTAKqWW03F9/7eee0236-1a72-4b86-b303-5dcadc007ba9.mp3",
+        },
+        {
+          id: "pFZP5JQG7iQjIQuC4Bku",
+          name: "Lily",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/pFZP5JQG7iQjIQuC4Bku/89b68b35-b3dd-4348-a84a-a3c13a3c2b30.mp3",
+        },
+        {
+          id: "pqHfZKP75CvOlQylNhV4",
+          name: "Bill",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/premade/voices/pqHfZKP75CvOlQylNhV4/d782b3ff-84ba-4029-848c-acf01285524d.mp3",
+        },
+        {
+          id: "WXmGNP5rvPWuO0RYTqfP",
+          name: "Abyasa",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/XrPn0Vi7oqRMwX7MqaVLpAaSfpe2/voices/WXmGNP5rvPWuO0RYTqfP/55f0d85a-d197-443e-856e-f0a2d9454f71.mp3",
+        },
+        {
+          id: "lFjzhZHq0NwTRiu2GQxy",
+          name: "Tri Nugraha Ramadhani",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/RQwIb5Id6wd09VubvX1MqxHmeir2/voices/lFjzhZHq0NwTRiu2GQxy/f97f401a-cc7c-4b82-9d0a-fd12931225fb.mp3",
+        },
+        {
+          id: "OKanSStS6li6xyU1WdXa",
+          name: "Meraki female Indonesian voice",
+          preview:
+            "https://storage.googleapis.com/eleven-public-prod/custom/voices/OKanSStS6li6xyU1WdXa/37BcR5jOZCG5vAuDDWBQ.mp3",
+        },
+        // ... (voice data remains the same)
+      ];
+
+      // Populate voice select
+      voices.forEach((voice) => {
+        const option = document.createElement("option");
+        option.value = voice.id;
+        option.textContent = voice.name;
+        voiceSelect.appendChild(option);
+      });
+
+      // Update preview on voice change
+      voiceSelect.addEventListener("change", () => {
+        const selectedVoice = voices.find((v) => v.id === voiceSelect.value);
+        previewAudio.src = selectedVoice.preview;
+        currentVoiceId = selectedVoice.id;
+      });
+
+      // Trigger change event to load the first preview
+      voiceSelect.dispatchEvent(new Event("change"));
+
+      // Convert text to speech
+      convertBtn.addEventListener("click", async () => {
+        const text = textArea.value;
+        if (!text) {
+          alert("Please enter some text.");
+          return;
+        }
+
+        if (!apiKey) {
+          alert("Please enter your API key.");
+          return;
+        }
+
+        try {
+          convertBtn.innerHTML =
+            '<i class="fas fa-spinner fa-spin mr-2"></i> Converting...';
+          convertBtn.disabled = true;
+
+          const response = await axios.post(
+            `https://api.elevenlabs.io/v1/text-to-speech/${currentVoiceId}`,
+            {
+              text: text,
+              model_id: "eleven_multilingual_v2",
+              voice_settings: {
+                stability: 0.5,
+                similarity_boost: 0.5,
+              },
+            },
+            {
+              headers: {
+                Accept: "audio/mpeg",
+                "xi-api-key": apiKey,
+                "Content-Type": "application/json",
+              },
+              responseType: "blob",
+            },
+          );
+
+          audioBlob = new Blob([response.data], { type: "audio/mpeg" });
+          const audioUrl = URL.createObjectURL(audioBlob);
+
+          audioElement.src = audioUrl;
+          audioContainer.classList.remove("hidden");
+
+          // Fetch updated usage after conversion
+          fetchUsage();
+        } catch (error) {
+          console.error("Error:", error);
+          alert(
+            "An error occurred while converting text to speech. Please try again.",
+          );
+        } finally {
+          convertBtn.innerHTML =
+            '<i class="fas fa-microphone mr-2"></i> Convert to Speech';
+          convertBtn.disabled = false;
+        }
+      });
+
+      // Download audio
+      downloadBtn.addEventListener("click", () => {
+        if (audioBlob) {
+          const url = URL.createObjectURL(audioBlob);
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = url;
+          a.download = "tts_audio.mp3";
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+        }
+      });
+
+      // Save to history
+      saveToHistoryBtn.addEventListener("click", () => {
+        if (audioBlob) {
+          const historyItem = {
+            id: uuid.v4(),
+            text: textArea.value,
+            voiceId: currentVoiceId,
+            voiceName: voices.find((v) => v.id === currentVoiceId).name,
+            timestamp: new Date().toISOString(),
+            audio: URL.createObjectURL(audioBlob),
+          };
+
+          let history = JSON.parse(localStorage.getItem("ttsHistory")) || [];
+          history.unshift(historyItem);
+          localStorage.setItem("ttsHistory", JSON.stringify(history));
+
+          updateHistoryList();
+        }
+      });
+
+      // Update history list
+      function updateHistoryList() {
+        const history = JSON.parse(localStorage.getItem("ttsHistory")) || [];
+        historyList.innerHTML = "";
+
+        history.forEach((item) => {
+          const itemElement = document.createElement("div");
+          itemElement.className = "bg-gray-100 p-4 rounded-lg";
+          itemElement.innerHTML = `
+            <p class="font-semibold">${item.voiceName}</p>
+            <p class="text-sm text-gray-600">${new Date(item.timestamp).toLocaleString()}</p>
+            <p class="mt-2">${item.text.substring(0, 50)}${item.text.length > 50 ? "..." : ""}</p>
+            <audio controls src="${item.audio}" class="w-full mt-2"></audio>
+            <button class="downloadHistoryAudio mt-2 bg-green-500 text-white py-1 px-2 rounded hover:bg-green-600 transition duration-300">
+              <i class="fas fa-download mr-1"></i> Download
+            </button>
+          `;
+
+          const downloadBtn = itemElement.querySelector(
+            ".downloadHistoryAudio",
+          );
+          downloadBtn.addEventListener("click", () => {
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = item.audio;
+            a.download = `tts_audio_${item.id}.mp3`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          });
+
+          historyList.appendChild(itemElement);
+        });
+      }
+
+      // Clear history
+      clearHistoryBtn.addEventListener("click", () => {
+        if (confirm("Are you sure you want to clear the history?")) {
+          localStorage.removeItem("ttsHistory");
+          updateHistoryList();
+        }
+      });
+
+      // Fetch usage
+      async function fetchUsage() {
+        if (!apiKey) {
+          usageContainer.classList.add("hidden");
+          return;
+        }
+
+        try {
+          const response = await axios.get(
+            "https://api.elevenlabs.io/v1/user",
+            {
+              headers: {
+                "xi-api-key": apiKey,
+              },
+            },
+          );
+
+          const usage = response.data.subscription;
+          usageContainer.classList.remove("hidden");
+
+          const totalCharacters = usage.character_limit;
+          const usedCharacters = usage.character_count;
+          const remainingCharacters = totalCharacters - usedCharacters;
+          const usagePercentage = (usedCharacters / totalCharacters) * 100;
+
+          document.getElementById("totalCharacters").textContent =
+            totalCharacters.toLocaleString();
+          document.getElementById("remainingCharacters").textContent =
+            remainingCharacters.toLocaleString();
+          document.getElementById("usagePercentage").textContent =
+            `${usagePercentage.toFixed(2)}%`;
+          usageBar.style.setProperty("--fill-width", `${usagePercentage}%`);
+
+          const additionalUsageInfo = document.getElementById(
+            "additionalUsageInfo",
+          );
+          additionalUsageInfo.innerHTML = `
+            <p><strong>Tier:</strong> ${usage.tier}</p>
+            <p><strong>Reset Date:</strong> ${new Date(usage.next_character_count_reset_unix * 1000).toLocaleDateString()}</p>
+          `;
+
+          // Start countdown
+          startCountdown(usage.next_character_count_reset_unix * 1000);
+        } catch (error) {
+          console.error("Error fetching usage:", error);
+          usageContainer.classList.add("hidden");
+        }
+      }
+
+      // Countdown function
+      function startCountdown(resetDate) {
+        const countdownElement = document.getElementById("resetCountdown");
+
+        function updateCountdown() {
+          const now = new Date().getTime();
+          const distance = resetDate - now;
+
+          const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+          const hours = Math.floor(
+            (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+          );
+          const minutes = Math.floor(
+            (distance % (1000 * 60 * 60)) / (1000 * 60),
+          );
+          const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+          countdownElement.textContent = `Next Reset In: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+          if (distance < 0) {
+            clearInterval(countdownTimer);
+            countdownElement.textContent = "Character count has been reset!";
+            fetchUsage(); // Refresh usage data
+          }
+        }
+
+        updateCountdown(); // Initial call
+        const countdownTimer = setInterval(updateCountdown, 1000);
+      }
+
+      // Toggle usage details
+      showUsageBtn.addEventListener("click", () => {
+        usageDetails.classList.toggle("hidden");
+        showUsageBtn.innerHTML = usageDetails.classList.contains("hidden")
+          ? '<i class="fas fa-chart-bar mr-2"></i> Show Usage Details'
+          : '<i class="fas fa-chart-bar mr-2"></i> Hide Usage Details';
+      });
+
+      // Initial history update and usage fetch
+      updateHistoryList();
+      fetchUsage();
+    </script>
+  </body>
+</html>
