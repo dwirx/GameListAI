@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audio Transcription App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen p-4">
+    <div class="container mx-auto max-w-4xl">
+      <h1 class="text-4xl font-bold mb-8 text-center text-blue-600">
+        Audio Transcription
+      </h1>
+      <div class="bg-white p-8 rounded-lg shadow-md mb-8">
+        <form id="transcriptionForm" class="space-y-6">
+          <div>
+            <label
+              for="apiKey"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >Deepgram API Key:</label
+            >
+            <div class="flex items-center space-x-2">
+              <input
+                type="password"
+                id="apiKey"
+                class="flex-grow rounded-l-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                placeholder="Enter your API key"
+              />
+              <button
+                type="button"
+                id="toggleApiKey"
+                class="bg-blue-500 text-white px-3 rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300"
+              >
+                Show
+              </button>
+            </div>
+            <p class="text-sm text-blue-500 mt-2">
+              Don't have an API key?
+              <a
+                href="https://console.deepgram.com/"
+                target="_blank"
+                class="underline"
+                >Get it here</a
+              >.
+            </p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label
+                for="audioFile"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Upload Audio File:</label
+              >
+              <input
+                type="file"
+                id="audioFile"
+                accept="audio/*"
+                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition duration-300"
+              />
+            </div>
+            <div>
+              <label
+                for="audioUrl"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Or Enter Audio URL:</label
+              >
+              <input
+                type="url"
+                id="audioUrl"
+                placeholder="https://example.com/audio.mp3"
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+              />
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label
+                for="modelSize"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Select Model:</label
+              >
+              <select
+                id="modelSize"
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+              >
+                <option value="nova-2" selected>Nova-2 (Recommended)</option>
+                <option value="whisper-tiny">Whisper Tiny</option>
+                <option value="whisper-base">Whisper Base</option>
+                <option value="whisper-small">Whisper Small</option>
+                <option value="whisper-medium">Whisper Medium</option>
+                <option value="whisper-large">Whisper Large</option>
+              </select>
+            </div>
+            <div>
+              <label
+                for="diarize"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Diarization:</label
+              >
+              <select
+                id="diarize"
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+              >
+                <option value="false">Disabled</option>
+                <option value="true">Enabled</option>
+              </select>
+            </div>
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300"
+          >
+            Transcribe
+          </button>
+        </form>
+      </div>
+
+      <div id="loading" class="text-center hidden mb-8">
+        <div
+          class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"
+        ></div>
+        <p class="mt-2 text-gray-600">Transcribing...</p>
+      </div>
+
+      <div id="result" class="bg-white p-8 rounded-lg shadow-md mb-8 hidden">
+        <h2 class="text-2xl font-semibold mb-4">Transcription Result</h2>
+        <div class="mb-4">
+          <h3 class="text-xl font-semibold mb-2">Plain Text:</h3>
+          <p
+            id="transcription"
+            class="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded-md"
+          ></p>
+        </div>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button
+            id="toggleSrt"
+            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300"
+          >
+            Show SRT
+          </button>
+          <button
+            id="downloadTxt"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300"
+          >
+            Download TXT
+          </button>
+          <button
+            id="downloadSrt"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300"
+          >
+            Download SRT
+          </button>
+        </div>
+        <div id="srtResult" class="hidden">
+          <h3 class="text-xl font-semibold mb-2">SRT Format:</h3>
+          <pre
+            id="srtTranscription"
+            class="text-sm text-gray-700 whitespace-pre-wrap overflow-x-auto bg-gray-50 p-4 rounded-md"
+          ></pre>
+        </div>
+        <div>
+          <h3 class="text-xl font-semibold mb-2">Processing Time:</h3>
+          <p id="processingTime" class="text-gray-700"></p>
+        </div>
+      </div>
+
+      <div id="history" class="bg-white p-8 rounded-lg shadow-md">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-semibold">Transcription History</h2>
+          <button
+            id="clearHistory"
+            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300"
+          >
+            Clear History
+          </button>
+        </div>
+        <ul id="historyList" class="space-y-4"></ul>
+      </div>
+    </div>
+
+    <script>
+      let transcriptData = null;
+      let uploadedFileName = null; // Track the uploaded file name
+
+      // Load API key and history from localStorage
+      document.addEventListener("DOMContentLoaded", () => {
+        const savedApiKey = localStorage.getItem("deepgramApiKey");
+        if (savedApiKey) {
+          document.getElementById("apiKey").value = savedApiKey;
+        }
+        updateHistoryList();
+      });
+
+      // Toggle API key visibility
+      document.getElementById("toggleApiKey").addEventListener("click", () => {
+        const apiKeyInput = document.getElementById("apiKey");
+        const toggleButton = document.getElementById("toggleApiKey");
+        if (apiKeyInput.type === "password") {
+          apiKeyInput.type = "text";
+          toggleButton.textContent = "Hide";
+        } else {
+          apiKeyInput.type = "password";
+          toggleButton.textContent = "Show";
+        }
+      });
+
+      // Toggle SRT visibility
+      document.getElementById("toggleSrt").addEventListener("click", () => {
+        const srtResult = document.getElementById("srtResult");
+        const toggleButton = document.getElementById("toggleSrt");
+        if (srtResult.classList.contains("hidden")) {
+          srtResult.classList.remove("hidden");
+          toggleButton.textContent = "Hide SRT";
+        } else {
+          srtResult.classList.add("hidden");
+          toggleButton.textContent = "Show SRT";
+        }
+      });
+
+      document
+        .getElementById("transcriptionForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const apiKey = document.getElementById("apiKey").value;
+          const file = document.getElementById("audioFile").files[0];
+          const url = document.getElementById("audioUrl").value;
+          const modelSize = document.getElementById("modelSize").value;
+          const diarize = document.getElementById("diarize").value;
+          const loadingDiv = document.getElementById("loading");
+          const resultDiv = document.getElementById("result");
+          const transcriptionP = document.getElementById("transcription");
+          const srtTranscriptionPre =
+            document.getElementById("srtTranscription");
+          const processingTimeP = document.getElementById("processingTime");
+
+          if (!apiKey) {
+            alert("Please enter your Deepgram API key");
+            return;
+          }
+
+          // Save API key to localStorage
+          localStorage.setItem("deepgramApiKey", apiKey);
+
+          if (!file && !url) {
+            alert("Please upload a file or provide a URL");
+            return;
+          }
+
+          if (file) {
+            uploadedFileName = file.name.split(".").slice(0, -1).join(".");
+          } else {
+            uploadedFileName = url
+              .split("/")
+              .pop()
+              .split(".")
+              .slice(0, -1)
+              .join(".");
+          }
+
+          const startTime = Date.now(); // Record the start time
+          loadingDiv.classList.remove("hidden");
+          resultDiv.classList.add("hidden");
+
+          try {
+            let response;
+            if (file) {
+              response = await sendAudioFile(file, apiKey, modelSize, diarize);
+            } else {
+              response = await fetch(
+                `https://api.deepgram.com/v1/listen?model=${modelSize}&smart_format=true&utterances=true&diarize=${diarize}`,
+                {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Token ${apiKey}`,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ url: url }),
+                },
+              );
+            }
+
+            if (!response.ok) {
+              throw new Error("API request failed");
+            }
+
+            transcriptData = await response.json();
+            let transcript = "";
+
+            if (diarize === "true" && transcriptData.results.utterances) {
+              transcript = transcriptData.results.utterances
+                .map(
+                  (utterance) =>
+                    `[Speaker: ${utterance.speaker}] ${utterance.transcript}`,
+                )
+                .join("\n");
+            } else {
+              transcript =
+                transcriptData.results.channels[0].alternatives[0].transcript;
+            }
+
+            const endTime = Date.now(); // Record the end time
+            const processingTime = (endTime - startTime) / 1000; // Calculate the processing time in seconds
+
+            loadingDiv.classList.add("hidden");
+            resultDiv.classList.remove("hidden");
+            transcriptionP.textContent = transcript;
+            processingTimeP.textContent = `Time taken: ${processingTime.toFixed(2)} seconds`;
+
+            // Generate SRT format
+            const words =
+              transcriptData.results.channels[0].alternatives[0].words;
+            let srtContent = generateSRT(words, diarize === "true");
+            srtTranscriptionPre.textContent = srtContent;
+
+            // Add to history
+            addToHistory(file ? file.name : url, transcript);
+          } catch (error) {
+            console.error("Error:", error);
+            alert("An error occurred during transcription. Please try again.");
+            loadingDiv.classList.add("hidden");
+          }
+        });
+
+      function sendAudioFile(file, apiKey, modelSize, diarize) {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open(
+            "POST",
+            `https://api.deepgram.com/v1/listen?model=${modelSize}&smart_format=true&utterances=true&diarize=${diarize}`,
+            true,
+          );
+          xhr.setRequestHeader("Authorization", `Token ${apiKey}`);
+          xhr.setRequestHeader("Content-Type", file.type);
+
+          xhr.onload = function () {
+            if (this.status >= 200 && this.status < 300) {
+              resolve({
+                ok: true,
+                json: () => JSON.parse(xhr.responseText),
+              });
+            } else {
+              reject(new Error(xhr.statusText));
+            }
+          };
+          xhr.onerror = function () {
+            reject(new Error("Network Error"));
+          };
+
+          xhr.send(file);
+        });
+      }
+
+      document.getElementById("downloadTxt").addEventListener("click", () => {
+        if (transcriptData) {
+          const transcript =
+            document.getElementById("transcription").textContent;
+          downloadFile(transcript, "transcript.txt", "text/plain");
+        }
+      });
+
+      document.getElementById("downloadSrt").addEventListener("click", () => {
+        if (transcriptData) {
+          const srtContent =
+            document.getElementById("srtTranscription").textContent;
+          downloadFile(srtContent, `${uploadedFileName}.srt`, "text/plain");
+        }
+      });
+
+      function generateSRT(words, diarize) {
+        let srt = "";
+        let index = 1;
+        let currentStart = words[0].start;
+        let currentEnd = words[0].end;
+        let currentText = words[0].word;
+        let currentSpeaker = diarize ? words[0].speaker || "Unknown" : null;
+
+        for (let i = 1; i < words.length; i++) {
+          if (
+            words[i].start - currentEnd > 1 ||
+            i === words.length - 1 ||
+            (diarize && words[i].speaker !== currentSpeaker)
+          ) {
+            let startTime = formatTime(currentStart);
+            let endTime = formatTime(
+              i === words.length - 1 ? words[i].end : currentEnd,
+            );
+
+            srt += `${index}\n${startTime} --> ${endTime}\n`;
+            if (diarize) {
+              srt += `[Speaker: ${currentSpeaker}] `;
+            }
+            srt += `${currentText.trim()}\n\n`;
+
+            index++;
+            currentStart = words[i].start;
+            currentText = words[i].word;
+            currentSpeaker = diarize ? words[i].speaker || "Unknown" : null;
+          } else {
+            currentText += " " + words[i].word;
+          }
+          currentEnd = words[i].end;
+        }
+
+        return srt;
+      }
+
+      function formatTime(seconds) {
+        let date = new Date(0);
+        date.setSeconds(seconds);
+        return date.toISOString().substr(11, 12).replace(".", ",");
+      }
+
+      function downloadFile(content, filename, contentType) {
+        const a = document.createElement("a");
+        const file = new Blob([content], { type: contentType });
+        a.href = URL.createObjectURL(file);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+
+      // History functionality
+      function addToHistory(source, transcript) {
+        const history = JSON.parse(
+          localStorage.getItem("transcriptionHistory") || "[]",
+        );
+        history.unshift({
+          id: Date.now(),
+          date: new Date().toLocaleString(),
+          source: source,
+          transcript:
+            transcript.substring(0, 100) +
+            (transcript.length > 100 ? "..." : ""),
+        });
+        localStorage.setItem(
+          "transcriptionHistory",
+          JSON.stringify(history.slice(0, 10)),
+        ); // Keep only the last 10 items
+        updateHistoryList();
+      }
+
+      function updateHistoryList() {
+        const historyList = document.getElementById("historyList");
+        const history = JSON.parse(
+          localStorage.getItem("transcriptionHistory") || "[]",
+        );
+        historyList.innerHTML = "";
+        history.forEach((item) => {
+          const li = document.createElement("li");
+          li.className = "bg-gray-50 p-4 rounded-md";
+          li.innerHTML = `
+                <div class="flex justify-between items-start">
+                  <div>
+                    <p class="font-semibold">${item.source}</p>
+                    <p class="text-sm text-gray-500">${item.date}</p>
+                  </div>
+                  <button class="viewTranscript text-blue-500 hover:text-blue-700 transition duration-300" data-id="${item.id}">
+                    View
+                  </button>
+                </div>
+                <p class="mt-2 text-gray-700">${item.transcript}</p>
+              `;
+          historyList.appendChild(li);
+        });
+
+        // Add event listeners to view buttons
+        document.querySelectorAll(".viewTranscript").forEach((button) => {
+          button.addEventListener("click", () =>
+            viewHistoryItem(button.getAttribute("data-id")),
+          );
+        });
+      }
+
+      function viewHistoryItem(id) {
+        const history = JSON.parse(
+          localStorage.getItem("transcriptionHistory") || "[]",
+        );
+        const item = history.find((i) => i.id.toString() === id);
+        if (item) {
+          document.getElementById("transcription").textContent =
+            item.transcript;
+          document.getElementById("result").classList.remove("hidden");
+          document.getElementById("srtResult").classList.add("hidden");
+          document.getElementById("toggleSrt").textContent = "Show SRT";
+          window.scrollTo({
+            top: document.getElementById("result").offsetTop,
+            behavior: "smooth",
+          });
+        }
+      }
+
+      document.getElementById("clearHistory").addEventListener("click", () => {
+        if (
+          confirm("Are you sure you want to clear the transcription history?")
+        ) {
+          localStorage.removeItem("transcriptionHistory");
+          updateHistoryList();
+        }
+      });
+
+      // Initial history update
+      updateHistoryList();
+    </script>
+  </body>
+</html>
