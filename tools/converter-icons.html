@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Konverter Icon Modern</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+        <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+            rel="stylesheet"
+        />
+    </head>
+    <body
+        class="bg-gradient-to-r from-blue-100 to-purple-100 min-h-screen p-8 font-sans"
+    >
+        <div
+            class="container mx-auto bg-white rounded-xl shadow-2xl max-w-4xl p-8 transition-all duration-300 hover:shadow-3xl"
+        >
+            <h1
+                class="text-4xl font-bold mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"
+            >
+                Konverter Icon Modern
+            </h1>
+            <div class="mb-8 bg-gray-50 p-6 rounded-lg shadow-inner">
+                <label
+                    for="imageUpload"
+                    class="block mb-2 font-semibold text-gray-700"
+                >
+                    <i class="fas fa-upload mr-2"></i>Pilih Gambar:
+                </label>
+                <input
+                    type="file"
+                    id="imageUpload"
+                    accept="image/*"
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300 bg-white"
+                />
+            </div>
+            <div class="mb-8 bg-gray-50 p-6 rounded-lg shadow-inner">
+                <label class="block mb-4 font-semibold text-gray-700">
+                    <i class="fas fa-th mr-2"></i>Ukuran Template:
+                </label>
+                <div class="flex flex-wrap gap-4">
+                    <label
+                        class="inline-flex items-center bg-white px-4 py-2 rounded-full shadow-sm hover:shadow-md transition duration-300"
+                    >
+                        <input
+                            type="checkbox"
+                            class="form-checkbox text-blue-500"
+                            value="16"
+                            checked
+                        />
+                        <span class="ml-2">16x16</span>
+                    </label>
+                    <label
+                        class="inline-flex items-center bg-white px-4 py-2 rounded-full shadow-sm hover:shadow-md transition duration-300"
+                    >
+                        <input
+                            type="checkbox"
+                            class="form-checkbox text-blue-500"
+                            value="48"
+                            checked
+                        />
+                        <span class="ml-2">48x48</span>
+                    </label>
+                    <label
+                        class="inline-flex items-center bg-white px-4 py-2 rounded-full shadow-sm hover:shadow-md transition duration-300"
+                    >
+                        <input
+                            type="checkbox"
+                            class="form-checkbox text-blue-500"
+                            value="128"
+                            checked
+                        />
+                        <span class="ml-2">128x128</span>
+                    </label>
+                    <label
+                        class="inline-flex items-center bg-white px-4 py-2 rounded-full shadow-sm hover:shadow-md transition duration-300"
+                    >
+                        <input
+                            type="checkbox"
+                            class="form-checkbox text-blue-500"
+                            value="256"
+                            checked
+                        />
+                        <span class="ml-2">256x256</span>
+                    </label>
+                </div>
+            </div>
+            <div class="mb-8 bg-gray-50 p-6 rounded-lg shadow-inner">
+                <label
+                    for="customSize"
+                    class="block mb-2 font-semibold text-gray-700"
+                >
+                    <i class="fas fa-sliders-h mr-2"></i>Ukuran Kustom
+                    (opsional):
+                </label>
+                <input
+                    type="number"
+                    id="customSize"
+                    min="16"
+                    max="512"
+                    placeholder="Masukkan ukuran (16-512)"
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300 bg-white"
+                />
+            </div>
+            <div class="flex justify-center mb-8">
+                <button
+                    id="convertBtn"
+                    class="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-8 py-3 rounded-full hover:from-blue-600 hover:to-purple-600 transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                    <i class="fas fa-magic mr-2"></i>Konversi
+                </button>
+            </div>
+            <div class="mb-8 bg-gray-50 p-6 rounded-lg shadow-inner">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-700">
+                    <i class="fas fa-image mr-2"></i>Gambar Asli:
+                </h2>
+                <div
+                    id="originalImage"
+                    class="flex justify-center items-center h-64 bg-white rounded-lg border-2 border-dashed border-gray-300"
+                ></div>
+            </div>
+            <div class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-700">
+                    <i class="fas fa-images mr-2"></i>Hasil Konversi:
+                </h2>
+                <div
+                    id="preview"
+                    class="grid grid-cols-2 md:grid-cols-4 gap-6"
+                ></div>
+            </div>
+            <div class="flex justify-center">
+                <button
+                    id="downloadAllBtn"
+                    class="bg-gradient-to-r from-green-500 to-teal-500 text-white px-8 py-3 rounded-full hover:from-green-600 hover:to-teal-600 transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                    style="display: none"
+                >
+                    <i class="fas fa-download mr-2"></i>Unduh Semua
+                </button>
+            </div>
+        </div>
+
+        <script>
+            const imageUpload = document.getElementById("imageUpload");
+            const customSize = document.getElementById("customSize");
+            const preview = document.getElementById("preview");
+            const convertBtn = document.getElementById("convertBtn");
+            const downloadAllBtn = document.getElementById("downloadAllBtn");
+            const originalImage = document.getElementById("originalImage");
+
+            const defaultSizes = [16, 48, 128, 256];
+            let icons = {};
+
+            imageUpload.addEventListener("change", displayOriginalImage);
+            convertBtn.addEventListener("click", convertImage);
+            downloadAllBtn.addEventListener("click", downloadAllIcons);
+
+            function displayOriginalImage() {
+                const file = imageUpload.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        originalImage.innerHTML = `<img src="${e.target.result}" alt="Original Image" class="max-h-full max-w-full object-contain rounded-lg shadow-lg">`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            function convertImage() {
+                const file = imageUpload.files[0];
+                if (!file) {
+                    showNotification("Pilih gambar terlebih dahulu!", "error");
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = new Image();
+                    img.onload = function () {
+                        preview.innerHTML = "";
+                        icons = {};
+                        const sizes = getSelectedSizes();
+                        const customSizeValue = parseInt(customSize.value);
+                        if (
+                            customSizeValue &&
+                            customSizeValue >= 16 &&
+                            customSizeValue <= 512
+                        ) {
+                            sizes.push(customSizeValue);
+                        }
+                        sizes.sort((a, b) => a - b);
+
+                        sizes.forEach((size) => {
+                            const canvas = document.createElement("canvas");
+                            canvas.width = size;
+                            canvas.height = size;
+                            const ctx = canvas.getContext("2d");
+                            ctx.drawImage(img, 0, 0, size, size);
+
+                            const iconUrl = canvas.toDataURL("image/png");
+                            icons[size] = iconUrl;
+
+                            const iconPreview = document.createElement("div");
+                            iconPreview.className =
+                                "text-center bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300";
+                            iconPreview.innerHTML = `
+                            <img src="${iconUrl}" alt="${size}x${size}" class="mx-auto mb-3 rounded">
+                            <p class="text-sm font-semibold mb-2">${size}x${size}</p>
+                            <button class="bg-blue-500 text-white px-4 py-2 rounded-full text-xs mt-1 download-btn hover:bg-blue-600 transition duration-300" data-size="${size}">
+                                <i class="fas fa-download mr-1"></i>Unduh
+                            </button>
+                        `;
+                            preview.appendChild(iconPreview);
+                        });
+
+                        downloadAllBtn.style.display = "inline-block";
+                        addDownloadListeners();
+                        showNotification("Konversi berhasil!", "success");
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function getSelectedSizes() {
+                const checkboxes = document.querySelectorAll(
+                    'input[type="checkbox"]:checked',
+                );
+                return Array.from(checkboxes).map((cb) => parseInt(cb.value));
+            }
+
+            function addDownloadListeners() {
+                document.querySelectorAll(".download-btn").forEach((btn) => {
+                    btn.addEventListener("click", function () {
+                        const size = this.getAttribute("data-size");
+                        downloadIcon(size);
+                    });
+                });
+            }
+
+            function downloadIcon(size) {
+                const link = document.createElement("a");
+                const fileName = `${imageUpload.files[0].name.split(".")[0]}_${size}.png`;
+                link.download = fileName;
+                link.href = icons[size];
+                link.click();
+                showNotification(
+                    `Icon ${size}x${size} berhasil diunduh!`,
+                    "success",
+                );
+            }
+
+            function downloadAllIcons() {
+                const zip = new JSZip();
+                const fileName = imageUpload.files[0].name.split(".")[0];
+
+                Object.entries(icons).forEach(([size, iconUrl]) => {
+                    const base64Data = iconUrl.split(",")[1];
+                    zip.file(`${fileName}_${size}.png`, base64Data, {
+                        base64: true,
+                    });
+                });
+
+                zip.generateAsync({ type: "blob" }).then(function (content) {
+                    saveAs(content, "icons.zip");
+                    showNotification("Semua icon berhasil diunduh!", "success");
+                });
+            }
+
+            function showNotification(message, type) {
+                const notif = document.createElement("div");
+                notif.className = `fixed bottom-4 right-4 p-4 rounded-lg text-white ${type === "success" ? "bg-green-500" : "bg-red-500"} shadow-lg transition-opacity duration-300`;
+                notif.innerHTML = `<i class="fas ${type === "success" ? "fa-check-circle" : "fa-exclamation-circle"} mr-2"></i>${message}`;
+                document.body.appendChild(notif);
+                setTimeout(() => {
+                    notif.style.opacity = "0";
+                    setTimeout(() => notif.remove(), 300);
+                }, 3000);
+            }
+        </script>
+    </body>
+</html>
