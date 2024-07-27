@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="id" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatbot Tamagotchi Fullscreen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.2/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/github.min.css"
+    />
+    <style>
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      .pulse {
+        animation: pulse 1s infinite;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0;
+        }
+      }
+      .blink {
+        animation: blink 1s infinite;
+      }
+      .markdown-body {
+        font-size: 14px;
+      }
+      .markdown-body pre {
+        background-color: #f6f8fa;
+        border-radius: 6px;
+        padding: 16px;
+      }
+      .markdown-body code {
+        background-color: rgba(175, 184, 193, 0.2);
+        border-radius: 6px;
+        padding: 0.2em 0.4em;
+      }
+      @keyframes talk {
+        0%,
+        100% {
+          transform: scaleY(1);
+        }
+        50% {
+          transform: scaleY(1.2);
+        }
+      }
+      .talking {
+        animation: talk 0.3s infinite;
+        transform-origin: center bottom;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 h-full flex flex-col">
+    <div class="flex-grow flex flex-col h-full">
+      <div class="bg-gray-800 p-2 flex items-center">
+        <div id="tamagotchi-container" class="text-3xl mr-2">
+          <span id="tamagotchi-face">🐣</span>
+          <span id="tamagotchi-mouth" class="text-xl">👄</span>
+        </div>
+        <h1 class="text-white text-xl font-bold flex-grow">
+          Chatbot Tamagotchi
+        </h1>
+        <div class="flex items-center">
+          <div class="w-2 h-2 bg-red-500 rounded-full mr-1"></div>
+          <div class="w-2 h-2 bg-green-500 rounded-full blink"></div>
+        </div>
+      </div>
+      <div class="flex-grow flex flex-col p-2 overflow-hidden">
+        <div id="api-key-container" class="mb-2">
+          <div class="flex items-center mb-1">
+            <input
+              type="password"
+              id="api-key-input"
+              class="flex-grow border-2 border-gray-300 rounded-l-xl px-3 py-2 text-sm"
+              placeholder="Masukkan API Key"
+            />
+            <button
+              id="toggle-api-key"
+              class="bg-gray-500 text-white px-4 py-2 text-sm font-bold hover:bg-gray-600"
+            >
+              👁️
+            </button>
+            <button
+              id="save-api-key"
+              class="bg-green-500 text-white px-4 py-2 rounded-r-xl text-sm font-bold hover:bg-green-600"
+            >
+              Simpan
+            </button>
+          </div>
+          <p id="api-key-status" class="text-sm text-gray-600"></p>
+        </div>
+        <div
+          id="chat-container"
+          class="flex-grow overflow-y-auto border-2 border-gray-300 p-3 rounded-xl mb-2 font-mono text-sm"
+        ></div>
+        <div
+          id="animation-container"
+          class="h-6 flex items-center justify-center mb-2 hidden"
+        >
+          <div class="w-2 h-2 bg-blue-500 rounded-full mx-1 pulse"></div>
+          <div
+            class="w-2 h-2 bg-blue-500 rounded-full mx-1 pulse"
+            style="animation-delay: 0.2s"
+          ></div>
+          <div
+            class="w-2 h-2 bg-blue-500 rounded-full mx-1 pulse"
+            style="animation-delay: 0.4s"
+          ></div>
+        </div>
+        <div class="flex mb-2">
+          <input
+            type="text"
+            id="user-input"
+            class="flex-grow border-2 border-gray-300 rounded-l-xl px-3 py-2 text-sm"
+            placeholder="Ketik pesan (Markdown)..."
+          />
+          <button
+            id="send-btn"
+            class="bg-blue-500 text-white px-4 py-2 rounded-r-xl text-sm font-bold hover:bg-blue-600"
+          >
+            Kirim
+          </button>
+          <button
+            id="clear-context-btn"
+            class="bg-yellow-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-yellow-600 ml-2"
+          >
+            Hapus Konteks
+          </button>
+        </div>
+        <div class="flex space-x-2">
+          <button
+            id="voice-btn"
+            class="bg-green-500 text-white px-3 py-2 rounded-xl flex-grow text-sm font-bold hover:bg-green-600"
+          >
+            Mulai Rekam
+          </button>
+          <button
+            id="stop-btn"
+            class="bg-red-500 text-white px-3 py-2 rounded-xl flex-grow text-sm font-bold hover:bg-red-600 hidden"
+          >
+            Stop
+          </button>
+        </div>
+        <p
+          id="status"
+          class="text-center text-gray-600 font-bold text-xs mt-1"
+        ></p>
+      </div>
+    </div>
+
+    <script>
+      let GROQ_API_KEY = "";
+      const chatContainer = document.getElementById("chat-container");
+      const userInput = document.getElementById("user-input");
+      const sendBtn = document.getElementById("send-btn");
+      const voiceBtn = document.getElementById("voice-btn");
+      const stopBtn = document.getElementById("stop-btn");
+      const statusElement = document.getElementById("status");
+      const animationContainer = document.getElementById("animation-container");
+      const tamagotchiFace = document.getElementById("tamagotchi-face");
+      const tamagotchiMouth = document.getElementById("tamagotchi-mouth");
+      const clearContextBtn = document.getElementById("clear-context-btn");
+      const apiKeyInput = document.getElementById("api-key-input");
+      const toggleApiKeyBtn = document.getElementById("toggle-api-key");
+      const saveApiKeyBtn = document.getElementById("save-api-key");
+      const apiKeyStatus = document.getElementById("api-key-status");
+
+      let mediaRecorder;
+      let audioChunks = [];
+      let context = [];
+      let maxContextLength = 20; // Maximum number of context messages to keep
+
+      marked.setOptions({
+        highlight: function (code, lang) {
+          const language = hljs.getLanguage(lang) ? lang : "plaintext";
+          return hljs.highlight(code, { language }).value;
+        },
+        langPrefix: "hljs language-",
+      });
+
+      sendBtn.addEventListener("click", sendMessage);
+      userInput.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") sendMessage();
+      });
+
+      voiceBtn.addEventListener("click", startRecording);
+      stopBtn.addEventListener("click", stopRecording);
+      clearContextBtn.addEventListener("click", clearContext);
+
+      // Load API key from localStorage
+      window.addEventListener("load", () => {
+        const savedApiKey = localStorage.getItem("GROQ_API_KEY");
+        if (savedApiKey) {
+          GROQ_API_KEY = savedApiKey;
+          apiKeyInput.value = savedApiKey;
+          apiKeyStatus.textContent = "API Key tersimpan";
+        }
+      });
+
+      // Toggle API key visibility
+      toggleApiKeyBtn.addEventListener("click", () => {
+        if (apiKeyInput.type === "password") {
+          apiKeyInput.type = "text";
+          toggleApiKeyBtn.textContent = "🔒";
+        } else {
+          apiKeyInput.type = "password";
+          toggleApiKeyBtn.textContent = "👁️";
+        }
+      });
+
+      // Save API key
+      saveApiKeyBtn.addEventListener("click", () => {
+        const newApiKey = apiKeyInput.value.trim();
+        if (newApiKey) {
+          GROQ_API_KEY = newApiKey;
+          localStorage.setItem("GROQ_API_KEY", newApiKey);
+          apiKeyStatus.textContent = "API Key tersimpan";
+        } else {
+          apiKeyStatus.textContent = "API Key tidak boleh kosong";
+        }
+      });
+
+      function addMessageToChat(sender, message) {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `mb-4 ${sender === "user" ? "text-right" : "text-left"}`;
+        const contentDiv = document.createElement("div");
+        contentDiv.className = `inline-block p-3 rounded-lg ${sender === "user" ? "bg-blue-100" : "bg-gray-200"} max-w-[80%]`;
+        contentDiv.innerHTML = marked.parse(message);
+        messageDiv.appendChild(contentDiv);
+        chatContainer.appendChild(messageDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        hljs.highlightAll();
+      }
+
+      function startTalkingAnimation() {
+        tamagotchiMouth.classList.add("talking");
+      }
+
+      function stopTalkingAnimation() {
+        tamagotchiMouth.classList.remove("talking");
+      }
+
+      async function startRecording() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+            await processAudio(audioBlob);
+          };
+
+          mediaRecorder.start();
+          voiceBtn.classList.add("hidden");
+          stopBtn.classList.remove("hidden");
+          animationContainer.classList.remove("hidden");
+          statusElement.textContent = "Merekam...";
+          tamagotchiFace.textContent = "🎙️";
+          startTalkingAnimation();
+        } catch (err) {
+          console.error("Error accessing microphone:", err);
+          statusElement.textContent = "Error: Tidak dapat mengakses mikrofon";
+        }
+      }
+
+      function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+          mediaRecorder.stop();
+          voiceBtn.classList.remove("hidden");
+          stopBtn.classList.add("hidden");
+          animationContainer.classList.add("hidden");
+          statusElement.textContent = "Memproses audio...";
+          tamagotchiFace.textContent = "🤔";
+          stopTalkingAnimation();
+
+          mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+        }
+      }
+
+      async function processAudio(audioBlob) {
+        try {
+          const formData = new FormData();
+          formData.append("file", audioBlob, "audio.wav");
+          formData.append("model", "whisper-large-v3");
+
+          const response = await fetch(
+            "https://api.groq.com/openai/v1/audio/transcriptions",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${GROQ_API_KEY}`,
+              },
+              body: formData,
+            },
+          );
+
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+
+          const data = await response.json();
+          userInput.value = data.text;
+          statusElement.textContent = "Transkripsi selesai.";
+          tamagotchiFace.textContent = "😃";
+          sendMessage();
+        } catch (error) {
+          console.error("Error:", error);
+          statusElement.textContent = "Error: Gagal memproses audio.";
+          tamagotchiFace.textContent = "😢";
+        }
+      }
+
+      function sendMessage() {
+        const message = userInput.value.trim();
+        if (message) {
+          addMessageToChat("user", message);
+          context.push({ role: "user", content: message });
+          if (context.length > maxContextLength) {
+            context.shift();
+          }
+          getChatbotResponse(message);
+          userInput.value = "";
+          tamagotchiFace.textContent = "🤔";
+          updateContextCount();
+        }
+      }
+
+      async function getChatbotResponse(message) {
+        try {
+          if (!GROQ_API_KEY) {
+            throw new Error("API Key belum diatur");
+          }
+          startTalkingAnimation();
+          const response = await fetch(
+            "https://api.groq.com/openai/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${GROQ_API_KEY}`,
+              },
+              body: JSON.stringify({
+                messages: context,
+                model: "llama-3.1-8b-instant",
+                temperature: 0.7,
+                max_tokens: 150,
+                top_p: 1,
+                stream: false,
+                stop: null,
+              }),
+            },
+          );
+
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+
+          const data = await response.json();
+          const botReply = data.choices[0].message.content.trim();
+          addMessageToChat("ai", botReply);
+          context.push({ role: "assistant", content: botReply });
+          if (context.length > maxContextLength) {
+            context.shift();
+          }
+          tamagotchiFace.textContent = "😄";
+          stopTalkingAnimation();
+          updateContextCount();
+        } catch (error) {
+          console.error("Error:", error);
+          addMessageToChat(
+            "ai",
+            "Maaf, terjadi kesalahan. Pastikan API Key sudah diatur dengan benar.",
+          );
+          tamagotchiFace.textContent = "😕";
+          stopTalkingAnimation();
+        }
+      }
+
+      function updateContextCount() {
+        statusElement.textContent = `Konteks: ${context.length}/${maxContextLength}`;
+      }
+
+      function clearContext() {
+        context = [];
+        chatContainer.innerHTML = "";
+        updateContextCount();
+        tamagotchiFace.textContent = "🐣";
+        addMessageToChat(
+          "ai",
+          "Konteks telah dihapus. Apa yang ingin Anda bicarakan?",
+        );
+      }
+
+      updateContextCount();
+    </script>
+  </body>
+</html>
