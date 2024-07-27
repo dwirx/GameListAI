@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Chatbot dengan Speech dan Tampilan Terstruktur</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css?family=Pacifico"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <style>
+      /* Custom styles for AI response */
+      .ai-response h1 {
+        font-size: 1.5em;
+        font-weight: bold;
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+      }
+      .ai-response h2 {
+        font-size: 1.3em;
+        font-weight: bold;
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+      }
+      .ai-response h3 {
+        font-size: 1.1em;
+        font-weight: bold;
+        margin-top: 0.5em;
+        margin-bottom: 0.5em;
+      }
+      .ai-response p {
+        margin-bottom: 0.5em;
+      }
+      .ai-response ul,
+      .ai-response ol {
+        margin-left: 1em;
+        margin-bottom: 0.5em;
+      }
+      .ai-response li {
+        margin-bottom: 0.25em;
+      }
+      .ai-response code {
+        background-color: #f0f0f0;
+        padding: 0.1em 0.3em;
+        border-radius: 3px;
+      }
+      .ai-response pre {
+        background-color: #f0f0f0;
+        padding: 0.5em;
+        border-radius: 3px;
+        white-space: pre-wrap;
+      }
+
+      /* Speech animation */
+      @keyframes speech-wave {
+        0% {
+          height: 5px;
+        }
+        50% {
+          height: 20px;
+        }
+        100% {
+          height: 5px;
+        }
+      }
+
+      .speech-animation {
+        display: flex;
+        align-items: flex-end;
+        height: 20px;
+      }
+
+      .speech-animation div {
+        background-color: #4caf50;
+        width: 3px;
+        margin: 0 1px;
+        border-radius: 3px;
+        animation: speech-wave 0.5s infinite;
+      }
+
+      .speech-animation div:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .speech-animation div:nth-child(3) {
+        animation-delay: 0.2s;
+      }
+      .speech-animation div:nth-child(4) {
+        animation-delay: 0.3s;
+      }
+      .speech-animation div:nth-child(5) {
+        animation-delay: 0.4s;
+      }
+
+      /* AI thinking animation */
+      @keyframes thinking-wave {
+        0% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-5px);
+        }
+        100% {
+          transform: translateY(0);
+        }
+      }
+
+      .ai-thinking-animation div {
+        animation: thinking-wave 1s infinite;
+      }
+
+      .ai-thinking-animation div:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .ai-thinking-animation div:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-3xl">
+      <h1 class="text-2xl font-bold mb-4 text-center">
+        AI Chatbot dengan Speech
+      </h1>
+      <div class="flex justify-between mb-4">
+        <div id="contextCount" class="text-sm text-gray-600">Konteks: 0</div>
+        <select id="modelSelect" class="p-2 border rounded">
+          <option value="llama-3.1-8b-instant">Llama 3.1 8B</option>
+          <option value="llama3-8b-8192">LLaMA3 8B</option>
+          <option value="llama-3.1-70b-versatile">
+            LLaMA 3.1 70B Versatile
+          </option>
+        </select>
+      </div>
+      <div
+        id="chatContainer"
+        class="mb-4 h-[50vh] overflow-y-auto border rounded p-4 space-y-4"
+      >
+        <!-- Chat messages will appear here -->
+      </div>
+      <div class="flex mb-4 relative">
+        <input
+          id="userInput"
+          type="text"
+          class="flex-grow p-2 border rounded-l"
+          placeholder="Ketik pesan Anda di sini..."
+        />
+        <button
+          id="sendButton"
+          class="bg-blue-500 text-white py-2 px-4 rounded-r hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+        >
+          Kirim
+        </button>
+        <div
+          id="speechIndicator"
+          class="absolute left-2 top-1/2 transform -translate-y-1/2 hidden"
+        >
+          <div class="speech-animation">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-between mb-4">
+        <button
+          id="startSpeech"
+          class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+        >
+          Mulai Bicara
+        </button>
+        <button
+          id="stopSpeech"
+          class="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+          disabled
+        >
+          Berhenti Bicara
+        </button>
+        <button
+          id="clearChat"
+          class="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
+        >
+          Bersihkan Obrolan
+        </button>
+      </div>
+      <div class="mb-4">
+        <input
+          id="apiKey"
+          type="password"
+          class="w-full p-2 border rounded mb-2"
+          placeholder="Masukkan API Key Anda..."
+        />
+        <button
+          id="toggleApiKey"
+          class="bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50"
+        >
+          Tampilkan API Key
+        </button>
+      </div>
+      <div class="mb-4">
+        <select id="countrySelect" class="w-full p-2 border rounded mb-2">
+          <option value="">Select a Country</option>
+        </select>
+        <select id="voices" class="w-full p-2 border rounded mb-2">
+          <option value="">Select A Voice</option>
+        </select>
+        <div class="flex items-center mb-2">
+          <label for="rate" class="mr-2">Rate:</label>
+          <input
+            id="rate"
+            type="range"
+            min="0.5"
+            max="2"
+            value="1"
+            step="0.1"
+            class="flex-grow"
+          />
+          <span id="rateValue" class="ml-2">1</span>
+        </div>
+        <div class="flex items-center">
+          <label for="pitch" class="mr-2">Pitch:</label>
+          <input
+            id="pitch"
+            type="range"
+            min="0"
+            max="2"
+            value="1"
+            step="0.1"
+            class="flex-grow"
+          />
+          <span id="pitchValue" class="ml-2">1</span>
+        </div>
+      </div>
+    </div>
+
+    <script src="groqtsswhisper.js"></script>
+  </body>
+</html>
