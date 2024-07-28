@@ -200,7 +200,7 @@ function generateFolderContents(folderPath, files) {
 }
 
 app.get("/", (req, res) => {
-  const itemsPerPage = parseInt(req.query.items) || 10;
+  const itemsPerPage = parseInt(req.query.items) || 50;
   const currentPage = parseInt(req.query.page) || 1;
   const filter = req.query.filter || "all";
 
@@ -292,9 +292,9 @@ app.get("/", (req, res) => {
         <div class="mb-6 flex flex-wrap justify-between items-center">
           <div>
             <select id="itemsPerPage" class="bg-white border border-gray-300 rounded-md px-4 py-2 mb-2 sm:mb-0 mr-2" onchange="changeItemsPerPage()">
-              <option value="10" ${itemsPerPage === 10 ? "selected" : ""}>10 items</option>
-              <option value="20" ${itemsPerPage === 20 ? "selected" : ""}>20 items</option>
               <option value="50" ${itemsPerPage === 50 ? "selected" : ""}>50 items</option>
+              <option value="100" ${itemsPerPage === 100 ? "selected" : ""}>100 items</option>
+              <option value="1000" ${itemsPerPage === 1000 ? "selected" : ""}>1000 items</option>
             </select>
             <select id="filterSelect" class="bg-white border border-gray-300 rounded-md px-4 py-2 mb-2 sm:mb-0" onchange="changeFilter()">
               <option value="all" ${filter === "all" ? "selected" : ""}>All</option>
