@@ -53,6 +53,30 @@ toolbarButtonsContainer.insertBefore(
     toolbarButtonsContainer.firstChild,
 );
 
+const selectAllButton = document.getElementById("selectAllButton");
+const clearAllButton = document.getElementById("clearAllButton");
+
+// Function to select all text in the editor
+function selectAllText() {
+    codeEditor.execCommand("selectAll");
+}
+
+// Function to clear all text in the editor
+function clearAllText() {
+    if (
+        confirm(
+            "Are you sure you want to clear all text? This action cannot be undone.",
+        )
+    ) {
+        codeEditor.setValue("");
+        updatePreview();
+    }
+}
+
+// Add event listeners for the new buttons
+selectAllButton.addEventListener("click", selectAllText);
+clearAllButton.addEventListener("click", clearAllText);
+
 let fontSize = 14;
 let newTabWindow = null;
 

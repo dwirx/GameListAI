@@ -1,326 +1,344 @@
-    /* Base styles */
-    html,
-    body {
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    /* CodeMirror base styles */
-    .CodeMirror {
-      height: 100% !important;
-      font-size: 14px;
-      font-family: 'Fira Code', monospace;
-    }
-
-    /* Light mode styles */
-    .CodeMirror {
-      background-color: #f8f8f8;
-      color: #333;
-    }
-
-    .CodeMirror-gutters {
-      background-color: #f0f0f0;
-      border-right: 1px solid #ddd;
-    }
-
-    .CodeMirror-linenumber {
-      color: #999;
-    }
-
-    .CodeMirror-cursor {
-      border-left: 1px solid #333;
-    }
-
-    /* Darcula-inspired dark mode for CodeMirror */
-    body.dark .CodeMirror {
-      background-color: #2B2B2B;
-      color: #A9B7C6;
-    }
-
-    body.dark .CodeMirror-gutters {
-      background-color: #313335;
-      border-right: 1px solid #4D4D4D;
-    }
-
-    body.dark .CodeMirror-linenumber {
-      color: #606366;
-    }
-
-    body.dark .CodeMirror-cursor {
-      border-left: 1px solid #A9B7C6;
-    }
-
-    /* Syntax highlighting for dark mode */
-    body.dark .cm-keyword {
-      color: #CC7832;
-    }
-
-    body.dark .cm-atom {
-      color: #9876AA;
-    }
-
-    body.dark .cm-number {
-      color: #6897BB;
-    }
-
-    body.dark .cm-def {
-      color: #A9B7C6;
-    }
-
-    body.dark .cm-variable {
-      color: #A9B7C6;
-    }
-
-    body.dark .cm-punctuation {
-      color: #A9B7C6;
-    }
-
-    body.dark .cm-property {
-      color: #FFC66D;
-    }
-
-    body.dark .cm-operator {
-      color: #A9B7C6;
-    }
-
-    body.dark .cm-comment {
-      color: #629755;
-    }
-
-    body.dark .cm-string {
-      color: #6A8759;
-    }
-
-    body.dark .cm-meta {
-      color: #BBB529;
-    }
-
-    body.dark .cm-qualifier {
-      color: #6A8759;
-    }
-
-    body.dark .cm-builtin {
-      color: #A9B7C6;
-    }
-
-    body.dark .cm-bracket {
-      color: #A9B7C6;
-    }
-
-    body.dark .cm-tag {
-      color: #E8BF6A;
-    }
-
-    body.dark .cm-attribute {
-      color: #BABABA;
-    }
-
-    body.dark .cm-hr {
-      color: #999;
-    }
-
-    body.dark .cm-link {
-      color: #287BDE;
-    }
-
-    body.dark .CodeMirror-selected {
-      background-color: #214283;
-    }
-
-    body.dark .CodeMirror-focused .CodeMirror-selected {
-      background-color: #214283;
-    }
-
-    body.dark .CodeMirror-line::selection,
-    body.dark .CodeMirror-line>span::selection,
-    body.dark .CodeMirror-line>span>span::selection {
-      background-color: #214283;
-    }
-
-    body.dark .CodeMirror-line::-moz-selection,
-    body.dark .CodeMirror-line>span::-moz-selection,
-    body.dark .CodeMirror-line>span>span::-moz-selection {
-      background-color: #214283;
-    }
-
-    /* Preview container styles */
-    #preview-container {
-      background-color: white;
-      transition: background-color 0.3s ease;
-    }
-
-    body.dark #preview-container {
-      background-color: #1a1a1a;
-    }
-
-    #preview-container.browser-fullscreen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 9999;
-    }
-
-    #preview {
-      width: 100%;
-      height: 100%;
-      border: none;
-      transition: filter 0.3s ease;
-    }
-
-    body.dark #preview {
-      filter: invert(0.9) hue-rotate(180deg);
-    }
-
-    #closePreview {
-      display: none;
-    }
-
-    #preview-container.browser-fullscreen #closePreview {
-      display: block;
-    }
-
-    /* Toolbar styles */
-    #toolbar {
-      background-color: #3C3F41;
-      border-bottom: 1px solid #323232;
-    }
-
-    body.dark #toolbar {
-      background-color: #2B2B2B;
-      border-bottom: 1px solid #1E1E1E;
-    }
-
-    /* Button styles */
-    button {
-      transition: background-color 0.3s, color 0.3s;
-    }
-
-    body.dark button {
-      background-color: #4A4A4A;
-      color: #A9B7C6;
-    }
-
-    body.dark button:hover {
-      background-color: #5C5C5C;
-    }
-
-    /* Split mode toggle styles */
-    .split-mode-toggle {
-      background-color: #4A4A4A;
-      border: 1px solid #323232;
-    }
-
-    body.dark .split-mode-toggle {
-      background-color: #4A4A4A;
-      border: 1px solid #1E1E1E;
-    }
-
-    /* Run button styles */
-    #runButton {
-      background-color: #388E3C;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-    }
-
-    body.dark #runButton {
-      background-color: #1B5E20;
-    }
-
-    #runButton:hover {
-      background-color: #2E7D32;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Close preview button styles */
-    #closePreview {
-      background-color: #B71C1C;
-      transition: all 0.3s ease;
-    }
-
-    body.dark #closePreview {
-      background-color: #7F0000;
-    }
-
-    #closePreview:hover {
-      background-color: #D32F2F;
-    }
-
-    /* Font size adjustment styles */
-    #fontSizeDisplay {
-      min-width: 40px;
-      text-align: center;
-    }
-
-    /* Responsive styles */
-    @media (max-width: 768px) {
-      #main-container {
-        flex-direction: column;
-      }
-
-      #preview-container {
-        height: 50%;
-      }
-
-      #toolbar {
-        flex-wrap: wrap;
-      }
-
-      #toolbar>div {
-        width: 100%;
-        justify-content: space-between;
-        margin-bottom: 0.5rem;
-      }
-    }
-
-    /* Additional enhancements */
-    .CodeMirror-scroll {
-      scrollbar-width: thin;
-      scrollbar-color: #888 #f1f1f1;
-    }
-
-    .CodeMirror-scroll::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .CodeMirror-scroll::-webkit-scrollbar-track {
-      background: #f1f1f1;
-    }
-
-    .CodeMirror-scroll::-webkit-scrollbar-thumb {
-      background: #888;
-      border-radius: 4px;
-    }
-
-    .CodeMirror-scroll::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
-
-    body.dark .CodeMirror-scroll {
-      scrollbar-color: #555 #2B2B2B;
-    }
-
-    body.dark .CodeMirror-scroll::-webkit-scrollbar-track {
-      background: #2B2B2B;
-    }
-
-    body.dark .CodeMirror-scroll::-webkit-scrollbar-thumb {
-      background: #555;
-    }
-
-    body.dark .CodeMirror-scroll::-webkit-scrollbar-thumb:hover {
-      background: #777;
-    }
-
-    /* Smooth transitions for dark mode */
-    body,
-    .CodeMirror,
-    #preview-container,
-    #toolbar,
-    button {
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
+/* Base styles */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* CodeMirror base styles */
+.CodeMirror {
+  height: 100% !important;
+  font-size: 14px;
+  font-family: 'Fira Code', monospace;
+}
+
+/* Light mode styles */
+.CodeMirror {
+  background-color: #f8f8f8;
+  color: #333;
+}
+
+.CodeMirror-gutters {
+  background-color: #f0f0f0;
+  border-right: 1px solid #ddd;
+}
+
+.CodeMirror-linenumber {
+  color: #999;
+}
+
+.CodeMirror-cursor {
+  border-left: 1px solid #333;
+}
+
+/* Darcula-inspired dark mode for CodeMirror */
+body.dark .CodeMirror {
+  background-color: #2B2B2B;
+  color: #A9B7C6;
+}
+
+body.dark .CodeMirror-gutters {
+  background-color: #313335;
+  border-right: 1px solid #4D4D4D;
+}
+
+body.dark .CodeMirror-linenumber {
+  color: #606366;
+}
+
+body.dark .CodeMirror-cursor {
+  border-left: 1px solid #A9B7C6;
+}
+
+/* Syntax highlighting for dark mode */
+body.dark .cm-keyword {
+  color: #CC7832;
+}
+
+body.dark .cm-atom {
+  color: #9876AA;
+}
+
+body.dark .cm-number {
+  color: #6897BB;
+}
+
+body.dark .cm-def {
+  color: #A9B7C6;
+}
+
+body.dark .cm-variable {
+  color: #A9B7C6;
+}
+
+body.dark .cm-punctuation {
+  color: #A9B7C6;
+}
+
+body.dark .cm-property {
+  color: #FFC66D;
+}
+
+body.dark .cm-operator {
+  color: #A9B7C6;
+}
+
+body.dark .cm-comment {
+  color: #629755;
+}
+
+body.dark .cm-string {
+  color: #6A8759;
+}
+
+body.dark .cm-meta {
+  color: #BBB529;
+}
+
+body.dark .cm-qualifier {
+  color: #6A8759;
+}
+
+body.dark .cm-builtin {
+  color: #A9B7C6;
+}
+
+body.dark .cm-bracket {
+  color: #A9B7C6;
+}
+
+body.dark .cm-tag {
+  color: #E8BF6A;
+}
+
+body.dark .cm-attribute {
+  color: #BABABA;
+}
+
+body.dark .cm-hr {
+  color: #999;
+}
+
+body.dark .cm-link {
+  color: #287BDE;
+}
+
+body.dark .CodeMirror-selected {
+  background-color: #214283;
+}
+
+body.dark .CodeMirror-focused .CodeMirror-selected {
+  background-color: #214283;
+}
+
+body.dark .CodeMirror-line::selection,
+body.dark .CodeMirror-line>span::selection,
+body.dark .CodeMirror-line>span>span::selection {
+  background-color: #214283;
+}
+
+body.dark .CodeMirror-line::-moz-selection,
+body.dark .CodeMirror-line>span::-moz-selection,
+body.dark .CodeMirror-line>span>span::-moz-selection {
+  background-color: #214283;
+}
+
+/* Preview container styles */
+#preview-container {
+  background-color: white;
+  transition: background-color 0.3s ease;
+}
+
+body.dark #preview-container {
+  background-color: #1a1a1a;
+}
+
+#preview-container.browser-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+}
+
+#preview {
+  width: 100%;
+  height: 100%;
+  border: none;
+  transition: filter 0.3s ease;
+}
+
+body.dark #preview {
+  filter: invert(0.9) hue-rotate(180deg);
+}
+
+#closePreview {
+  display: none;
+}
+
+#preview-container.browser-fullscreen #closePreview {
+  display: block;
+}
+
+/* Toolbar styles */
+#toolbar {
+  background-color: #3C3F41;
+  border-bottom: 1px solid #323232;
+}
+
+body.dark #toolbar {
+  background-color: #2B2B2B;
+  border-bottom: 1px solid #1E1E1E;
+}
+
+/* Button styles */
+button {
+  transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark button {
+  background-color: #4A4A4A;
+  color: #A9B7C6;
+}
+
+body.dark button:hover {
+  background-color: #5C5C5C;
+}
+
+/* Split mode toggle styles */
+.split-mode-toggle {
+  background-color: #4A4A4A;
+  border: 1px solid #323232;
+}
+
+body.dark .split-mode-toggle {
+  background-color: #4A4A4A;
+  border: 1px solid #1E1E1E;
+}
+
+/* Run button styles */
+#runButton {
+  background-color: #388E3C;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+body.dark #runButton {
+  background-color: #1B5E20;
+}
+
+#runButton:hover {
+  background-color: #2E7D32;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Close preview button styles */
+#closePreview {
+  background-color: #B71C1C;
+  transition: all 0.3s ease;
+}
+
+body.dark #closePreview {
+  background-color: #7F0000;
+}
+
+#closePreview:hover {
+  background-color: #D32F2F;
+}
+
+/* Font size adjustment styles */
+#fontSizeDisplay {
+  min-width: 40px;
+  text-align: center;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  #main-container {
+    flex-direction: column;
+  }
+
+  #preview-container {
+    height: 50%;
+  }
+
+  #toolbar {
+    flex-wrap: wrap;
+  }
+
+  #toolbar>div {
+    width: 100%;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* New button styles */
+#selectAllButton,
+#clearAllButton {
+  transition: color 0.3s ease;
+}
+
+#selectAllButton:hover,
+#clearAllButton:hover {
+  color: #60A5FA;
+  /* Tailwind's blue-400 */
+}
+
+body.dark #selectAllButton:hover,
+body.dark #clearAllButton:hover {
+  color: #3B82F6;
+  /* Tailwind's blue-500 for better contrast in dark mode */
+}
+
+/* Additional enhancements */
+.CodeMirror-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+.CodeMirror-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.CodeMirror-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.CodeMirror-scroll::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.CodeMirror-scroll::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+body.dark .CodeMirror-scroll {
+  scrollbar-color: #555 #2B2B2B;
+}
+
+body.dark .CodeMirror-scroll::-webkit-scrollbar-track {
+  background: #2B2B2B;
+}
+
+body.dark .CodeMirror-scroll::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+body.dark .CodeMirror-scroll::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* Smooth transitions for dark mode */
+body,
+.CodeMirror,
+#preview-container,
+#toolbar,
+button {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
