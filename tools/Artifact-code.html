@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon" />
+    <title>OpenArtifacts</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- <link rel="stylesheet" href="style.css"> -->
+    <style>
+      :root {
+        --primary-color: #4caf50;
+        --secondary-color: #45a049;
+        --background-color: #f5f5f5;
+        --text-color: #333;
+        --border-color: #ddd;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-color: var(--background-color);
+        color: var(--text-color);
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      header {
+        background-color: #fff;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .logo {
+        font-size: 1.5rem;
+        margin: 0 0 0.5rem;
+        color: var(--primary-color);
+      }
+
+      .tabs {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .tab-btn {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        color: var(--text-color);
+        background-color: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .tab-btn.current {
+        background-color: var(--primary-color);
+        color: #fff;
+      }
+
+      main {
+        flex: 1;
+        padding: 1rem;
+      }
+
+      .tab-section {
+        display: none;
+        height: 100%;
+      }
+
+      .tab-section.current {
+        display: block;
+      }
+
+      #api-form {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .form-group {
+        margin-bottom: 1rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 1rem;
+      }
+
+      .form-group button {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        background-color: var(--primary-color);
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .form-group button:hover {
+        background-color: var(--secondary-color);
+      }
+
+      #tab-code pre {
+        margin: 0;
+        padding: 1rem;
+        background-color: #282c34;
+        border-radius: 4px;
+        overflow: auto;
+        font-size: 0.9rem;
+      }
+
+      iframe {
+        width: 100%;
+        height: calc(100vh - 200px);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+      }
+
+      footer {
+        background-color: #fff;
+        padding: 1rem;
+        text-align: center;
+        box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .credits {
+        font-size: 0.9rem;
+      }
+
+      .credits a {
+        color: var(--primary-color);
+        text-decoration: none;
+      }
+
+      .credits a:hover {
+        text-decoration: underline;
+      }
+
+      .button-group {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .action-button {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        background-color: var(--primary-color);
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .action-button:hover {
+        background-color: var(--secondary-color);
+      }
+
+      .action-button i {
+        font-size: 1.2rem;
+      }
+
+      .download-btn {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        background-color: var(--primary-color);
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-bottom: 1rem;
+      }
+
+      .download-btn:hover {
+        background-color: var(--secondary-color);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <header>
+        <h1 class="logo">OpenArtifacts</h1>
+        <nav class="tabs">
+          <button
+            class="tab-btn current"
+            id="button-tab-form"
+            onclick="openTab('tab-form')"
+          >
+            <i class="fas fa-edit"></i> Form
+          </button>
+          <button
+            class="tab-btn"
+            id="button-tab-code"
+            onclick="openTab('tab-code')"
+          >
+            <i class="fas fa-code"></i> Code
+          </button>
+          <button
+            class="tab-btn"
+            id="button-tab-app"
+            onclick="openTab('tab-app')"
+          >
+            <i class="fas fa-mobile-alt"></i> App
+          </button>
+        </nav>
+      </header>
+
+      <main>
+        <section class="tab-section current" id="tab-form">
+          <form id="api-form">
+            <div class="form-group">
+              <label for="api-endpoint">API Endpoint:</label>
+              <input
+                type="text"
+                id="api-endpoint"
+                name="api-endpoint"
+                value="https://api.openai.com/v1/chat/completions"
+              />
+            </div>
+            <div class="form-group">
+              <label for="api-key">API key:</label>
+              <div class="input-with-icon">
+                <input
+                  type="password"
+                  id="key"
+                  name="api-key"
+                  value=""
+                  placeholder="sk-xxx-yyyyyyyzzzzzzzz"
+                />
+                <button
+                  type="button"
+                  id="toggle-password"
+                  class="toggle-password"
+                >
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="model-name">Model Name:</label>
+              <input
+                type="text"
+                id="model-name"
+                name="model-name"
+                value="gpt-4"
+              />
+            </div>
+            <div class="form-group">
+              <label for="prompt">App Description:</label>
+              <textarea
+                id="prompt"
+                name="prompt"
+                rows="4"
+                placeholder="Describe your front-end app in a few sentences"
+              ></textarea>
+              <div class="word-count">
+                Words: <span id="word-count">0</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <button type="submit">Generate App</button>
+            </div>
+          </form>
+        </section>
+        <section class="tab-section" id="tab-code">
+          <pre><code id="code" class="language-jsx"></code></pre>
+          <div class="token-usage">
+            Tokens used: <span id="token-count">0</span>
+          </div>
+        </section>
+        <section class="tab-section" id="tab-app">
+          <iframe></iframe>
+        </section>
+      </main>
+
+      <footer>
+        <div class="credits">
+          by <a href="https://x.com/mayfer">murat</a> | clone on
+          <a href="https://github.com/mayfer/open-artifacts">github</a>
+        </div>
+      </footer>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <!-- <script src="script.js"></script> -->
+    <script>
+      // Tab functionality
+      function openTab(tabId) {
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((btn) => btn.classList.remove("current"));
+        document
+          .querySelectorAll(".tab-section")
+          .forEach((section) => section.classList.remove("current"));
+        document.getElementById(`button-${tabId}`).classList.add("current");
+        document.getElementById(tabId).classList.add("current");
+      }
+
+      const form = document.getElementById("api-form");
+
+      function saveToLocalStorage() {
+        const formData = Object.fromEntries(new FormData(form));
+        localStorage.setItem("apiFormData", JSON.stringify(formData));
+      }
+
+      function loadFromLocalStorage() {
+        const storedData = localStorage.getItem("apiFormData");
+        if (storedData) {
+          const formData = JSON.parse(storedData);
+          Object.entries(formData).forEach(([key, value]) => {
+            const element = form.elements[key];
+            if (element) element.value = value;
+          });
+        }
+      }
+
+      window.addEventListener("load", loadFromLocalStorage);
+      form.addEventListener("input", saveToLocalStorage);
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        saveToLocalStorage();
+
+        const prompt = form.prompt.value;
+        const fullprompt = `You are an expert front-end developer. Don't use css files, only javascript/react (jsx). You can use styled-components if you want styling. Generate a React component (called App) that follows the following specifications: ${prompt}\n\nQuickly list methods you'll likely need for the component(s) and then immediately generate the code in a single code block. Once code is generated, no further explanation is required. Make sure all libraries are imported (i.e. it's common to forget three.js addons), or module addons registered if needed (such as chart.js registrables).`;
+
+        const apiKey = document.querySelector("#key").value;
+        const apiEndpoint = document.querySelector("#api-endpoint").value;
+        const modelName = document.querySelector("#model-name").value;
+        const output = document.querySelector("#code");
+
+        output.textContent = "Generating code...";
+        openTab("tab-code");
+
+        try {
+          const response = await fetch(apiEndpoint, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: modelName,
+              messages: [{ role: "user", content: fullprompt }],
+              max_tokens: 4096,
+              temperature: 0,
+              stream: true,
+            }),
+          });
+
+          if (response.ok) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let responseText = "";
+
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              const chunk = decoder.decode(value, { stream: true });
+
+              const lines = chunk
+                .split("\n")
+                .filter((line) => line.trim() !== "");
+              for (const line of lines) {
+                if (line.startsWith("data: [DONE]")) break;
+                try {
+                  const json = JSON.parse(line.replace(/^data: /, ""));
+                  if (json.choices && json.choices.length > 0) {
+                    const content = json.choices[0].delta.content;
+                    if (content) {
+                      responseText += content;
+                      output.textContent = responseText;
+                      hljs.highlightElement(output);
+                      output.scrollTop = output.scrollHeight;
+                    }
+                  }
+                } catch (error) {
+                  console.error("Error parsing JSON:", line, error);
+                }
+              }
+            }
+
+            const codeMatch = responseText.match(/```(?:\w+\n)?([\s\S]*?)```/);
+            if (codeMatch) {
+              responseText = codeMatch[1].trim();
+            }
+
+            renderGeneratedHtml(responseText);
+            openTab("tab-app");
+          } else {
+            throw new Error(response.statusText);
+          }
+        } catch (error) {
+          output.textContent = `Error: ${error.message}`;
+        }
+      });
+
+      const htmlWrapper = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+    <title>React TypeScript Without Bundler</title>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "three/examples/jsm/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    <\/script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/plain" id="jsx-code">
+        import ReactDOM from 'react-dom';
+
+        [[APP_CODE]]
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    <\/script>
+    <script>
+        const jsxCode = document.getElementById('jsx-code').textContent;
+        const compiledCode = Babel.transform(jsxCode, { presets: ['react'] }).code;
+        console.log(compiledCode);
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.text = compiledCode;
+        document.body.appendChild(script);
+    <\/script>
+</body>
+</html>
+`;
+
+      function renderGeneratedHtml(appHtml) {
+        const htmlContent = htmlWrapper.replace("[[APP_CODE]]", appHtml);
+        const htmlContentUpdatedImports = htmlContent.replace(
+          /import\s+.*?\s+from\s+['"]([^'"]+)['"]/g,
+          (match, p1) => {
+            if (
+              p1.startsWith("https://") ||
+              p1.startsWith("three/") ||
+              p1 === "three"
+            )
+              return match;
+            return match.replace(p1, `https://cdn.skypack.dev/${p1}`);
+          },
+        );
+
+        const blob = new Blob([htmlContentUpdatedImports], {
+          type: "text/html",
+        });
+        const url = URL.createObjectURL(blob);
+        const iframeElem = document.querySelector("iframe");
+        iframeElem.src = url;
+
+        // Buat tombol unduh
+        const downloadButton = document.createElement("button");
+        downloadButton.textContent = "Unduh HTML";
+        downloadButton.classList.add("download-btn");
+        downloadButton.addEventListener("click", () => {
+          const tempLink = document.createElement("a");
+          tempLink.href = url;
+          tempLink.download = "generated_app.html";
+          document.body.appendChild(tempLink);
+          tempLink.click();
+          document.body.removeChild(tempLink);
+
+          // Hapus objek URL setelah unduhan selesai
+          setTimeout(() => {
+            URL.revokeObjectURL(url);
+          }, 100);
+        });
+
+        // Tambahkan tombol unduh ke halaman
+        const appSection = document.getElementById("tab-app");
+        if (appSection.querySelector(".download-btn")) {
+          appSection.removeChild(appSection.querySelector(".download-btn"));
+        }
+        appSection.insertBefore(downloadButton, appSection.firstChild);
+      }
+    </script>
+  </body>
+</html>
