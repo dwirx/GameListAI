@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Advanced Image Combiner</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+        <style>
+            .image-item {
+                transition: all 0.3s ease;
+            }
+            .image-item:hover {
+                transform: scale(1.05);
+            }
+            .sortable-ghost {
+                opacity: 0.5;
+            }
+            #imagePreview {
+                max-height: 300px;
+                overflow-y: auto;
+            }
+            #pasteArea {
+                border: 2px dashed #ccc;
+                padding: 20px;
+                text-align: center;
+                cursor: pointer;
+            }
+            #pasteArea.drag-over {
+                background-color: #f0f0f0;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-100 min-h-screen p-4">
+        <div
+            class="bg-white p-4 sm:p-8 rounded-lg shadow-md w-full max-w-4xl mx-auto"
+        >
+            <h1
+                class="text-2xl sm:text-3xl font-bold mb-6 text-center text-blue-600"
+            >
+                Advanced Image Combiner
+            </h1>
+
+            <div class="mb-4">
+                <label
+                    for="imageInput"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    >Select Images:</label
+                >
+                <input
+                    type="file"
+                    id="imageInput"
+                    accept="image/*"
+                    multiple
+                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+            </div>
+
+            <div class="mb-4">
+                <label
+                    for="imageUrl"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    >Or Add Image URL:</label
+                >
+                <div class="flex">
+                    <input
+                        type="text"
+                        id="imageUrl"
+                        placeholder="https://example.com/image.jpg"
+                        class="flex-grow mr-2 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                    />
+                    <button
+                        id="addUrlButton"
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    >
+                        Add
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label
+                    for="pasteArea"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    >Or Paste/Drop Image Here:</label
+                >
+                <div id="pasteArea" class="rounded-md">
+                    <p class="text-gray-500">
+                        Click here to paste an image or drag and drop an image
+                        file
+                    </p>
+                </div>
+            </div>
+
+            <div
+                id="imagePreview"
+                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4"
+            ></div>
+
+            <div class="mb-4">
+                <label
+                    for="outputFormat"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    >Output Format:</label
+                >
+                <select
+                    id="outputFormat"
+                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                >
+                    <option value="image/jpeg">JPG</option>
+                    <option value="image/png">PNG</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label
+                    for="layout"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    >Layout:</label
+                >
+                <select
+                    id="layout"
+                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                >
+                    <option value="horizontal">
+                        Horizontal (Side by Side)
+                    </option>
+                    <option value="vertical">Vertical (Top to Bottom)</option>
+                    <option value="grid">Grid</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+
+            <div id="gridOptions" class="mb-4 hidden">
+                <label
+                    for="gridCols"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    >Grid Columns:</label
+                >
+                <input
+                    type="number"
+                    id="gridCols"
+                    min="1"
+                    max="10"
+                    value="2"
+                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                />
+            </div>
+
+            <div id="customLayoutOptions" class="mb-4 hidden">
+                <p class="text-sm font-medium text-gray-700 mb-2">
+                    Drag images to arrange them:
+                </p>
+                <div
+                    id="customLayoutPreview"
+                    class="border-2 border-dashed border-gray-300 p-4 min-h-[200px]"
+                ></div>
+            </div>
+
+            <div class="flex justify-between items-center mb-4">
+                <button
+                    id="combineButton"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                >
+                    Combine Images
+                </button>
+                <a
+                    id="downloadLink"
+                    class="hidden bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                    download="combined_image"
+                    >Download Combined Image</a
+                >
+            </div>
+
+            <div id="outputContainer" class="mt-6 hidden">
+                <h2 class="text-xl font-semibold mb-2">Combined Image:</h2>
+                <img
+                    id="outputImage"
+                    class="max-w-full h-auto rounded-lg shadow-md"
+                />
+            </div>
+        </div>
+
+        <script>
+            const imageInput = document.getElementById("imageInput");
+            const imageUrl = document.getElementById("imageUrl");
+            const addUrlButton = document.getElementById("addUrlButton");
+            const pasteArea = document.getElementById("pasteArea");
+            const imagePreview = document.getElementById("imagePreview");
+            const combineButton = document.getElementById("combineButton");
+            const outputFormat = document.getElementById("outputFormat");
+            const layout = document.getElementById("layout");
+            const gridOptions = document.getElementById("gridOptions");
+            const gridCols = document.getElementById("gridCols");
+            const customLayoutOptions = document.getElementById(
+                "customLayoutOptions",
+            );
+            const customLayoutPreview = document.getElementById(
+                "customLayoutPreview",
+            );
+            const outputContainer = document.getElementById("outputContainer");
+            const outputImage = document.getElementById("outputImage");
+            const downloadLink = document.getElementById("downloadLink");
+
+            let images = [];
+
+            imageInput.addEventListener("change", (e) => {
+                const newImages = Array.from(e.target.files);
+                images = images.concat(newImages);
+                updateImagePreview();
+            });
+
+            addUrlButton.addEventListener("click", () => {
+                const url = imageUrl.value.trim();
+                if (url) {
+                    fetch(url)
+                        .then((response) => response.blob())
+                        .then((blob) => {
+                            const file = new File([blob], "image_from_url", {
+                                type: blob.type,
+                            });
+                            images.push(file);
+                            updateImagePreview();
+                            imageUrl.value = "";
+                        })
+                        .catch((error) => {
+                            console.error("Error fetching image:", error);
+                            alert(
+                                "Failed to fetch image from URL. Please check the URL and try again.",
+                            );
+                        });
+                }
+            });
+
+            layout.addEventListener("change", () => {
+                gridOptions.classList.toggle("hidden", layout.value !== "grid");
+                customLayoutOptions.classList.toggle(
+                    "hidden",
+                    layout.value !== "custom",
+                );
+                if (layout.value === "custom") {
+                    updateCustomLayoutPreview();
+                }
+            });
+
+            // Paste functionality
+            document.addEventListener("paste", (e) => {
+                const items = e.clipboardData.items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf("image") !== -1) {
+                        const blob = items[i].getAsFile();
+                        addImageFromBlob(blob);
+                        break;
+                    }
+                }
+            });
+
+            // Drag and drop functionality
+            pasteArea.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                pasteArea.classList.add("drag-over");
+            });
+
+            pasteArea.addEventListener("dragleave", () => {
+                pasteArea.classList.remove("drag-over");
+            });
+
+            pasteArea.addEventListener("drop", (e) => {
+                e.preventDefault();
+                pasteArea.classList.remove("drag-over");
+                const files = e.dataTransfer.files;
+                for (let i = 0; i < files.length; i++) {
+                    if (files[i].type.startsWith("image/")) {
+                        addImageFromBlob(files[i]);
+                    }
+                }
+            });
+
+            function addImageFromBlob(blob) {
+                const file = new File([blob], "pasted_image", {
+                    type: blob.type,
+                });
+                images.push(file);
+                updateImagePreview();
+            }
+
+            function updateImagePreview() {
+                imagePreview.innerHTML = "";
+                images.forEach((image, index) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const div = document.createElement("div");
+                        div.classList.add("relative", "image-item");
+
+                        const img = document.createElement("img");
+                        img.src = e.target.result;
+                        img.classList.add(
+                            "w-full",
+                            "h-32",
+                            "object-cover",
+                            "rounded-md",
+                        );
+
+                        const deleteBtn = document.createElement("button");
+                        deleteBtn.innerHTML = "&times;";
+                        deleteBtn.classList.add(
+                            "absolute",
+                            "top-0",
+                            "right-0",
+                            "bg-red-500",
+                            "text-white",
+                            "rounded-full",
+                            "w-6",
+                            "h-6",
+                            "flex",
+                            "items-center",
+                            "justify-center",
+                            "cursor-pointer",
+                        );
+                        deleteBtn.onclick = () => deleteImage(index);
+
+                        div.appendChild(img);
+                        div.appendChild(deleteBtn);
+                        imagePreview.appendChild(div);
+                    };
+                    reader.readAsDataURL(image);
+                });
+
+                makePreviewSortable(imagePreview);
+                if (layout.value === "custom") {
+                    updateCustomLayoutPreview();
+                }
+            }
+
+            function makePreviewSortable(element) {
+                new Sortable(element, {
+                    animation: 150,
+                    ghostClass: "sortable-ghost",
+                    onEnd: function (evt) {
+                        const newIndex = evt.newIndex;
+                        const oldIndex = evt.oldIndex;
+                        const element = images.splice(oldIndex, 1)[0];
+                        images.splice(newIndex, 0, element);
+                        if (layout.value === "custom") {
+                            updateCustomLayoutPreview();
+                        }
+                    },
+                });
+            }
+
+            function updateCustomLayoutPreview() {
+                customLayoutPreview.innerHTML = "";
+                images.forEach((image, index) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const div = document.createElement("div");
+                        div.classList.add("inline-block", "cursor-move", "m-2");
+
+                        const img = document.createElement("img");
+                        img.src = e.target.result;
+                        img.classList.add(
+                            "w-24",
+                            "h-24",
+                            "object-cover",
+                            "rounded-md",
+                        );
+
+                        div.appendChild(img);
+                        customLayoutPreview.appendChild(div);
+                    };
+                    reader.readAsDataURL(image);
+                });
+                makePreviewSortable(customLayoutPreview);
+            }
+
+            function deleteImage(index) {
+                images.splice(index, 1);
+                updateImagePreview();
+            }
+
+            combineButton.addEventListener("click", combineImages);
+
+            function combineImages() {
+                if (images.length === 0) {
+                    alert("Please select at least one image.");
+                    return;
+                }
+
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+
+                const imagePromises = images.map((image) => {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.onload = () => resolve(img);
+                        img.onerror = reject;
+                        img.src = URL.createObjectURL(image);
+                    });
+                });
+
+                Promise.all(imagePromises)
+                    .then((loadedImages) => {
+                        let canvasWidth, canvasHeight;
+
+                        if (layout.value === "horizontal") {
+                            canvasWidth = loadedImages.reduce(
+                                (sum, img) => sum + img.width,
+                                0,
+                            );
+                            canvasHeight = Math.max(
+                                ...loadedImages.map((img) => img.height),
+                            );
+                        } else if (layout.value === "vertical") {
+                            canvasWidth = Math.max(
+                                ...loadedImages.map((img) => img.width),
+                            );
+                            canvasHeight = loadedImages.reduce(
+                                (sum, img) => sum + img.height,
+                                0,
+                            );
+                        } else if (layout.value === "grid") {
+                            const cols = parseInt(gridCols.value);
+                            const rows = Math.ceil(loadedImages.length / cols);
+                            canvasWidth = loadedImages
+                                .slice(0, cols)
+                                .reduce((sum, img) => sum + img.width, 0);
+                            canvasHeight = Math.max(
+                                ...Array(rows)
+                                    .fill()
+                                    .map((_, i) =>
+                                        loadedImages
+                                            .slice(i * cols, (i + 1) * cols)
+                                            .reduce(
+                                                (max, img) =>
+                                                    Math.max(max, img.height),
+                                                0,
+                                            ),
+                                    ),
+                            );
+                        } else if (layout.value === "custom") {
+                            const previewRect =
+                                customLayoutPreview.getBoundingClientRect();
+                            canvasWidth = previewRect.width;
+                            canvasHeight = previewRect.height;
+                        }
+
+                        canvas.width = canvasWidth;
+                        canvas.height = canvasHeight;
+
+                        if (layout.value === "custom") {
+                            customLayoutPreview
+                                .querySelectorAll("img")
+                                .forEach((previewImg, index) => {
+                                    const rect =
+                                        previewImg.getBoundingClientRect();
+                                    const previewRect =
+                                        customLayoutPreview.getBoundingClientRect();
+                                    const x = rect.left - previewRect.left;
+                                    const y = rect.top - previewRect.top;
+                                    ctx.drawImage(
+                                        loadedImages[index],
+                                        x,
+                                        y,
+                                        rect.width,
+                                        rect.height,
+                                    );
+                                });
+                        } else {
+                            let x = 0,
+                                y = 0;
+                            loadedImages.forEach((img, index) => {
+                                if (layout.value === "horizontal") {
+                                    ctx.drawImage(img, x, 0);
+                                    x += img.width;
+                                } else if (layout.value === "vertical") {
+                                    ctx.drawImage(img, 0, y);
+                                    y += img.height;
+                                } else if (layout.value === "grid") {
+                                    const cols = parseInt(gridCols.value);
+                                    const col = index % cols;
+                                    const row = Math.floor(index / cols);
+                                    x = loadedImages
+                                        .slice(0, col)
+                                        .reduce(
+                                            (sum, img) => sum + img.width,
+                                            0,
+                                        );
+                                    y = loadedImages
+                                        .slice(0, row * cols)
+                                        .reduce((sum, img, i) => {
+                                            if (i % cols === 0)
+                                                return (
+                                                    sum +
+                                                    Math.max(
+                                                        ...loadedImages
+                                                            .slice(i, i + cols)
+                                                            .map(
+                                                                (img) =>
+                                                                    img.height,
+                                                            ),
+                                                    )
+                                                );
+                                            return sum;
+                                        }, 0);
+                                    ctx.drawImage(img, x, y);
+                                }
+                            });
+                        }
+
+                        const combinedImageData = canvas.toDataURL(
+                            outputFormat.value,
+                            0.8,
+                        );
+                        outputImage.src = combinedImageData;
+                        downloadLink.href = combinedImageData;
+                        downloadLink.download = `combined_image.${outputFormat.value === "image/jpeg" ? "jpg" : "png"}`;
+                        outputContainer.classList.remove("hidden");
+                        downloadLink.classList.remove("hidden");
+                    })
+                    .catch((error) => {
+                        console.error("Error loading images:", error);
+                        alert(
+                            "An error occurred while combining images. Please try again.",
+                        );
+                    });
+            }
+        </script>
+    </body>
+</html>
