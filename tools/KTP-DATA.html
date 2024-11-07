@@ -1,0 +1,1210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KPT Search</title>
+    <link rel="manifest" href="manifest.json" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f0f0f0;
+      }
+      .container {
+        max-width: 100%;
+        margin: 0 auto;
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .stat-card {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        width: 100%;
+      }
+      .stat-card h3 {
+        margin: 0;
+        font-size: 14px;
+        color: #6c757d;
+      }
+      .stat-card p {
+        margin: 5px 0 0;
+        font-size: 24px;
+        font-weight: bold;
+      }
+      .team-management {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 12px;
+        border-bottom: 1px solid #dee2e6;
+      }
+      th {
+        background-color: #f8f9fa;
+        font-weight: bold;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+      }
+      .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 90%;
+        max-width: 800px;
+        border-radius: 8px;
+      }
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .close:hover,
+      .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        background-color: white;
+        border-radius: 8px;
+        padding: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+      }
+      .pagination button {
+        width: 40px;
+        height: 40px;
+        margin: 5px;
+        border: none;
+        background-color: white;
+        color: #333;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+      }
+      .pagination button:hover {
+        background-color: #f0f0f0;
+      }
+      .pagination button.active {
+        background-color: #6200ee;
+        color: white;
+      }
+      .pagination button:first-child,
+      .pagination button:last-child {
+        background-color: #e0e0e0;
+        color: #757575;
+      }
+      .pagination .ellipsis {
+        width: 40px;
+        text-align: center;
+        font-size: 16px;
+        color: #757575;
+      }
+      .filters {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .filters input,
+      .filters select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      .voting-label {
+        padding: 5px 10px;
+        border-radius: 4px;
+        color: white;
+        font-weight: bold;
+      }
+      .eligible {
+        background-color: green;
+      }
+      .non-eligible {
+        background-color: blue;
+      }
+      .copyable {
+        cursor: pointer;
+        text-decoration: underline;
+      }
+      .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .action-buttons button {
+        padding: 10px 20px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .action-buttons button:hover {
+        background-color: #45a049;
+      }
+      #fileUpload {
+        margin-bottom: 20px;
+      }
+      .edit-mode input,
+      .edit-mode textarea {
+        width: 100%;
+        padding: 5px;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+      }
+      .edit-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+      }
+      .edit-buttons button {
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      .edited-green {
+        background-color: #90ee90;
+      }
+      .edited-blue {
+        background-color: #add8e6;
+      }
+      .family-member {
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+      }
+      .family-member-actions {
+        margin-top: 10px;
+      }
+      .family-member-actions button {
+        margin-right: 5px;
+      }
+      .matching-status {
+        font-weight: bold;
+      }
+      .matching-status.sesuai {
+        color: green;
+      }
+      .matching-status.tidak-sesuai {
+        color: blue;
+      }
+      @media (max-width: 768px) {
+        .container {
+          padding: 10px;
+        }
+        th,
+        td {
+          padding: 8px;
+        }
+        .modal-content {
+          width: 95%;
+          margin: 5% auto;
+        }
+        table {
+          font-size: 14px;
+        }
+        .pagination button {
+          width: 30px;
+          height: 30px;
+          font-size: 14px;
+        }
+      }
+      @media (min-width: 768px) {
+        .filters {
+          flex-direction: row;
+        }
+        .filters input,
+        .filters select {
+          flex: 1;
+        }
+      }
+      .storage-buttons {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+      }
+      .storage-buttons button {
+        padding: 10px 20px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .storage-buttons button:hover {
+        background-color: #45a049;
+      }
+      #maskToggleBtn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-left: 10px;
+      }
+
+      #maskToggleBtn:hover {
+        background-color: #45a049;
+      }
+
+      /* Copy notification styles */
+      #copyNotification {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #333;
+        color: white;
+        padding: 15px 25px;
+        border-radius: 5px;
+        display: none;
+        z-index: 1000;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      }
+
+      #copyNotification.show {
+        display: block;
+        animation: fadeInOut 2s ease-in-out;
+      }
+
+      @keyframes fadeInOut {
+        0% { opacity: 0; }
+        15% { opacity: 1; }
+        85% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+
+      /* Add styles for copyable elements */
+      .copyable {
+        cursor: pointer;
+        position: relative;
+        padding: 2px 4px;
+        background-color: #f8f9fa;
+        border-radius: 3px;
+        transition: background-color 0.2s;
+      }
+
+      .copyable:hover {
+        background-color: #e9ecef;
+      }
+
+      .copyable:active {
+        background-color: #dee2e6;
+      }
+
+      /* Add tooltip style */
+      .copyable::after {
+        content: 'Click to copy';
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 4px 8px;
+        background-color: #333;
+        color: white;
+        border-radius: 4px;
+        font-size: 12px;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s;
+        white-space: nowrap;
+      }
+
+      .copyable:hover::after {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      /* Make table cells selectable */
+      td, th {
+        user-select: text;
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+      }
+
+      /* Style for selected text */
+      ::selection {
+        background-color: #b3d4fc;
+        text-shadow: none;
+      }
+
+      #customContextMenu {
+        position: fixed;
+        background: white;
+        border: 1px solid #ccc;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        border-radius: 4px;
+        display: none;
+        z-index: 1000;
+      }
+
+      .menu-item {
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+
+      .menu-item:hover {
+        background-color: #f0f0f0;
+      }
+
+      .selectable {
+        user-select: text;
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+      }
+
+      .copyable {
+        cursor: pointer;
+      }
+
+      /* Update existing styles */
+      td, th {
+        user-select: text;
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        position: relative;
+      }
+
+      /* Hide context menu when clicking elsewhere */
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>KTP SEARCH</h1>
+      </div>
+      <div id="fileUpload">
+        <input type="file" id="csvFile" accept=".csv" />
+        <button onclick="handleFileUpload()">Upload CSV</button>
+        <button onclick="saveCSV()">Save CSV</button>
+        <button onclick="addNewRecord()">Add New Record</button>
+        <button onclick="toggleMasking()" id="maskToggleBtn">Show Full Numbers</button>
+      </div>
+      <div class="stat-cards">
+        <div class="stat-card">
+          <h3>Total Records</h3>
+          <p id="totalRecords">0</p>
+        </div>
+      </div>
+      <div class="team-management">
+        <h2>Data Management</h2>
+        <div class="action-buttons">
+          <button onclick="uncheckAll()">Uncheck All</button>
+        </div>
+        <div class="filters">
+          <input type="text" id="searchInput" placeholder="Search..." />
+          <input
+            type="text"
+            id="addressInput"
+            placeholder="Search by Address"
+          />
+          <select id="itemsPerPage">
+            <option value="10">10 per page</option>
+            <option value="50">50 per page</option>
+          </select>
+          <select id="checklistFilter">
+            <option value="all">All</option>
+            <option value="checked">Checked</option>
+            <option value="unchecked">Unchecked</option>
+          </select>
+          <select id="matchingFilter">
+            <option value="all">All</option>
+            <option value="sesuai">Sesuai</option>
+            <option value="tidak-sesuai">Tidak Sesuai</option>
+          </select>
+        </div>
+        <div class="storage-buttons">
+          <button onclick="saveDataStorage()">Save Data Storage</button>
+          <button onclick="loadDataStorage()">Load Data Storage</button>
+          <button onclick="deleteDataStorage()">Delete Data Storage</button>
+        </div>
+        <div style="overflow-x: auto">
+          <table id="dataTable">
+            <thead>
+              <tr>
+                <th>NO</th>
+                <th>NO. KK</th>
+                <th>NIK</th>
+                <th>NAMA LENGKAP</th>
+                <th>ALAMAT</th>
+                <th>RT/RW</th>
+                <th>Status Edit</th>
+                <th>Voter Status</th>
+                <th>Checklist</th>
+                <th>Matching Status</th>
+                <th>VIEW FAMILY</th>
+                <th>EDIT</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+    <div id="familyModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Family View</h2>
+        <div id="familyContent"></div>
+        <button onclick="addFamilyMember()">Add Family Member</button>
+      </div>
+    </div>
+    <div id="editModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeEditModal()">&times;</span>
+        <h2>Edit Record</h2>
+        <div id="editContent"></div>
+      </div>
+    </div>
+    <script>
+      let csvData = [];
+      let currentPage = 1;
+      let itemsPerPage = 10;
+      let viewedRecords =
+        JSON.parse(localStorage.getItem("viewedRecords")) || {};
+      let editedRecords =
+        JSON.parse(localStorage.getItem("editedRecords")) || {};
+      let matchingStatus =
+        JSON.parse(localStorage.getItem("matchingStatus")) || {};
+      let currentKK = "";
+      let isMaskingEnabled = true;
+
+      const headers = [
+        "NO", "NIK", "NO KK", "STAT HBKEL", "NAMA LENGKAP", "JNS KLMIN", 
+        "TMPT LHR", "TGL LHR", "STAT KWN", "AGAMA", "NAMA LGKP IBU", 
+        "NAMA LGKP AYAH", "ALAMAT", "RT", "RW", "PENDIDIKAN", "PEKERJAAN"
+      ];
+
+      function handleFileUpload() {
+        const fileInput = document.getElementById("csvFile");
+        const file = fileInput.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const content = e.target.result;
+            Papa.parse(content, {
+              delimiter: ";",
+              complete: function (results) {
+                csvData = [headers, ...results.data.filter(row => row.length > 1)];
+                localStorage.setItem("csvData", JSON.stringify(csvData));
+                updateTable();
+                document.getElementById("totalRecords").textContent = csvData.length - 1;
+              },
+            });
+          };
+          reader.readAsText(file);
+        } else {
+          alert("Please select a CSV file to upload.");
+        }
+      }
+
+      document
+        .getElementById("searchInput")
+        .addEventListener("input", updateTable);
+      document
+        .getElementById("addressInput")
+        .addEventListener("input", updateTable);
+      document
+        .getElementById("itemsPerPage")
+        .addEventListener("change", function (e) {
+          itemsPerPage = parseInt(e.target.value);
+          currentPage = 1;
+          updateTable();
+        });
+      document
+        .getElementById("checklistFilter")
+        .addEventListener("change", updateTable);
+      document
+        .getElementById("matchingFilter")
+        .addEventListener("change", updateTable);
+
+      function updateTable() {
+        const tbody = document.querySelector("#dataTable tbody");
+        tbody.innerHTML = "";
+
+        const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+        const addressFilter = document.getElementById("addressInput").value.toLowerCase();
+        const checklistFilter = document.getElementById("checklistFilter").value;
+        const matchingFilter = document.getElementById("matchingFilter").value;
+
+        let filteredData = csvData.slice(1).filter((row) => {
+          const rowString = row.join(" ").toLowerCase();
+          const addressMatch = row[12].toLowerCase().includes(addressFilter);
+          const checklistMatch =
+            checklistFilter === "all" ||
+            (checklistFilter === "checked" && viewedRecords[row[1]]) ||
+            (checklistFilter === "unchecked" && !viewedRecords[row[1]]);
+          const matchingStatusMatch =
+            matchingFilter === "all" ||
+            (matchingFilter === "sesuai" && matchingStatus[row[1]] === "sesuai") ||
+            (matchingFilter === "tidak-sesuai" && matchingStatus[row[1]] === "tidak-sesuai");
+          return rowString.includes(searchTerm) && addressMatch && checklistMatch && matchingStatusMatch;
+        });
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedData = filteredData.slice(startIndex, endIndex);
+
+        paginatedData.forEach((row, index) => {
+          const tr = document.createElement("tr");
+          const editStatus = editedRecords[row[1]] ? editedRecords[row[1]] : { status: "Not Edited" };
+          const editClass = editStatus.status === "Edited (Green)" 
+            ? "edited-green" 
+            : editStatus.status === "Edited (Blue)" 
+              ? "edited-blue" 
+              : "";
+          
+          const currentAge = calculateAge(row[7]);
+          const voterStatus = currentAge >= 17
+            ? '<span class="voting-label eligible">Bisa Memilih</span>'
+            : '<span class="voting-label non-eligible">Tidak Bisa Memilih</span>';
+          
+          const matchingStatusHtml = getMatchingStatusHtml(row[1]);
+
+          tr.innerHTML = `
+            <td class="selectable">${row[0]}</td>
+            <td class="selectable copyable" data-value="${row[2]}">${maskNumber(row[2])}</td>
+            <td class="selectable copyable" data-value="${row[1]}">${maskNumber(row[1])}</td>
+            <td class="selectable copyable" data-value="${row[4]}">${row[4]}</td>
+            <td class="selectable copyable" data-value="${row[12]}">${row[12]}</td>
+            <td class="selectable">${row[13]}/${row[14]}</td>
+            <td class="${editClass}">${editStatus.status}<br>${editStatus.date || ""}</td>
+            <td>${voterStatus}</td>
+            <td><input type="checkbox" ${viewedRecords[row[1]] ? "checked" : ""} onclick="toggleChecklist('${row[1]}')"></td>
+            <td>${matchingStatusHtml}</td>
+            <td><button onclick="showFamilyModal('${row[2]}')">View Family</button></td>
+            <td><button onclick="showEditModal(${csvData.indexOf(row)})">Edit</button></td>
+          `;
+
+          tr.querySelectorAll('.copyable').forEach(cell => {
+            cell.addEventListener('contextmenu', handleContextMenu);
+            cell.addEventListener('click', handleCellClick);
+          });
+
+          tbody.appendChild(tr);
+        });
+
+        updatePagination(filteredData.length);
+      }
+
+      function calculateAge(birthDateString) {
+        try {
+          const [day, month, year] = birthDateString.split('/');
+          const birthDate = new Date(year, month - 1, day);
+          const today = new Date();
+          
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+          
+          return age;
+        } catch (error) {
+          console.error("Error calculating age:", error);
+          return 0;
+        }
+      }
+
+      function updatePagination(totalItems) {
+        const paginationElement = document.getElementById("pagination");
+        paginationElement.innerHTML = "";
+
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        const prevButton = document.createElement("button");
+        prevButton.innerHTML = "&lt;";
+        prevButton.onclick = () => {
+          if (currentPage > 1) {
+            currentPage--;
+            updateTable();
+          }
+        };
+        paginationElement.appendChild(prevButton);
+
+        const maxVisiblePages = 5;
+        let startPage = Math.max(
+          1,
+          currentPage - Math.floor(maxVisiblePages / 2),
+        );
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+        if (endPage - startPage + 1 < maxVisiblePages) {
+          startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+          const button = document.createElement("button");
+          button.textContent = i;
+          button.onclick = () => {
+            currentPage = i;
+            updateTable();
+          };
+          if (i === currentPage) {
+            button.classList.add("active");
+          }
+          paginationElement.appendChild(button);
+        }
+
+        if (endPage < totalPages) {
+          const ellipsis = document.createElement("div");
+          ellipsis.className = "ellipsis";
+          ellipsis.textContent = "...";
+          paginationElement.appendChild(ellipsis);
+
+          const lastPageButton = document.createElement("button");
+          lastPageButton.textContent = totalPages;
+          lastPageButton.onclick = () => {
+            currentPage = totalPages;
+            updateTable();
+          };
+          paginationElement.appendChild(lastPageButton);
+        }
+
+        const nextButton = document.createElement("button");
+        nextButton.innerHTML = "&gt;";
+        nextButton.onclick = () => {
+          if (currentPage < totalPages) {
+            currentPage++;
+            updateTable();
+          }
+        };
+        paginationElement.appendChild(nextButton);
+      }
+
+      function showFamilyModal(kkNumber) {
+        const modal = document.getElementById("familyModal");
+        const familyContent = document.getElementById("familyContent");
+        familyContent.innerHTML = "";
+        currentKK = kkNumber;
+
+        const familyMembers = csvData.filter((row) => row[2] === kkNumber);
+        familyMembers.forEach((member, index) => {
+          const currentAge = calculateAge(member[7]);
+          const ageLabel =
+            currentAge >= 17
+              ? `<span class="voting-label eligible">Bisa Memilih</span>`
+              : `<span class="voting-label non-eligible">Tidak Bisa Memilih</span>`;
+          const matchingStatusHtml = getMatchingStatusHtml(member[1]);
+          const memberDiv = document.createElement("div");
+          memberDiv.className = "family-member";
+          memberDiv.innerHTML = `
+                    <h3>${member[4]}</h3>
+                    <p>NIK: <span class="copyable" onclick="copyToClipboard('${member[1]}')">${maskNumber(member[1])}</span></p>
+                    <p>NO. KK: <span class="copyable" onclick="copyToClipboard('${member[2]}')">${maskNumber(member[2])}</span></p>
+                    <p>Status Hubungan: ${member[3]}</p>
+                    <p>Jenis Kelamin: ${member[5]}</p>
+                    <p>Alamat: <span class="copyable" onclick="copyToClipboard('${member[12]}')">${member[12]}</span></p>
+                    <p>RT/RW: ${member[13]}/${member[14]}</p>
+                    <p>Tempat Lahir: ${member[6]}</p>
+                    <p>Tanggal Lahir: ${member[7]}</p>
+                    <p>Umur Saat Ini: ${currentAge} tahun ${ageLabel}</p>
+                    <p>Status Perkawinan: ${member[8]}</p>
+                    <p>Agama: ${member[9]}</p>
+                    <p>Nama Ibu: ${member[10]}</p>
+                    <p>Nama Ayah: ${member[11]}</p>
+                    <p>Pendidikan: ${member[15]}</p>
+                    <p>Pekerjaan: ${member[16]}</p>
+                    <p>Matching Status: ${matchingStatusHtml}</p>
+                    <div class="family-member-actions">
+                      <button onclick="editFamilyMember(${index})">Edit</button>
+                      <button onclick="removeFamilyMember(${index})">Remove</button>
+                      <button onclick="toggleMatchingStatus('${member[1]}')">Toggle Matching Status</button>
+                    </div>
+                  `;
+          familyContent.appendChild(memberDiv);
+          viewedRecords[member[1]] = true;
+        });
+
+        localStorage.setItem("viewedRecords", JSON.stringify(viewedRecords));
+        modal.style.display = "block";
+        updateTable();
+      }
+
+      function editFamilyMember(index) {
+        const familyMembers = csvData.filter((row) => row[1] === currentKK);
+        const member = familyMembers[index];
+        const rowIndex = csvData.indexOf(member);
+        showEditModal(rowIndex);
+      }
+
+      function removeFamilyMember(index) {
+        const familyMembers = csvData.filter((row) => row[1] === currentKK);
+        const member = familyMembers[index];
+        const rowIndex = csvData.indexOf(member);
+
+        if (
+          confirm(
+            `Are you sure you want to remove ${member[3]} from the family?`,
+          )
+        ) {
+          csvData.splice(rowIndex, 1);
+          localStorage.setItem("csvData", JSON.stringify(csvData));
+          showFamilyModal(currentKK);
+          updateTable();
+        }
+      }
+
+      function addFamilyMember() {
+        const newMember = [...csvData[0]].map(() => ""); // Create an empty row
+        newMember[1] = currentKK; // Set the KK number
+        csvData.push(newMember);
+        const newIndex = csvData.length - 1;
+        showEditModal(newIndex, true);
+      }
+
+      function addNewRecord() {
+        const newRecord = [...csvData[0]].map(() => ""); // Create an empty row
+        csvData.push(newRecord);
+        const newIndex = csvData.length - 1;
+        showEditModal(newIndex, true);
+      }
+
+      function maskNumber(number) {
+        if (!number) return '';
+        return isMaskingEnabled ? 
+          number.slice(0, 6) + "******" + number.slice(-4) : 
+          number;
+      }
+
+      function copyToClipboard(text) {
+        if (!text) return;
+        
+        navigator.clipboard.writeText(text).then(() => {
+          showCopyNotification("Text copied: " + text);
+        }).catch(err => {
+          console.error('Failed to copy text: ', err);
+          // Fallback method
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          document.body.appendChild(textArea);
+          textArea.select();
+          try {
+            document.execCommand('copy');
+            showCopyNotification("Text copied: " + text);
+          } catch (err) {
+            console.error('Fallback: Failed to copy text: ', err);
+            showCopyNotification("Failed to copy text");
+          }
+          document.body.removeChild(textArea);
+        });
+      }
+
+      // Add notification function for copy feedback
+      function showCopyNotification(message) {
+        // Create notification element if it doesn't exist
+        let notification = document.getElementById("copyNotification");
+        if (!notification) {
+          notification = document.createElement("div");
+          notification.id = "copyNotification";
+          document.body.appendChild(notification);
+        }
+        
+        // Update notification content and show it
+        notification.textContent = message;
+        notification.classList.add("show");
+        
+        // Hide notification after 2 seconds
+        setTimeout(() => {
+          notification.classList.remove("show");
+        }, 2000);
+      }
+
+      function toggleChecklist(nik) {
+        viewedRecords[nik] = !viewedRecords[nik];
+        localStorage.setItem("viewedRecords", JSON.stringify(viewedRecords));
+        updateTable();
+      }
+
+      function uncheckAll() {
+        viewedRecords = {};
+        localStorage.setItem("viewedRecords", JSON.stringify(viewedRecords));
+        updateTable();
+      }
+
+      function showEditModal(rowIndex, isNewMember = false) {
+        const modal = document.getElementById("editModal");
+        const editContent = document.getElementById("editContent");
+        editContent.innerHTML = "";
+
+        const row = csvData[rowIndex];
+        const form = document.createElement("form");
+        form.className = "edit-mode";
+
+        csvData[0].forEach((header, index) => {
+          const label = document.createElement("label");
+          label.textContent = header;
+          const input = document.createElement("input");
+          input.type = "text";
+          input.value = row[index];
+          input.name = header;
+          form.appendChild(label);
+          form.appendChild(input);
+        });
+
+        const remarksLabel = document.createElement("label");
+        remarksLabel.textContent = "Remarks";
+        const remarksInput = document.createElement("textarea");
+        remarksInput.name = "remarks";
+        remarksInput.value = editedRecords[row[2]]?.remarks || "";
+        form.appendChild(remarksLabel);
+        form.appendChild(remarksInput);
+
+        const buttonDiv = document.createElement("div");
+        buttonDiv.className = "edit-buttons";
+        const saveButton = document.createElement("button");
+        saveButton.textContent = "Save";
+        saveButton.onclick = (e) => {
+          e.preventDefault();
+          saveEdit(rowIndex, form, isNewMember);
+        };
+        const cancelButton = document.createElement("button");
+        cancelButton.textContent = "Cancel";
+        cancelButton.onclick = closeEditModal;
+        buttonDiv.appendChild(saveButton);
+        buttonDiv.appendChild(cancelButton);
+        form.appendChild(buttonDiv);
+
+        editContent.appendChild(form);
+        modal.style.display = "block";
+      }
+
+      function saveEdit(rowIndex, form, isNewMember) {
+        const formData = new FormData(form);
+        const updatedRow = csvData[0].map((header) => formData.get(header));
+        csvData[rowIndex] = updatedRow;
+
+        const nik = updatedRow[2];
+        const remarks = formData.get("remarks");
+        const now = new Date();
+        const editStatus = {
+          status: isNewMember ? "Added (Blue)" : "Edited (Green)",
+          date: now.toLocaleString(),
+          remarks: remarks,
+        };
+        editedRecords[nik] = editStatus;
+
+        localStorage.setItem("csvData", JSON.stringify(csvData));
+        localStorage.setItem("editedRecords", JSON.stringify(editedRecords));
+
+        updateTable();
+        closeEditModal();
+        if (currentKK) {
+          showFamilyModal(currentKK);
+        }
+      }
+
+      function closeEditModal() {
+        document.getElementById("editModal").style.display = "none";
+      }
+
+      function saveCSV() {
+        const csv = Papa.unparse(csvData);
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        if (link.download !== undefined) {
+          const url = URL.createObjectURL(blob);
+          link.setAttribute("href", url);
+          link.setAttribute("download", "updated_data.csv");
+          link.style.visibility = "hidden";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      }
+
+      function saveDataStorage() {
+        const dataToSave = {
+          csvData: csvData,
+          viewedRecords: viewedRecords,
+          editedRecords: editedRecords,
+          matchingStatus: matchingStatus,
+        };
+        const jsonData = JSON.stringify(dataToSave);
+        const blob = new Blob([jsonData], { type: "application/json" });
+        const link = document.createElement("a");
+        if (link.download !== undefined) {
+          const url = URL.createObjectURL(blob);
+          link.setAttribute("href", url);
+          link.setAttribute("download", "kpt_search_data_storage.json");
+          link.style.visibility = "hidden";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      }
+
+      function loadDataStorage() {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = ".json";
+        fileInput.onchange = function (event) {
+          const file = event.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              try {
+                const loadedData = JSON.parse(e.target.result);
+                csvData = loadedData.csvData || [];
+                viewedRecords = loadedData.viewedRecords || {};
+                editedRecords = loadedData.editedRecords || {};
+                matchingStatus = loadedData.matchingStatus || {};
+
+                localStorage.setItem("csvData", JSON.stringify(csvData));
+                localStorage.setItem(
+                  "viewedRecords",
+                  JSON.stringify(viewedRecords),
+                );
+                localStorage.setItem(
+                  "editedRecords",
+                  JSON.stringify(editedRecords),
+                );
+                localStorage.setItem(
+                  "matchingStatus",
+                  JSON.stringify(matchingStatus),
+                );
+
+                updateTable();
+                document.getElementById("totalRecords").textContent =
+                  csvData.length - 1;
+                alert("Data storage loaded successfully!");
+              } catch (error) {
+                console.error("Error parsing JSON:", error);
+                alert(
+                  "Error loading data storage. Please make sure you're uploading a valid JSON file.",
+                );
+              }
+            };
+            reader.readAsText(file);
+          }
+        };
+        fileInput.click();
+      }
+
+      function deleteDataStorage() {
+        if (
+          confirm(
+            "Are you sure you want to delete all stored data? This action cannot be undone.",
+          )
+        ) {
+          localStorage.removeItem("csvData");
+          localStorage.removeItem("viewedRecords");
+          localStorage.removeItem("editedRecords");
+          localStorage.removeItem("matchingStatus");
+
+          csvData = [];
+          viewedRecords = {};
+          editedRecords = {};
+          matchingStatus = {};
+
+          updateTable();
+          document.getElementById("totalRecords").textContent = "0";
+          alert("All data storage has been deleted.");
+        }
+      }
+
+      function getMatchingStatusHtml(nik) {
+        const status = matchingStatus[nik] || "tidak-sesuai";
+        return `<span class="matching-status ${status}">${
+          status === "sesuai" ? "Sesuai" : "Tidak Sesuai"
+        }</span>`;
+      }
+
+      function toggleMatchingStatus(nik) {
+        matchingStatus[nik] =
+          matchingStatus[nik] === "sesuai" ? "tidak-sesuai" : "sesuai";
+        localStorage.setItem("matchingStatus", JSON.stringify(matchingStatus));
+        updateTable();
+        if (currentKK) {
+          showFamilyModal(currentKK);
+        }
+      }
+
+      function toggleMasking() {
+        isMaskingEnabled = !isMaskingEnabled;
+        document.getElementById('maskToggleBtn').textContent = 
+          isMaskingEnabled ? 'Show Full Numbers' : 'Mask Numbers';
+        updateTable();
+      }
+
+      // Disable text selection
+      document.addEventListener("selectstart", function (e) {
+        e.preventDefault();
+      });
+
+      // Disable copying
+      document.addEventListener("copy", function (e) {
+        e.preventDefault();
+      });
+
+      document.querySelector(".close").onclick = function () {
+        document.getElementById("familyModal").style.display = "none";
+      };
+
+      window.onclick = function (event) {
+        if (event.target == document.getElementById("familyModal")) {
+          document.getElementById("familyModal").style.display = "none";
+        }
+        if (event.target == document.getElementById("editModal")) {
+          document.getElementById("editModal").style.display = "none";
+        }
+      };
+
+      window.onload = function () {
+        const storedData = localStorage.getItem("csvData");
+        if (storedData) {
+          csvData = JSON.parse(storedData);
+          updateTable();
+          document.getElementById("totalRecords").textContent =
+            csvData.length - 1;
+        }
+
+        viewedRecords = JSON.parse(localStorage.getItem("viewedRecords")) || {};
+        editedRecords = JSON.parse(localStorage.getItem("editedRecords")) || {};
+        matchingStatus =
+          JSON.parse(localStorage.getItem("matchingStatus")) || {};
+
+        // Disable right-click context menu
+        document.addEventListener("contextmenu", function (e) {
+          e.preventDefault();
+        });
+      };
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/service-worker.js")
+            .then((registration) => {
+              console.log(
+                "Service Worker registered successfully:",
+                registration.scope,
+              );
+            })
+            .catch((error) => {
+              console.log("Service Worker registration failed:", error);
+            });
+        });
+      }
+
+      function handleContextMenu(e) {
+        e.preventDefault();
+        const value = e.target.dataset.value;
+        showContextMenu(e.pageX, e.pageY, value);
+      }
+
+      function handleCellClick(e) {
+        const value = e.target.dataset.value;
+        copyToClipboard(value);
+      }
+
+      function showContextMenu(x, y, value) {
+        let contextMenu = document.getElementById('customContextMenu');
+        if (!contextMenu) {
+          contextMenu = createContextMenu();
+        }
+
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+        contextMenu.style.display = 'block';
+        contextMenu.dataset.value = value;
+      }
+
+      function createContextMenu() {
+        const menu = document.createElement('div');
+        menu.id = 'customContextMenu';
+        menu.innerHTML = `
+          <div class="menu-item" onclick="handleContextMenuAction('copy')">Copy</div>
+          <div class="menu-item" onclick="handleContextMenuAction('select')">Select</div>
+        `;
+        document.body.appendChild(menu);
+        return menu;
+      }
+
+      function handleContextMenuAction(action) {
+        const menu = document.getElementById('customContextMenu');
+        const value = menu.dataset.value;
+
+        switch(action) {
+          case 'copy':
+            copyToClipboard(value);
+            break;
+          case 'select':
+            selectText(value);
+            break;
+        }
+        menu.style.display = 'none';
+      }
+
+      function selectText(text) {
+        const range = document.createRange();
+        const selection = window.getSelection();
+        const elements = document.querySelectorAll(`[data-value="${text}"]`);
+        if (elements.length > 0) {
+          range.selectNodeContents(elements[0]);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      }
+
+      document.addEventListener('click', function(e) {
+        const contextMenu = document.getElementById('customContextMenu');
+        if (contextMenu && !contextMenu.contains(e.target)) {
+          contextMenu.style.display = 'none';
+        }
+      });
+
+      // Prevent default context menu on copyable elements
+      document.addEventListener('contextmenu', function(e) {
+        if (e.target.classList.contains('copyable')) {
+          e.preventDefault();
+        }
+      });
+    </script>
+  </body>
+</html>
