@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Kamera & Kompresi Pro</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .camera-container {
+            position: relative;
+            overflow: hidden;
+            max-height: 60vh;
+        }
+        .result-image {
+            max-height: 60vh;
+            object-fit: contain;
+        }
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #captureBtn, #galleryBtn {
+            transition: transform 0.2s;
+        }
+        #captureBtn:active, #galleryBtn:active {
+            transform: scale(0.95);
+        }
+        .image-comparison {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+        }
+        .image-comparison img {
+            display: block;
+            width: 100%;
+        }
+        .image-comparison .original-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(0 0, var(--position) 0, var(--position) 100%, 0 100%);
+        }
+        .image-comparison .slider {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: var(--position);
+            width: 4px;
+            background: white;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            cursor: ew-resize;
+        }
+        .image-comparison .slider::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-comparison .slider::before,
+        .image-comparison .slider::after {
+            content: "";
+            position: absolute;
+            width: 0;
+            height: 0;
+        }
+        .gallery-item {
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .gallery-item .overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .gallery-item:hover .overlay {
+            opacity: 1;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 1rem;
+        }
+        .tab {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+        .tab.active {
+            color: #3b82f6;
+            border-color: #3b82f6;
+        }
+        /* Custom scrollbar for gallery */
+        .gallery-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        .gallery-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .gallery-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .gallery-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 shadow-lg">
+            <h1 class="text-2xl font-bold text-center">Aplikasi Kamera & Kompresi Pro</h1>
+        </header>
+        
+        <!-- Tabs Navigation -->
+        <div class="tabs bg-white">
+            <div id="cameraTab" class="tab active" onclick="switchTab('camera')">
+                <i class="fas fa-camera mr-2"></i>Kamera
+            </div>
+            <div id="galleryTab" class="tab" onclick="switchTab('gallery')">
+                <i class="fas fa-images mr-2"></i>Galeri
+            </div>
+            <div id="settingsTab" class="tab" onclick="switchTab('settings')">
+                <i class="fas fa-sliders-h mr-2"></i>Pengaturan
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <main class="flex-grow flex flex-col items-center p-4">
+            <!-- Camera Tab -->
+            <div id="cameraTabContent" class="w-full">
+                <!-- Camera View -->
+                <div id="cameraContainer" class="camera-container w-full rounded-lg overflow-hidden shadow-xl bg-black mb-4">
+                    <video id="video" class="w-full hidden" autoplay playsinline></video>
+                    <canvas id="canvas" class="w-full hidden"></canvas>
+                    <img id="resultImage" class="result-image w-full hidden" alt="Hasil gambar">
+                    <div id="placeholderText" class="flex items-center justify-center h-64 text-white text-center p-4">
+                        <p>Silakan ambil gambar dari kamera atau pilih dari galeri</p>
+                    </div>
+                </div>
+                
+                <!-- Image Comparison (shown after compression) -->
+                <div id="imageComparison" class="image-comparison w-full rounded-lg overflow-hidden shadow-xl mb-4 hidden">
+                    <img id="comparisonCompressed" class="compressed-image" alt="Gambar Terkompresi">
+                    <div class="original-image">
+                        <img id="comparisonOriginal" alt="Gambar Asli">
+                    </div>
+                    <div class="slider"></div>
+                    <div class="absolute top-0 left-0 p-2 bg-black bg-opacity-70 text-white text-xs rounded-br-lg">
+                        Geser untuk bandingkan
+                    </div>
+                </div>
+                
+                <!-- Controls -->
+                <div class="w-full max-w-md mx-auto">
+                    <!-- Camera Actions -->
+                    <div class="flex justify-center space-x-4 mb-4">
+                        <button id="captureBtn" class="flex items-center justify-center bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold py-3 px-6 rounded-full shadow-lg transform transition">
+                            <i class="fas fa-camera mr-2"></i> Ambil Foto
+                        </button>
+                        <button id="galleryBtn" class="flex items-center justify-center bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white font-bold py-3 px-6 rounded-full shadow-lg transform transition">
+                            <i class="fas fa-images mr-2"></i> Pilih File
+                        </button>
+                        <input type="file" id="fileInput" accept="image/*" class="hidden">
+                    </div>
+                    
+                    <!-- Compression Settings -->
+                    <div id="compressionOptions" class="bg-white p-4 rounded-lg shadow-md mb-4 hidden">
+                        <h2 class="text-lg font-semibold mb-2 text-gray-800">Pengaturan Kompresi</h2>
+                        
+                        <div class="mb-3">
+                            <label for="qualitySlider" class="block text-sm font-medium text-gray-700 mb-1">Kualitas: <span id="qualityValue">80</span>%</label>
+                            <input type="range" id="qualitySlider" min="10" max="100" value="80" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="maxWidthInput" class="block text-sm font-medium text-gray-700 mb-1">Lebar Maksimum (px):</label>
+                            <input type="number" id="maxWidthInput" value="1920" min="100" step="100" class="w-full p-2 border border-gray-300 rounded-md">
+                        </div>
+                        
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-sm text-gray-700">Live Preview</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="livePreviewToggle" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        
+                        <div class="flex justify-between">
+                            <button id="compressBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow">
+                                <i class="fas fa-compress mr-1"></i> Kompres
+                            </button>
+                            <button id="downloadBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded shadow" disabled>
+                                <i class="fas fa-download mr-1"></i> Unduh
+                            </button>
+                            <button id="saveBtn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded shadow" disabled>
+                                <i class="fas fa-save mr-1"></i> Simpan
+                            </button>
+                        </div>
+                        
+                        <div id="imageInfo" class="text-xs text-gray-600 mt-3 hidden">
+                            <div class="flex justify-between bg-gray-100 p-2 rounded mb-1">
+                                <span>Ukuran Asli:</span>
+                                <span id="originalSize" class="font-medium">0</span> KB
+                            </div>
+                            <div class="flex justify-between bg-gray-100 p-2 rounded mb-1">
+                                <span>Ukuran Terkompresi:</span>
+                                <span id="compressedSize" class="font-medium">0</span> KB
+                            </div>
+                            <div class="flex justify-between bg-gray-100 p-2 rounded mb-1">
+                                <span>Pengurangan:</span>
+                                <span id="reductionPercentage" class="font-medium text-green-600">0</span>%
+                            </div>
+                            <div class="flex justify-between bg-gray-100 p-2 rounded">
+                                <span>Resolusi:</span>
+                                <span id="imageResolution" class="font-medium">0 x 0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gallery Tab -->
+            <div id="galleryTabContent" class="w-full hidden">
+                <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+                    <h2 class="text-lg font-semibold mb-3 text-gray-800 flex items-center">
+                        <i class="fas fa-history mr-2 text-blue-500"></i>Riwayat Foto
+                    </h2>
+                    
+                    <div id="noImagesMessage" class="text-center py-10 text-gray-500">
+                        <i class="fas fa-images text-4xl mb-3"></i>
+                        <p>Belum ada foto tersimpan</p>
+                    </div>
+                    
+                    <div id="galleryContainer" class="gallery-container grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 hidden">
+                        <!-- Gallery items will be inserted here -->
+                    </div>
+                </div>
+                
+                <!-- Image Detail Modal -->
+                <div id="imageDetailModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 hidden">
+                    <div class="bg-white rounded-lg max-w-4xl w-11/12 max-h-screen overflow-y-auto">
+                        <div class="p-4 border-b flex justify-between items-center">
+                            <h3 class="text-lg font-semibold" id="modalImageDate"></h3>
+                            <button id="closeDetailModal" class="text-gray-600 hover:text-gray-900">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                        <div class="p-4">
+                            <img id="modalImage" class="max-w-full max-h-[70vh] mx-auto mb-4" alt="Detail Gambar">
+                            
+                            <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                                <div class="flex-1 bg-gray-100 p-3 rounded">
+                                    <h4 class="font-medium mb-2">Info Gambar</h4>
+                                    <p class="text-sm mb-1">Ukuran: <span id="modalImageSize">0</span> KB</p>
+                                    <p class="text-sm mb-1">Resolusi: <span id="modalImageResolution">0 x 0</span></p>
+                                    <p class="text-sm">Diambil pada: <span id="modalImageTimestamp"></span></p>
+                                </div>
+                                <div class="flex-1 bg-gray-100 p-3 rounded">
+                                    <h4 class="font-medium mb-2">Opsi</h4>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button id="modalImageDownload" class="text-sm bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded">
+                                            <i class="fas fa-download mr-1"></i> Unduh
+                                        </button>
+                                        <button id="modalImageDelete" class="text-sm bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded">
+                                            <i class="fas fa-trash-alt mr-1"></i> Hapus
+                                        </button>
+                                        <button id="modalImageEdit" class="text-sm bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded">
+                                            <i class="fas fa-edit mr-1"></i> Edit
+                                        </button>
+                                        <button id="modalImageShare" class="text-sm bg-purple-500 hover:bg-purple-600 text-white py-1 px-3 rounded">
+                                            <i class="fas fa-share-alt mr-1"></i> Bagikan
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Delete Confirmation Modal -->
+                <div id="deleteConfirmModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+                    <div class="bg-white rounded-lg max-w-md w-11/12 p-5">
+                        <h3 class="text-lg font-semibold mb-3">Konfirmasi Hapus</h3>
+                        <p class="mb-5">Apakah Anda yakin ingin menghapus gambar ini? Tindakan ini tidak dapat dibatalkan.</p>
+                        <div class="flex justify-end gap-3">
+                            <button id="cancelDeleteBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded">
+                                Batal
+                            </button>
+                            <button id="confirmDeleteBtn" class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded">
+                                Hapus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Tab -->
+            <div id="settingsTabContent" class="w-full hidden">
+                <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+                    <h2 class="text-lg font-semibold mb-3 text-gray-800 flex items-center">
+                        <i class="fas fa-sliders-h mr-2 text-blue-500"></i>Pengaturan Aplikasi
+                    </h2>
+                    
+                    <div class="mb-4">
+                        <h3 class="font-medium mb-2 text-gray-700">Pengaturan Kamera</h3>
+                        <div class="flex justify-between items-center mb-3 p-2 bg-gray-50 rounded">
+                            <span class="text-sm">Kamera Belakang</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="backCameraToggle" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        <div class="flex justify-between items-center mb-3 p-2 bg-gray-50 rounded">
+                            <span class="text-sm">Flash (jika tersedia)</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="flashToggle" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h3 class="font-medium mb-2 text-gray-700">Pengaturan Kompresi Default</h3>
+                        <div class="mb-3">
+                            <label for="defaultQualitySlider" class="block text-sm font-medium text-gray-700 mb-1">Kualitas Default: <span id="defaultQualityValue">80</span>%</label>
+                            <input type="range" id="defaultQualitySlider" min="10" max="100" value="80" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                        <div class="mb-3">
+                            <label for="defaultMaxWidthInput" class="block text-sm font-medium text-gray-700 mb-1">Lebar Maksimum Default (px):</label>
+                            <input type="number" id="defaultMaxWidthInput" value="1920" min="100" step="100" class="w-full p-2 border border-gray-300 rounded-md">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h3 class="font-medium mb-2 text-gray-700">Penyimpanan</h3>
+                        <div class="mb-3 p-2 bg-gray-50 rounded flex justify-between items-center">
+                            <div>
+                                <p class="text-sm font-medium">Penggunaan Penyimpanan</p>
+                                <p class="text-xs text-gray-500"><span id="storageUsed">0</span> MB dari <span id="storageAvailable">0</span> MB</p>
+                            </div>
+                            <button id="clearStorageBtn" class="text-xs bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded">
+                                Bersihkan
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h3 class="font-medium mb-2 text-gray-700">Tentang Aplikasi</h3>
+                        <div class="text-sm p-2 bg-gray-50 rounded">
+                            <p class="mb-1"><strong>Versi:</strong> 1.0.0</p>
+                            <p class="mb-1"><strong>Dibuat oleh:</strong> Claude 3.7 Sonnet</p>
+                            <p><strong>Tanggal Rilis:</strong> April 2025</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white p-3 text-center text-sm">
+            <p>&copy; 2025 Aplikasi Kamera & Kompresi Pro</p>
+        </footer>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loading" class="loading hidden">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const resultImage = document.getElementById('resultImage');
+        const captureBtn = document.getElementById('captureBtn');
+        const galleryBtn = document.getElementById('galleryBtn');
+        const fileInput = document.getElementById('fileInput');
+        const compressionOptions = document.getElementById('compressionOptions');
+        const qualitySlider = document.getElementById('qualitySlider');
+        const qualityValue = document.getElementById('qualityValue');
+        const maxWidthInput = document.getElementById('maxWidthInput');
+        const compressBtn = document.getElementById('compressBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const imageInfo = document.getElementById('imageInfo');
+        const originalSize = document.getElementById('originalSize');
+        const compressedSize = document.getElementById('compressedSize');
+        const reductionPercentage = document.getElementById('reductionPercentage');
+        const imageResolution = document.getElementById('imageResolution');
+        const loading = document.getElementById('loading');
+        const placeholderText = document.getElementById('placeholderText');
+        const imageComparison = document.getElementById('imageComparison');
+        const comparisonOriginal = document.getElementById('comparisonOriginal');
+        const comparisonCompressed = document.getElementById('comparisonCompressed');
+        const livePreviewToggle = document.getElementById('livePreviewToggle');
+        const galleryContainer = document.getElementById('galleryContainer');
+        const noImagesMessage = document.getElementById('noImagesMessage');
+        const imageDetailModal = document.getElementById('imageDetailModal');
+        const modalImage = document.getElementById('modalImage');
+        const modalImageDate = document.getElementById('modalImageDate');
+        const modalImageSize = document.getElementById('modalImageSize');
+        const modalImageResolution = document.getElementById('modalImageResolution');
+        const modalImageTimestamp = document.getElementById('modalImageTimestamp');
+        const closeDetailModal = document.getElementById('closeDetailModal');
+        const modalImageDownload = document.getElementById('modalImageDownload');
+        const modalImageDelete = document.getElementById('modalImageDelete');
+        const modalImageEdit = document.getElementById('modalImageEdit');
+        const modalImageShare = document.getElementById('modalImageShare');
+        const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        const defaultQualitySlider = document.getElementById('defaultQualitySlider');
+        const defaultQualityValue = document.getElementById('defaultQualityValue');
+        const defaultMaxWidthInput = document.getElementById('defaultMaxWidthInput');
+        const backCameraToggle = document.getElementById('backCameraToggle');
+        const flashToggle = document.getElementById('flashToggle');
+        const clearStorageBtn = document.getElementById('clearStorageBtn');
+        const storageUsed = document.getElementById('storageUsed');
+        const storageAvailable = document.getElementById('storageAvailable');
+        
+        // Tab elements
+        const cameraTab = document.getElementById('cameraTab');
+        const galleryTab = document.getElementById('galleryTab');
+        const settingsTab = document.getElementById('settingsTab');
+        const cameraTabContent = document.getElementById('cameraTabContent');
+        const galleryTabContent = document.getElementById('galleryTabContent');
+        const settingsTabContent = document.getElementById('settingsTabContent');
+        
+        // Global variables
+        let stream = null;
+        let originalImageData = null;
+        let compressedImageData = null;
+        let imageLibrary = [];
+        let currentImageId = null;
+        let isDragging = false;
+        let sliderPosition = 50;
+        let comparisonWidth = 0;
+        
+        // Constants
+        const STORAGE_KEY = 'image_kompres_library';
+        const DEFAULT_SETTINGS_KEY = 'image_kompres_settings';
+        
+        // Initialize
+        init();
+        
+        function init() {
+            // Load saved images
+            loadImageLibrary();
+            
+            // Load default settings
+            loadDefaultSettings();
+            
+            // Update storage info
+            updateStorageInfo();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Setup image comparison
+            setupImageComparison();
+        }
+        
+        function setupEventListeners() {
+            // Camera actions
+            captureBtn.addEventListener('click', startCamera);
+            galleryBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleFileSelect);
+            compressBtn.addEventListener('click', compressImage);
+            downloadBtn.addEventListener('click', downloadImage);
+            saveBtn.addEventListener('click', saveImageToLibrary);
+            
+            // Sliders
+            qualitySlider.addEventListener('input', () => {
+                qualityValue.textContent = qualitySlider.value;
+                if (livePreviewToggle.checked && originalImageData) {
+                    debounce(compressImage, 300)();
+                }
+            });
+            
+            maxWidthInput.addEventListener('input', () => {
+                if (livePreviewToggle.checked && originalImageData) {
+                    debounce(compressImage, 300)();
+                }
+            });
+            
+            defaultQualitySlider.addEventListener('input', () => {
+                defaultQualityValue.textContent = defaultQualitySlider.value;
+                saveDefaultSettings();
+            });
+            
+            defaultMaxWidthInput.addEventListener('input', saveDefaultSettings);
+            backCameraToggle.addEventListener('change', saveDefaultSettings);
+            flashToggle.addEventListener('change', saveDefaultSettings);
+            
+            // Modal events
+            closeDetailModal.addEventListener('click', () => {
+                imageDetailModal.classList.add('hidden');
+            });
+            
+            modalImageDownload.addEventListener('click', downloadModalImage);
+            modalImageDelete.addEventListener('click', showDeleteConfirmation);
+            modalImageEdit.addEventListener('click', editModalImage);
+            modalImageShare.addEventListener('click', shareModalImage);
+            
+            // Delete confirmation
+            confirmDeleteBtn.addEventListener('click', deleteCurrentImage);
+            cancelDeleteBtn.addEventListener('click', () => {
+                deleteConfirmModal.classList.add('hidden');
+            });
+            
+            // Storage
+            clearStorageBtn.addEventListener('click', clearAllStorage);
+            
+            // Setup responsive canvas size
+            window.addEventListener('resize', () => {
+                adjustCanvasSize();
+                setupImageComparison();
+            });
+            
+            // Close modals when clicking outside
+            imageDetailModal.addEventListener('click', (e) => {
+                if (e.target === imageDetailModal) {
+                    imageDetailModal.classList.add('hidden');
+                }
+            });
+            
+            deleteConfirmModal.addEventListener('click', (e) => {
+                if (e.target === deleteConfirmModal) {
+                    deleteConfirmModal.classList.add('hidden');
+                }
+            });
+            
+            // Keyboard events
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    imageDetailModal.classList.add('hidden');
+                    deleteConfirmModal.classList.add('hidden');
+                }
+            });
+        }
+        
+        function startCamera() {
+            if (stream) {
+                // Camera is already active
+                captureImage();
+                return;
+            }
+            
+            showLoading();
+            
+            // Get camera settings
+            const useFrontCamera = !backCameraToggle.checked;
+            
+            // Request camera access
+            navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: useFrontCamera ? 'user' : 'environment',
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                } 
+            })
+            .then(streamObj => {
+                stream = streamObj;
+                video.srcObject = stream;
+                
+                // Show video element
+                placeholderText.classList.add('hidden');
+                video.classList.remove('hidden');
+                resultImage.classList.add('hidden');
+                canvas.classList.add('hidden');
+                imageComparison.classList.add('hidden');
+                
+                // Change capture button text
+                captureBtn.innerHTML = '<i class="fas fa-camera mr-2"></i> Ambil Foto';
+                
+                hideLoading();
+                
+                // Enable video element to update its layout
+                setTimeout(() => {
+                    adjustCanvasSize();
+                }, 300);
+            })
+            .catch(error => {
+                console.error('Error accessing camera:', error);
+                alert('Tidak dapat mengakses kamera. Pastikan Anda memberikan izin dan kamera tersedia.');
+                hideLoading();
+            });
+        }
+        
+        function captureImage() {
+            // Set canvas dimensions to match video
+            adjustCanvasSize();
+            
+            // Draw video frame to canvas
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Stop camera stream
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            // Hide video and show canvas
+            video.classList.add('hidden');
+            canvas.classList.remove('hidden');
+            
+            // Process the captured image
+            processImage(canvas.toDataURL('image/jpeg'));
+            
+            // Reset capture button
+            captureBtn.innerHTML = '<i class="fas fa-camera mr-2"></i> Ambil Foto Baru';
+        }
+        
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            
+            if (file && file.type.match('image.*')) {
+                showLoading();
+                
+                // Stop camera if active
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                
+                // Create FileReader to read the file
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    processImage(e.target.result);
+                    hideLoading();
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            // Reset file input to allow selecting the same file again
+            fileInput.value = '';
+        }
+        
+        function processImage(dataUrl) {
+            // Save original image data
+            originalImageData = dataUrl;
+            
+            // Display image
+            resultImage.src = dataUrl;
+            resultImage.classList.remove('hidden');
+            placeholderText.classList.add('hidden');
+            video.classList.add('hidden');
+            canvas.classList.add('hidden');
+            imageComparison.classList.add('hidden');
+            
+            // Set compression settings from defaults
+            qualitySlider.value = defaultQualitySlider.value;
+            qualityValue.textContent = defaultQualitySlider.value;
+            maxWidthInput.value = defaultMaxWidthInput.value;
+            
+            // Show compression options
+            compressionOptions.classList.remove('hidden');
+            
+            // Reset download button and image info
+            downloadBtn.disabled = true;
+            saveBtn.disabled = true;
+            imageInfo.classList.add('hidden');
+            
+            // Calculate and display original size and resolution
+            calculateImageInfo(dataUrl).then(info => {
+                originalSize.textContent = info.size.toFixed(2);
+                imageResolution.textContent = `${info.width} x ${info.height}`;
+            });
+            
+            // Auto compress if live preview is enabled
+            if (livePreviewToggle.checked) {
+                setTimeout(() => compressImage(), 300);
+            }
+        }
+        
+        function compressImage() {
+            if (!originalImageData) return;
+            
+            showLoading();
+            
+            // Get compression settings
+            const quality = parseInt(qualitySlider.value) / 100;
+            const maxWidth = parseInt(maxWidthInput.value);
+            
+            // Create image element to load the original image
+            const img = new Image();
+            img.onload = function() {
+                // Calculate new dimensions maintaining aspect ratio
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > maxWidth) {
+                    height = (height * maxWidth) / width;
+                    width = maxWidth;
+                }
+                
+                // Create canvas for resizing
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = width;
+                tempCanvas.height = height;
+                
+                // Draw and compress image
+                const ctx = tempCanvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Get compressed data URL
+                compressedImageData = tempCanvas.toDataURL('image/jpeg', quality);
+                
+                // Update display
+                resultImage.src = compressedImageData;
+                
+                // Update image comparison
+                comparisonOriginal.src = originalImageData;
+                comparisonCompressed.src = compressedImageData;
+                
+                // Show image comparison
+                imageComparison.classList.remove('hidden');
+                setupImageComparison();
+                
+                // Update image info
+                Promise.all([
+                    calculateImageInfo(originalImageData),
+                    calculateImageInfo(compressedImageData)
+                ]).then(([origInfo, compInfo]) => {
+                    originalSize.textContent = origInfo.size.toFixed(2);
+                    compressedSize.textContent = compInfo.size.toFixed(2);
+                    imageResolution.textContent = `${compInfo.width} x ${compInfo.height}`;
+                    
+                    const reduction = ((origInfo.size - compInfo.size) / origInfo.size * 100);
+                    reductionPercentage.textContent = reduction.toFixed(1);
+                    
+                    imageInfo.classList.remove('hidden');
+                    downloadBtn.disabled = false;
+                    saveBtn.disabled = false;
+                    hideLoading();
+                });
+            };
+            
+            img.src = originalImageData;
+        }
+        
+        function downloadImage() {
+            if (!compressedImageData) return;
+            
+            // Create temporary anchor element
+            const link = document.createElement('a');
+            link.href = compressedImageData;
+            link.download = `compressed_image_${new Date().getTime()}.jpg`;
+            
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function saveImageToLibrary() {
+            if (!compressedImageData) return;
+            
+            showLoading();
+            
+            // Get image info for saving
+            calculateImageInfo(compressedImageData).then(info => {
+                // Create new image entry
+                const newImage = {
+                    id: Date.now().toString(),
+                    date: new Date().toISOString(),
+                    dataUrl: compressedImageData,
+                    size: info.size,
+                    width: info.width,
+                    height: info.height
+                };
+                
+                // Add to library
+                imageLibrary.unshift(newImage);
+                
+                // Save to localStorage
+                saveImageLibrary();
+                
+                // Update UI
+                updateGallery();
+                hideLoading();
+                
+                // Notify user
+                const notification = document.createElement('div');
+                notification.className = 'fixed bottom-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
+                notification.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Gambar berhasil disimpan!';
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    notification.style.transition = 'opacity 0.5s';
+                    setTimeout(() => document.body.removeChild(notification), 500);
+                }, 3000);
+            });
+        }
+        
+        async function calculateImageInfo(dataUrl) {
+            return new Promise((resolve) => {
+                // Get image dimensions
+                const img = new Image();
+                img.onload = function() {
+                    // Convert data URL to Blob to get size
+                    fetch(dataUrl)
+                        .then(response => response.blob())
+                        .then(blob => {
+                            resolve({
+                                size: blob.size / 1024, // KB
+                                width: img.width,
+                                height: img.height
+                            });
+                        });
+                };
+                img.src = dataUrl;
+            });
+        }
+        
+        function adjustCanvasSize() {
+            if (video.videoWidth && video.videoHeight) {
+                // Maintain aspect ratio but fit within container
+                const containerWidth = video.clientWidth;
+                const videoRatio = video.videoHeight / video.videoWidth;
+                
+                canvas.width = containerWidth;
+                canvas.height = containerWidth * videoRatio;
+            }
+        }
+        
+        function setupImageComparison() {
+            if (imageComparison.classList.contains('hidden')) return;
+            
+            comparisonWidth = imageComparison.offsetWidth;
+            sliderPosition = 50; // Reset to middle
+            
+            // Set initial position
+            updateSliderPosition(sliderPosition);
+            
+            // Add event listeners for slider
+            const slider = imageComparison.querySelector('.slider');
+            
+            // Remove previous event listeners
+            slider.removeEventListener('mousedown', handleMouseDown);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            slider.removeEventListener('touchstart', handleTouchStart);
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
+            
+            // Add new event listeners
+            slider.addEventListener('mousedown', handleMouseDown);
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            slider.addEventListener('touchstart', handleTouchStart, { passive: true });
+            document.addEventListener('touchmove', handleTouchMove, { passive: true });
+            document.addEventListener('touchend', handleTouchEnd);
+        }
+        
+        function handleMouseDown(e) {
+            e.preventDefault();
+            isDragging = true;
+        }
+        
+        function handleMouseMove(e) {
+            if (!isDragging) return;
+            
+            const rect = imageComparison.getBoundingClientRect();
+            let position = ((e.clientX - rect.left) / rect.width) * 100;
+            
+            updateSliderPosition(position);
+        }
+        
+        function handleMouseUp() {
+            isDragging = false;
+        }
+        
+        function handleTouchStart(e) {
+            isDragging = true;
+        }
+        
+        function handleTouchMove(e) {
+            if (!isDragging || e.touches.length !== 1) return;
+            
+            const touch = e.touches[0];
+            const rect = imageComparison.getBoundingClientRect();
+            let position = ((touch.clientX - rect.left) / rect.width) * 100;
+            
+            updateSliderPosition(position);
+        }
+        
+        function handleTouchEnd() {
+            isDragging = false;
+        }
+        
+        function updateSliderPosition(position) {
+            // Clamp position between 0 and 100
+            position = Math.max(0, Math.min(100, position));
+            sliderPosition = position;
+            
+            // Update CSS variable for slider position
+            imageComparison.style.setProperty('--position', `${position}%`);
+        }
+        
+        function loadImageLibrary() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    imageLibrary = JSON.parse(stored);
+                    updateGallery();
+                }
+            } catch (error) {
+                console.error('Error loading image library:', error);
+                imageLibrary = [];
+            }
+        }
+        
+        function saveImageLibrary() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(imageLibrary));
+                updateStorageInfo();
+            } catch (error) {
+                console.error('Error saving image library:', error);
+                alert('Penyimpanan penuh! Hapus beberapa gambar terlebih dahulu.');
+            }
+        }
+        
+        function updateGallery() {
+            // Show or hide no images message
+            if (imageLibrary.length === 0) {
+                noImagesMessage.classList.remove('hidden');
+                galleryContainer.classList.add('hidden');
+                return;
+            }
+            
+            noImagesMessage.classList.add('hidden');
+            galleryContainer.classList.remove('hidden');
+            
+            // Clear gallery container
+            galleryContainer.innerHTML = '';
+            
+            // Add images to gallery
+            imageLibrary.forEach(image => {
+                const date = new Date(image.date);
+                const formattedDate = formatDate(date);
+                
+                const galleryItem = document.createElement('div');
+                galleryItem.className = 'gallery-item rounded overflow-hidden shadow-md aspect-square';
+                galleryItem.innerHTML = `
+                    <img src="${image.dataUrl}" alt="Foto ${formattedDate}">
+                    <div class="overlay">
+                        <div class="text-xs">${formattedDate}</div>
+                        <div class="text-xs">${image.size.toFixed(1)} KB</div>
+                    </div>
+                `;
+                
+                galleryItem.addEventListener('click', () => {
+                    showImageDetail(image);
+                });
+                
+                galleryContainer.appendChild(galleryItem);
+            });
+        }
+        
+        function showImageDetail(image) {
+            currentImageId = image.id;
+            
+            // Set modal content
+            modalImage.src = image.dataUrl;
+            const date = new Date(image.date);
+            modalImageDate.textContent = formatDate(date);
+            modalImageSize.textContent = image.size.toFixed(1);
+            modalImageResolution.textContent = `${image.width} x ${image.height}`;
+            modalImageTimestamp.textContent = formatDateTime(date);
+            
+            // Show modal
+            imageDetailModal.classList.remove('hidden');
+        }
+        
+        function downloadModalImage() {
+            const image = imageLibrary.find(img => img.id === currentImageId);
+            if (!image) return;
+            
+            // Create temporary anchor element
+            const link = document.createElement('a');
+            link.href = image.dataUrl;
+            link.download = `image_${formatDateForFilename(new Date(image.date))}.jpg`;
+            
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function showDeleteConfirmation() {
+            deleteConfirmModal.classList.remove('hidden');
+        }
+        
+        function deleteCurrentImage() {
+            const index = imageLibrary.findIndex(img => img.id === currentImageId);
+            if (index !== -1) {
+                imageLibrary.splice(index, 1);
+                saveImageLibrary();
+                updateGallery();
+            }
+            
+            // Close modals
+            deleteConfirmModal.classList.add('hidden');
+            imageDetailModal.classList.add('hidden');
+        }
+        
+        function editModalImage() {
+            const image = imageLibrary.find(img => img.id === currentImageId);
+            if (!image) return;
+            
+            // Close modal
+            imageDetailModal.classList.add('hidden');
+            
+            // Switch to camera tab
+            switchTab('camera');
+            
+            // Load image for editing
+            processImage(image.dataUrl);
+        }
+        
+        function shareModalImage() {
+            const image = imageLibrary.find(img => img.id === currentImageId);
+            if (!image) return;
+            
+            // Check if Web Share API is available
+            if (navigator.share) {
+                // Convert data URL to Blob
+                fetch(image.dataUrl)
+                    .then(res => res.blob())
+                    .then(blob => {
+                        // Create file from blob
+                        const file = new File([blob], `image_${formatDateForFilename(new Date(image.date))}.jpg`, { type: 'image/jpeg' });
+                        
+                        navigator.share({
+                            title: 'Berbagi Gambar',
+                            files: [file]
+                        }).catch(error => {
+                            console.error('Error sharing:', error);
+                            alert('Tidak dapat berbagi gambar. Coba unduh terlebih dahulu.');
+                        });
+                    });
+            } else {
+                alert('Web Share API tidak didukung di browser Anda. Coba unduh gambar terlebih dahulu.');
+            }
+        }
+        
+        function loadDefaultSettings() {
+            try {
+                const stored = localStorage.getItem(DEFAULT_SETTINGS_KEY);
+                if (stored) {
+                    const settings = JSON.parse(stored);
+                    
+                    defaultQualitySlider.value = settings.quality || 80;
+                    defaultQualityValue.textContent = defaultQualitySlider.value;
+                    
+                    defaultMaxWidthInput.value = settings.maxWidth || 1920;
+                    
+                    backCameraToggle.checked = settings.useBackCamera !== false;
+                    flashToggle.checked = settings.useFlash === true;
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+        
+        function saveDefaultSettings() {
+            const settings = {
+                quality: parseInt(defaultQualitySlider.value),
+                maxWidth: parseInt(defaultMaxWidthInput.value),
+                useBackCamera: backCameraToggle.checked,
+                useFlash: flashToggle.checked
+            };
+            
+            localStorage.setItem(DEFAULT_SETTINGS_KEY, JSON.stringify(settings));
+        }
+        
+        function updateStorageInfo() {
+            try {
+                // Calculate total storage used by images (KB)
+                const totalSize = imageLibrary.reduce((total, img) => total + img.size, 0);
+                storageUsed.textContent = (totalSize / 1024).toFixed(2); // Convert to MB
+                
+                // Estimate available storage (5MB for localStorage)
+                const estimatedAvailable = 5;
+                storageAvailable.textContent = estimatedAvailable;
+            } catch (error) {
+                console.error('Error calculating storage:', error);
+            }
+        }
+        
+        function clearAllStorage() {
+            if (confirm('Apakah Anda yakin ingin menghapus semua gambar? Tindakan ini tidak dapat dibatalkan.')) {
+                imageLibrary = [];
+                saveImageLibrary();
+                updateGallery();
+                
+                alert('Semua gambar telah dihapus!');
+            }
+        }
+        
+        function switchTab(tab) {
+            // Hide all tabs
+            cameraTabContent.classList.add('hidden');
+            galleryTabContent.classList.add('hidden');
+            settingsTabContent.classList.add('hidden');
+            
+            // Remove active class from all tabs
+            cameraTab.classList.remove('active');
+            galleryTab.classList.remove('active');
+            settingsTab.classList.remove('active');
+            
+            // Show selected tab
+            if (tab === 'camera') {
+                cameraTabContent.classList.remove('hidden');
+                cameraTab.classList.add('active');
+            } else if (tab === 'gallery') {
+                galleryTabContent.classList.remove('hidden');
+                galleryTab.classList.add('active');
+                updateGallery(); // Refresh gallery
+            } else if (tab === 'settings') {
+                settingsTabContent.classList.remove('hidden');
+                settingsTab.classList.add('active');
+                updateStorageInfo(); // Update storage info
+            }
+            
+            // Stop camera if switching away from camera tab
+            if (tab !== 'camera' && stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                video.classList.add('hidden');
+                captureBtn.innerHTML = '<i class="fas fa-camera mr-2"></i> Ambil Foto';
+            }
+        }
+        
+        function formatDate(date) {
+            return date.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+        
+        function formatDateTime(date) {
+            return date.toLocaleString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        function formatDateForFilename(date) {
+            return date.toISOString().split('T')[0] + '_' + 
+                   date.toTimeString().split(' ')[0].replace(/:/g, '-');
+        }
+        
+        function showLoading() {
+            loading.classList.remove('hidden');
+        }
+        
+        function hideLoading() {
+            loading.classList.add('hidden');
+        }
+        
+        // Utility function for debouncing
+        function debounce(func, delay) {
+            let timeoutId;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    func.apply(context, args);
+                }, delay);
+            };
+        }
+    </script>
+</body>
+</html>
