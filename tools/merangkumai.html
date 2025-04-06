@@ -1,0 +1,2244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Content Summarizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-color: #3B82F6;
+            --primary-hover: #2563EB;
+            --secondary-color: #6366F1;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --danger-color: #EF4444;
+            --gray-light: #F3F4F6;
+            --gray-medium: #9CA3AF;
+            --gray-dark: #4B5563;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F9FAFB;
+            color: #111827;
+            line-height: 1.6;
+        }
+        
+        .loader {
+            border-top-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: var(--gray-light);
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--gray-medium);
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-dark);
+        }
+        
+        .shine {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shine 1.5s infinite;
+        }
+        
+        @keyframes shine {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-primary {
+            background-color: #EBF5FF;
+            color: #1E40AF;
+        }
+        
+        .badge-success {
+            background-color: #ECFDF5;
+            color: #065F46;
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: auto;
+            min-width: 120px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            white-space: nowrap;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .tab-active {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 py-6 md:py-8">
+        <header class="mb-8 text-center">
+            <div class="flex items-center justify-center mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-blue-600 mr-2">
+                    <path fill-rule="evenodd" d="M9 4.5a.75.75 0 01.721.544l.813 2.846a3.75 3.75 0 002.576 2.576l2.846.813a.75.75 0 010 1.442l-2.846.813a3.75 3.75 0 00-2.576 2.576l-.813 2.846a.75.75 0 01-1.442 0l-.813-2.846a3.75 3.75 0 00-2.576-2.576l-2.846-.813a.75.75 0 010-1.442l2.846-.813A3.75 3.75 0 007.466 7.89l.813-2.846A.75.75 0 019 4.5zM18 1.5a.75.75 0 01.728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 010 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 01-1.456 0l-.258-1.036a2.625 2.625 0 00-1.91-1.91l-1.036-.258a.75.75 0 010-1.456l1.036-.258a2.625 2.625 0 001.91-1.91l.258-1.036A.75.75 0 0118 1.5z" clip-rule="evenodd" />
+                </svg>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">AI Content Summarizer</h1>
+            </div>
+            <p class="text-gray-600 max-w-xl mx-auto">Rangkum konten website atau teks dengan cepat menggunakan kecerdasan buatan canggih</p>
+        </header>
+        
+        <div class="bg-white rounded-xl shadow-md p-5 mb-8">
+            <div class="flex border-b border-gray-200 mb-4">
+                <button id="tabUrl" class="tab-active px-4 py-2 text-sm font-medium flex items-center">
+                    <i class="fas fa-globe mr-2"></i>
+                    URL Website
+                </button>
+                <button id="tabText" class="px-4 py-2 text-sm font-medium text-gray-500 flex items-center">
+                    <i class="fas fa-file-alt mr-2"></i>
+                    Teks
+                </button>
+                <button id="tabSettings" class="px-4 py-2 text-sm font-medium text-gray-500 flex items-center">
+                    <i class="fas fa-cog mr-2"></i>
+                    Pengaturan
+                </button>
+            </div>
+            
+            <div id="urlContent" class="tab-content">
+                <div class="mb-4">
+                    <label for="url" class="block text-sm font-medium text-gray-700 mb-1">URL Website</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-link text-gray-400"></i>
+                        </div>
+                        <input type="url" id="url" placeholder="https://example.com" 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Masukkan URL lengkap termasuk http:// atau https://</p>
+                </div>
+            </div>
+            
+            <div id="textContent" class="tab-content hidden">
+                <div class="mb-4">
+                    <label for="inputText" class="block text-sm font-medium text-gray-700 mb-1">Teks untuk Dirangkum</label>
+                    <textarea id="inputText" rows="6" placeholder="Tempel atau ketik teks yang ingin dirangkum di sini..."
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition custom-scrollbar"></textarea>
+                    <div class="flex justify-between mt-1">
+                        <p class="text-xs text-gray-500">Minimal 100 karakter untuk hasil yang baik</p>
+                        <p id="charCount" class="text-xs text-gray-500">0 karakter</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="settingsContent" class="tab-content hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="language" class="block text-sm font-medium text-gray-700 mb-1">Bahasa Ringkasan</label>
+                        <select id="language" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="id">Bahasa Indonesia</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="style" class="block text-sm font-medium text-gray-700 mb-1">Gaya Ringkasan</label>
+                        <select id="style" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="comprehensive">Komprehensif (Detail)</option>
+                            <option value="concise">Ringkas (Singkat)</option>
+                            <option value="bullet">Poin-poin (Bullet)</option>
+                            <option value="academic">Akademis</option>
+                            <option value="simplified">Disederhanakan</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="maxLength" class="block text-sm font-medium text-gray-700 mb-1">Panjang Maksimum</label>
+                        <div class="flex items-center">
+                            <input type="range" id="maxLength" min="100" max="1000" step="50" value="400" 
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <span id="maxLengthValue" class="ml-2 text-sm text-gray-700 min-w-[60px]">400</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Panjang maksimum ringkasan dalam kata</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Pengaturan Tambahan</label>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Format dengan Markdown</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="useMarkdown" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Sertakan Kesimpulan</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="includeConclusion" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Deteksi Klaim Utama</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="detectClaims" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <label for="advancedPrompt" class="block text-sm font-medium text-gray-700 mb-1">Prompt Kustom (Lanjutan)</label>
+                    <textarea id="advancedPrompt" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition custom-scrollbar"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Kosongkan untuk menggunakan prompt default berdasarkan pengaturan di atas</p>
+                </div>
+                
+                <div class="flex items-center justify-between mt-4">
+                    <button id="restoreDefaultSettings" class="text-sm text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-undo-alt mr-1"></i> Kembalikan Pengaturan Default
+                    </button>
+                    <button id="applySettings" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
+                        <i class="fas fa-check mr-1"></i> Terapkan Pengaturan
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex flex-col space-y-3 mt-6">
+                <button id="summarizeBtn" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition flex items-center justify-center space-x-2">
+                    <i class="fas fa-magic mr-2"></i>
+                    <span>Rangkum Sekarang</span>
+                </button>
+                
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                    <button id="resetBtn" class="w-full sm:w-1/2 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition flex items-center justify-center">
+                        <i class="fas fa-redo-alt mr-2"></i>
+                        <span>Reset</span>
+                    </button>
+                    
+                    <button id="exampleBtn" class="w-full sm:w-1/2 py-2 border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-lg transition flex items-center justify-center">
+                        <i class="fas fa-lightbulb mr-2"></i>
+                        <span>Contoh</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="loadingContainer" class="hidden bg-white rounded-xl shadow-md p-6 mb-8">
+            <div class="flex flex-col items-center justify-center space-y-4">
+                <div class="loader h-12 w-12 border-4 border-gray-200 rounded-full"></div>
+                <div class="text-center">
+                    <p class="text-gray-700 font-medium">Sedang memproses rangkuman...</p>
+                    <p class="text-gray-500 text-sm">Mohon tunggu sebentar, AI sedang bekerja keras untuk menganalisis konten.</p>
+                </div>
+                
+                <div class="w-full max-w-md mt-4">
+                    <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="progressBar" class="h-full bg-blue-600 transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div id="tipContainer" class="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg max-w-md">
+                    <p class="text-sm text-blue-800"><i class="fas fa-info-circle mr-2"></i><span id="randomTip">Tip akan muncul di sini...</span></p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="resultContainer" class="hidden mb-8 fade-in">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-file-alt mr-2 text-blue-600"></i>
+                            Hasil Rangkuman
+                        </h2>
+                        <p class="text-sm text-gray-500" id="summaryStats">Statistik rangkuman akan muncul di sini</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button id="saveBtn" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition flex items-center tooltip">
+                            <i class="fas fa-save mr-1.5"></i>
+                            Simpan
+                            <span class="tooltiptext">Simpan ringkasan</span>
+                        </button>
+                        <button id="copyBtn" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center tooltip">
+                            <i class="fas fa-copy mr-1.5"></i>
+                            Salin
+                            <span class="tooltiptext">Salin ke clipboard</span>
+                        </button>
+                        <button id="shareBtn" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition flex items-center tooltip">
+                            <i class="fas fa-share-alt mr-1.5"></i>
+                            Bagikan
+                            <span class="tooltiptext">Bagikan ringkasan</span>
+                        </button>
+                        <button id="downloadBtn" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition flex items-center tooltip">
+                            <i class="fas fa-file-download mr-1.5"></i>
+                            Unduh
+                            <span class="tooltiptext">Unduh sebagai PDF/Markdown</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                    <div class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm flex items-center">
+                        <i class="fas fa-language mr-1.5"></i>
+                        <span id="summaryLanguage">Bahasa Indonesia</span>
+                    </div>
+                    <div class="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm flex items-center">
+                        <i class="fas fa-check-circle mr-1.5"></i>
+                        <span id="summaryType">Ringkasan Komprehensif</span>
+                    </div>
+                    <div class="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-sm flex items-center">
+                        <i class="fas fa-clock mr-1.5"></i>
+                        <span id="summaryTime">Waktu Pemrosesan: 3s</span>
+                    </div>
+                </div>
+                
+                <div id="summaryResult" class="prose prose-blue max-w-none bg-gray-50 p-5 rounded-lg text-gray-800 custom-scrollbar overflow-y-auto max-h-[500px] mt-2 border border-gray-200"></div>
+                
+                <div class="mt-4 flex flex-col sm:flex-row justify-between text-xs text-gray-500">
+                    <p id="summaryMetadata" class="mb-2 sm:mb-0">
+                        <span id="summarySource" class="inline-block mr-2"></span>
+                        <span id="summaryDate" class="inline-block"></span>
+                    </p>
+                    <div class="flex items-center">
+                        <span class="mr-2">Kualitas Ringkasan:</span>
+                        <div class="flex">
+                            <button class="feedback-btn" data-rating="1"><i class="far fa-star text-gray-400 hover:text-yellow-500"></i></button>
+                            <button class="feedback-btn" data-rating="2"><i class="far fa-star text-gray-400 hover:text-yellow-500"></i></button>
+                            <button class="feedback-btn" data-rating="3"><i class="far fa-star text-gray-400 hover:text-yellow-500"></i></button>
+                            <button class="feedback-btn" data-rating="4"><i class="far fa-star text-gray-400 hover:text-yellow-500"></i></button>
+                            <button class="feedback-btn" data-rating="5"><i class="far fa-star text-gray-400 hover:text-yellow-500"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6 col-span-1 md:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-history mr-2 text-blue-600"></i>
+                        Ringkasan Tersimpan
+                    </h2>
+                    <div class="flex items-center">
+                        <button id="exportAllBtn" class="text-sm text-blue-600 hover:text-blue-800 mr-3 tooltip">
+                            <i class="fas fa-download mr-1"></i> Ekspor
+                            <span class="tooltiptext">Ekspor semua ringkasan</span>
+                        </button>
+                        <button id="clearAllBtn" class="text-sm text-red-600 hover:text-red-800 tooltip">
+                            <i class="fas fa-trash-alt mr-1"></i> Hapus Semua
+                            <span class="tooltiptext">Hapus semua ringkasan</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="border-b border-gray-200 pb-2 mb-4">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                        <input type="text" id="searchSummaries" placeholder="Cari ringkasan..." 
+                               class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                </div>
+                
+                <div id="summariesList" class="space-y-4 custom-scrollbar overflow-y-auto max-h-[400px] pr-2">
+                    <!-- Daftar ringkasan akan ditampilkan di sini -->
+                    <div id="noSummaries" class="text-gray-500 italic p-4 text-center">
+                        <i class="fas fa-inbox text-gray-300 text-4xl mb-2"></i>
+                        <p>Belum ada ringkasan tersimpan.</p>
+                        <p class="text-sm mt-1">Ringkasan yang Anda simpan akan muncul di sini.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-800 flex items-center mb-4">
+                    <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>
+                    Tips & Bantuan
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="p-3 bg-blue-50 rounded-lg">
+                        <h3 class="font-medium text-blue-800 mb-1">Meringkas dari URL</h3>
+                        <p class="text-sm text-blue-700">Masukkan URL lengkap termasuk http:// atau https:// untuk mendapatkan ringkasan halaman web.</p>
+                    </div>
+                    
+                    <div class="p-3 bg-green-50 rounded-lg">
+                        <h3 class="font-medium text-green-800 mb-1">Meringkas Teks</h3>
+                        <p class="text-sm text-green-700">Salin dan tempel teks yang ingin dirangkum. Minimal 100 karakter untuk hasil terbaik.</p>
+                    </div>
+                    
+                    <div class="p-3 bg-purple-50 rounded-lg">
+                        <h3 class="font-medium text-purple-800 mb-1">Kustomisasi</h3>
+                        <p class="text-sm text-purple-700">Sesuaikan panjang, gaya, dan bahasa ringkasan di tab Pengaturan.</p>
+                    </div>
+                    
+                    <div class="p-3 bg-yellow-50 rounded-lg">
+                        <h3 class="font-medium text-yellow-800 mb-1">Pembatasan</h3>
+                        <p class="text-sm text-yellow-700">Beberapa website mungkin memblokir akses untuk dirangkum. Gunakan fitur teks untuk konten tersebut.</p>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <button id="showTutorialBtn" class="w-full py-2 border border-blue-300 bg-white hover:bg-blue-50 text-blue-700 font-medium rounded-lg transition flex items-center justify-center">
+                        <i class="fas fa-graduation-cap mr-2"></i>
+                        <span>Lihat Tutorial</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Share -->
+    <div id="shareModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Bagikan Ringkasan</h3>
+                <button id="closeShareModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Link Ringkasan</label>
+                    <div class="flex">
+                        <input type="text" id="shareLink" readonly class="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <button id="copyShareLink" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-r-lg transition">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Bagikan ke:</label>
+                    <div class="flex space-x-3">
+                        <button class="share-btn p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition tooltip" data-platform="facebook">
+                            <i class="fab fa-facebook-f"></i>
+                            <span class="tooltiptext">Facebook</span>
+                        </button>
+                        <button class="share-btn p-2 bg-blue-400 hover:bg-blue-500 text-white rounded-full transition tooltip" data-platform="twitter">
+                            <i class="fab fa-twitter"></i>
+                            <span class="tooltiptext">Twitter</span>
+                        </button>
+                        <button class="share-btn p-2 bg-green-600 hover:bg-green-700 text-white rounded-full transition tooltip" data-platform="whatsapp">
+                            <i class="fab fa-whatsapp"></i>
+                            <span class="tooltiptext">WhatsApp</span>
+                        </button>
+                        <button class="share-btn p-2 bg-blue-700 hover:bg-blue-800 text-white rounded-full transition tooltip" data-platform="linkedin">
+                            <i class="fab fa-linkedin-in"></i>
+                            <span class="tooltiptext">LinkedIn</span>
+                        </button>
+                        <button class="share-btn p-2 bg-red-600 hover:bg-red-700 text-white rounded-full transition tooltip" data-platform="email">
+                            <i class="fas fa-envelope"></i>
+                            <span class="tooltiptext">Email</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="pt-2">
+                    <button id="generateQR" class="w-full py-2 border border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium rounded-lg transition flex items-center justify-center">
+                        <i class="fas fa-qrcode mr-2"></i>
+                        <span>Generate QR Code</span>
+                    </button>
+                </div>
+                
+                <div id="qrCodeContainer" class="hidden pt-3 flex justify-center">
+                    <div id="qrCode" class="p-2 bg-white border border-gray-200 rounded"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Download -->
+    <div id="downloadModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Unduh Ringkasan</h3>
+                <button id="closeDownloadModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Format:</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="downloadPdf" class="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition flex flex-col items-center">
+                            <i class="fas fa-file-pdf text-red-600 text-2xl mb-2"></i>
+                            <span class="text-sm font-medium">PDF</span>
+                        </button>
+                        <button id="downloadMarkdown" class="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition flex flex-col items-center">
+                            <i class="fas fa-file-alt text-blue-600 text-2xl mb-2"></i>
+                            <span class="text-sm font-medium">Markdown</span>
+                        </button>
+                        <button id="downloadTxt" class="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition flex flex-col items-center">
+                            <i class="fas fa-file-alt text-gray-600 text-2xl mb-2"></i>
+                            <span class="text-sm font-medium">Text</span>
+                        </button>
+                        <button id="downloadHtml" class="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition flex flex-col items-center">
+                            <i class="fas fa-file-code text-orange-600 text-2xl mb-2"></i>
+                            <span class="text-sm font-medium">HTML</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="fileName" class="block text-sm font-medium text-gray-700 mb-1">Nama File</label>
+                    <input type="text" id="fileName" placeholder="ringkasan" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                </div>
+                
+                <div class="pt-2">
+                    <button id="downloadStart" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition">
+                        <i class="fas fa-download mr-2"></i>
+                        <span>Mulai Unduh</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Tutorial -->
+    <div id="tutorialModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl max-w-3xl w-full mx-4 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Panduan Penggunaan</h3>
+                <button id="closeTutorialModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="tutorialContent" class="overflow-y-auto max-h-[70vh] pr-2 custom-scrollbar">
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="text-blue-600 font-medium mb-2">1. Cara Merangkum dari URL</h4>
+                        <p class="text-gray-700 mb-2">Untuk merangkum konten dari sebuah website:</p>
+                        <ol class="text-gray-700 list-decimal list-inside space-y-1 ml-2">
+                            <li>Pastikan Anda berada di tab "URL Website"</li>
+                            <li>Masukkan URL lengkap (termasuk http:// atau https://)</li>
+                            <li>Klik tombol "Rangkum Sekarang"</li>
+                            <li>Tunggu hingga proses selesai</li>
+                        </ol>
+                        <p class="text-sm text-gray-500 mt-2">Catatan: Beberapa website mungkin membatasi akses untuk crawling atau memiliki konten yang tidak bisa diakses.</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-blue-600 font-medium mb-2">2. Cara Merangkum dari Teks</h4>
+                        <p class="text-gray-700 mb-2">Untuk merangkum teks yang Anda salin:</p>
+                        <ol class="text-gray-700 list-decimal list-inside space-y-1 ml-2">
+                            <li>Klik tab "Teks"</li>
+                            <li>Salin dan tempel teks yang ingin dirangkum</li>
+                            <li>Pastikan teks memiliki minimal 100 karakter</li>
+                            <li>Klik tombol "Rangkum Sekarang"</li>
+                        </ol>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-blue-600 font-medium mb-2">3. Menyesuaikan Pengaturan</h4>
+                        <p class="text-gray-700 mb-2">Anda dapat menyesuaikan hasil rangkuman dengan mengubah pengaturan di tab "Pengaturan":</p>
+                        <ul class="text-gray-700 list-disc list-inside space-y-1 ml-2">
+                            <li>Bahasa: Pilih output dalam Bahasa Indonesia atau Bahasa Inggris</li>
+                            <li>Gaya: Ubah gaya ringkasan (Komprehensif, Ringkas, Poin-poin, dll.)</li>
+                            <li>Panjang Maksimum: Atur berapa kata maksimum yang diinginkan</li>
+                            <li>Format Markdown: Aktifkan/nonaktifkan format markdown pada hasil</li>
+                            <li>Sertakan Kesimpulan: Aktifkan/nonaktifkan bagian kesimpulan</li>
+                            <li>Deteksi Klaim: Aktifkan/nonaktifkan analisis klaim utama</li>
+                        </ul>
+                        <p class="text-sm text-gray-500 mt-2">Tips: Anda juga dapat menulis prompt kustom di bagian "Prompt Kustom (Lanjutan)"</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-blue-600 font-medium mb-2">4. Menyimpan dan Mengelola Ringkasan</h4>
+                        <p class="text-gray-700 mb-2">Setelah mendapatkan hasil rangkuman:</p>
+                        <ul class="text-gray-700 list-disc list-inside space-y-1 ml-2">
+                            <li>Klik "Simpan" untuk menyimpan ringkasan ke penyimpanan lokal</li>
+                            <li>Klik "Salin" untuk menyalin ringkasan ke clipboard</li>
+                            <li>Klik "Bagikan" untuk membagikan ringkasan</li>
+                            <li>Klik "Unduh" untuk mengunduh ringkasan dalam berbagai format</li>
+                        </ul>
+                        <p class="text-gray-700 mt-2">Ringkasan tersimpan akan muncul di bagian "Ringkasan Tersimpan" di bawah. Anda dapat:</p>
+                        <ul class="text-gray-700 list-disc list-inside space-y-1 ml-2">
+                            <li>Mencari ringkasan dengan kotak pencarian</li>
+                            <li>Mengekspor semua ringkasan sekaligus</li>
+                            <li>Menghapus ringkasan yang tidak diperlukan</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-between">
+                <label class="flex items-center text-sm text-gray-700">
+                    <input type="checkbox" id="dontShowAgain" class="mr-2">
+                    Jangan tampilkan lagi
+                </label>
+                <button id="closeTutorial" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition">
+                    Mengerti
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Examples -->
+    <div id="exampleModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl max-w-2xl w-full mx-4 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Contoh untuk Dicoba</h3>
+                <button id="closeExampleModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <div class="p-3 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer example-item">
+                    <div class="flex items-center mb-2">
+                        <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-2">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <h4 class="font-medium">Wikipedia - Artificial Intelligence</h4>
+                    </div>
+                    <p class="text-sm text-gray-600">Ringkas artikel Wikipedia tentang kecerdasan buatan dan teknologinya.</p>
+                    <div class="mt-2">
+                        <span class="badge badge-primary">URL</span>
+                    </div>
+                    <input type="hidden" class="example-url" value="https://en.wikipedia.org/wiki/Artificial_intelligence">
+                </div>
+                
+                <div class="p-3 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer example-item">
+                    <div class="flex items-center mb-2">
+                        <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-2">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <h4 class="font-medium">CNN Indonesia</h4>
+                    </div>
+                    <p class="text-sm text-gray-600">Ringkas berita terbaru dari CNN Indonesia.</p>
+                    <div class="mt-2">
+                        <span class="badge badge-primary">URL</span>
+                    </div>
+                    <input type="hidden" class="example-url" value="https://www.cnnindonesia.com/">
+                </div>
+                
+                <div class="p-3 border border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition cursor-pointer example-item">
+                    <div class="flex items-center mb-2">
+                        <div class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-2">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h4 class="font-medium">Artikel Ilmiah</h4>
+                    </div>
+                    <p class="text-sm text-gray-600">Ringkas artikel ilmiah tentang perubahan iklim.</p>
+                    <div class="mt-2">
+                        <span class="badge badge-success">Teks</span>
+                    </div>
+                    <input type="hidden" class="example-text" value="Perubahan iklim adalah perubahan jangka panjang pada suhu dan pola cuaca. Perubahan ini mungkin alami, seperti melalui variasi dalam siklus matahari. Namun sejak tahun 1800-an, aktivitas manusia telah menjadi pendorong utama perubahan iklim, terutama karena pembakaran bahan bakar fosil seperti batu bara, minyak, dan gas, yang menghasilkan gas rumah kaca.
+
+Gas rumah kaca seperti karbon dioksida dan metana membungkus Bumi seperti selimut. Mereka memerangkap panas matahari dan meningkatkan suhu. Efek rumah kaca ini terutama disebabkan oleh karbon dioksida, metana, dinitrogen oksida, dan gas-gas rumah kaca yang memerangkap panas.
+
+Manusia telah memproduksi gas-gas ini dalam kuantitas yang semakin besar sejak Revolusi Industri pada tahun 1800-an. Konsentrasi karbon dioksida telah meningkat lebih dari 48% sejak era pra-industri. Peningkatan yang dramatis ini telah terjadi karena aktivitas manusia seperti pembakaran bahan bakar fosil dan deforestasi.
+
+Dampak dari perubahan iklim termasuk peningkatan temperatur, kenaikan permukaan laut, cuaca ekstrem yang lebih sering dan intens, dan perubahan pada habitat satwa liar. Studi menunjukkan bahwa pemanasan global dapat dibatasi dengan mengurangi emisi dan mencari sumber energi alternatif.">
+                </div>
+                
+                <div class="p-3 border border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition cursor-pointer example-item">
+                    <div class="flex items-center mb-2">
+                        <div class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-2">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h4 class="font-medium">Deskripsi Produk</h4>
+                    </div>
+                    <p class="text-sm text-gray-600">Ringkas deskripsi produk teknologi terbaru.</p>
+                    <div class="mt-2">
+                        <span class="badge badge-success">Teks</span>
+                    </div>
+                    <input type="hidden" class="example-text" value="SmartGlobe X7 adalah perangkat revolusioner yang menggabungkan teknologi GPS, AI, dan realitas tertambah untuk menciptakan pengalaman navigasi yang belum pernah ada sebelumnya. Dengan prosesor quad-core terbaru dan sistem operasi GlobeOS, perangkat ini menawarkan kecepatan proses yang luar biasa dan efisiensi daya yang optimal.
+
+Layar 6.5 inci dengan teknologi AMOLED memberikan gambar yang jernih dengan resolusi 4K bahkan dalam kondisi cahaya yang terang. Baterai lithium polymer 5000mAh menjamin penggunaan sepanjang hari, dan dengan teknologi fast charging, Anda bisa mendapatkan daya 60% hanya dalam 30 menit.
+
+Fitur utama SmartGlobe X7 termasuk pemandu jalan real-time dengan overlay AR, penerjemahan bahasa langsung untuk 50 bahasa, dan asisten AI terintegrasi yang belajar dari kebiasaan penggunaan Anda. Kamera ganda 48MP memungkinkan pengguna untuk mendokumentasikan perjalanan dengan kualitas profesional.
+
+SmartGlobe X7 juga hadir dengan perlindungan tahan air dan debu dengan sertifikasi IP68, membuatnya ideal untuk petualangan outdoor. Perangkat ini kompatibel dengan semua perangkat smart home populer, menjadikannya hub sempurna untuk mengontrol rumah Anda dari jarak jauh.
+
+Dengan fitur keamanan tingkat lanjut, termasuk enkripsi end-to-end dan verifikasi biometrik ganda, data Anda selalu aman. SmartGlobe X7 tersedia dalam tiga varian warna: Cosmic Black, Arctic Silver, dan Forest Green dengan harga mulai dari Rp 7.499.000.">
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end">
+                <button id="closeExamples" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-8 mt-12">
+        <div class="container max-w-6xl mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">AI Content Summarizer</h3>
+                    <p class="text-gray-300 text-sm">Alat ringkasan konten yang didukung teknologi AI untuk menghasilkan ringkasan berkualitas tinggi dari website dan teks.</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Navigasi Cepat</h3>
+                    <ul class="text-gray-300 text-sm space-y-2">
+                        <li><a href="#" class="hover:text-blue-300 transition">Beranda</a></li>
+                        <li><a href="#" class="hover:text-blue-300 transition">Tutorial</a></li>
+                        <li><a href="#" class="hover:text-blue-300 transition">FAQ</a></li>
+                        <li><a href="#" class="hover:text-blue-300 transition">Kebijakan Privasi</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Kontak</h3>
+                    <ul class="text-gray-300 text-sm space-y-2">
+                        <li class="flex items-center"><i class="fas fa-envelope mr-2 text-blue-400"></i> support@summarizer.com</li>
+                        <li class="flex items-center"><i class="fas fa-globe mr-2 text-blue-400"></i> www.summarizer.com</li>
+                    </ul>
+                    
+                    <div class="mt-4">
+                        <div class="flex space-x-3">
+                            <a href="#" class="text-gray-300 hover:text-white transition">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="text-gray-300 hover:text-white transition">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="text-gray-300 hover:text-white transition">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a href="#" class="text-gray-300 hover:text-white transition">
+                                <i class="fab fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400 text-sm">&copy; 2025 AI Content Summarizer. All rights reserved.</p>
+                <p class="text-gray-400 text-sm mt-2 md:mt-0">Powered by <span class="text-blue-400">Groq LLM API</span> & Tailwind CSS</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // API Key (dalam praktiknya, ini sebaiknya disimpan di server)
+        const API_KEY = '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';
+        
+        // Tips random untuk ditampilkan saat loading
+        const randomTips = [
+            "Ringkasan yang baik seharusnya mempertahankan poin utama dari konten asli.",
+            "Gunakan fitur 'Salin' untuk dengan cepat menyalin ringkasan ke clipboard.",
+            "Semakin panjang teks asli, semakin baik AI dalam mengidentifikasi poin utama.",
+            "Anda dapat menyesuaikan prompt untuk hasil yang lebih spesifik.",
+            "Merangkum artikel ilmiah? Pilih gaya 'Akademis' untuk hasil yang lebih formal.",
+            "Simpan ringkasan Anda untuk referensi di masa mendatang.",
+            "Gaya 'Poin-poin' sangat cocok untuk rangkuman presentasi.",
+            "Pastikan URL diawali dengan http:// atau https:// untuk hasil yang akurat.",
+            "Gunakan fitur unduh untuk menyimpan ringkasan dalam berbagai format file.",
+            "Ringkasan biasanya berjalan lebih cepat untuk teks daripada URL website.",
+            "Berikan peringkat untuk ringkasan untuk membantu meningkatkan kualitas.",
+            "Bagikan ringkasan Anda ke media sosial dengan fitur Bagikan.",
+            "Fitur pencarian membantu Anda menemukan ringkasan tersimpan dengan cepat."
+        ];
+        
+        // Default prompt templates berdasarkan bahasa dan gaya
+        const defaultPrompts = {
+            id: {
+                comprehensive: `Ringkas konten dari sumber berikut secara komprehensif. Berikan ringkasan yang mencakup:
+1. Judul/topik utama
+2. Poin kunci dan argumen utama 
+3. Data penting, statistik, atau bukti yang relevan
+4. Analisis singkat tentang topik yang dibahas
+5. Kesimpulan dan implikasi (jika ada)
+
+Format ringkasan dalam paragraf yang terstruktur dengan judul yang jelas. Sertakan semua informasi penting sambil menghilangkan detail yang tidak perlu.`,
+
+                concise: `Berikan ringkasan singkat dan padat dari sumber berikut. Fokus hanya pada informasi paling penting dan esensial. Hindari detail yang tidak perlu dan penjelasan panjang. Rangkum dalam beberapa paragraf singkat yang menangkap esensi dari konten.`,
+
+                bullet: `Ringkas konten dari sumber berikut dalam format poin-poin (bullet points). Organisasikan ringkasan dengan:
+• Judul utama
+• 5-7 poin utama yang mencakup informasi kunci
+• Setiap poin harus singkat (1-2 kalimat)
+• Urutkan poin berdasarkan kepentingan
+• Akhiri dengan kesimpulan singkat jika relevan`,
+
+                academic: `Buat ringkasan akademis dari sumber berikut. Ringkasan harus:
+1. Menggunakan bahasa formal dan objektif
+2. Menyajikan argumen dan bukti dengan tepat
+3. Mengikuti struktur: pendahuluan, metodologi (jika relevan), temuan utama, dan kesimpulan
+4. Menyebutkan konsep kunci dan terminologi penting
+5. Menghindari opini dan menjaga netralitas
+
+Gunakan gaya penulisan akademis dan teknis jika diperlukan.`,
+
+                simplified: `Ringkas konten dari sumber berikut dengan bahasa yang sederhana dan mudah dipahami. Jelaskan konsep kompleks dengan cara yang jelas. Hindari jargon, terminologi teknis, atau bahasa rumit. Ringkasan harus dapat dipahami oleh pembaca umum. Gunakan kalimat pendek dan sederhana.`
+            },
+            
+            en: {
+                comprehensive: `Summarize the content from the following source comprehensively. Provide a summary that includes:
+1. Main title/topic
+2. Key points and main arguments
+3. Important data, statistics, or relevant evidence
+4. Brief analysis of the discussed topics
+5. Conclusion and implications (if any)
+
+Format the summary in structured paragraphs with clear headings. Include all important information while eliminating unnecessary details.`,
+
+                concise: `Provide a brief and concise summary of the following source. Focus only on the most important and essential information. Avoid unnecessary details and lengthy explanations. Summarize in a few short paragraphs that capture the essence of the content.`,
+
+                bullet: `Summarize the content from the following source in bullet point format. Organize the summary with:
+• Main title
+• 5-7 main points covering key information
+• Each point should be brief (1-2 sentences)
+• Order points by importance
+• End with a brief conclusion if relevant`,
+
+                academic: `Create an academic summary of the following source. The summary should:
+1. Use formal and objective language
+2. Present arguments and evidence accurately
+3. Follow a structure: introduction, methodology (if relevant), main findings, and conclusion
+4. Mention key concepts and important terminology
+5. Avoid opinions and maintain neutrality
+
+Use academic and technical writing style where necessary.`,
+
+                simplified: `Summarize the content from the following source in simple and easy-to-understand language. Explain complex concepts in a clear way. Avoid jargon, technical terminology, or complicated language. The summary should be understandable to general readers. Use short and simple sentences.`
+            }
+        };
+        
+        // Elemen DOM
+        const tabUrl = document.getElementById('tabUrl');
+        const tabText = document.getElementById('tabText');
+        const tabSettings = document.getElementById('tabSettings');
+        const urlContent = document.getElementById('urlContent');
+        const textContent = document.getElementById('textContent');
+        const settingsContent = document.getElementById('settingsContent');
+        const urlInput = document.getElementById('url');
+        const inputText = document.getElementById('inputText');
+        const charCount = document.getElementById('charCount');
+        const languageSelect = document.getElementById('language');
+        const styleSelect = document.getElementById('style');
+        const maxLengthInput = document.getElementById('maxLength');
+        const maxLengthValue = document.getElementById('maxLengthValue');
+        const useMarkdown = document.getElementById('useMarkdown');
+        const includeConclusion = document.getElementById('includeConclusion');
+        const detectClaims = document.getElementById('detectClaims');
+        const advancedPrompt = document.getElementById('advancedPrompt');
+        const restoreDefaultSettings = document.getElementById('restoreDefaultSettings');
+        const applySettings = document.getElementById('applySettings');
+        const summarizeBtn = document.getElementById('summarizeBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const exampleBtn = document.getElementById('exampleBtn');
+        const loadingContainer = document.getElementById('loadingContainer');
+        const progressBar = document.getElementById('progressBar');
+        const randomTip = document.getElementById('randomTip');
+        const resultContainer = document.getElementById('resultContainer');
+        const summaryResult = document.getElementById('summaryResult');
+        const summaryStats = document.getElementById('summaryStats');
+        const summaryLanguage = document.getElementById('summaryLanguage');
+        const summaryType = document.getElementById('summaryType');
+        const summaryTime = document.getElementById('summaryTime');
+        const summarySource = document.getElementById('summarySource');
+        const summaryDate = document.getElementById('summaryDate');
+        const saveBtn = document.getElementById('saveBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const summariesList = document.getElementById('summariesList');
+        const noSummaries = document.getElementById('noSummaries');
+        const searchSummaries = document.getElementById('searchSummaries');
+        const exportAllBtn = document.getElementById('exportAllBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const showTutorialBtn = document.getElementById('showTutorialBtn');
+        const feedbackBtns = document.querySelectorAll('.feedback-btn');
+        
+        // Modal elements
+        const shareModal = document.getElementById('shareModal');
+        const closeShareModal = document.getElementById('closeShareModal');
+        const shareLink = document.getElementById('shareLink');
+        const copyShareLink = document.getElementById('copyShareLink');
+        const shareBtns = document.querySelectorAll('.share-btn');
+        const generateQR = document.getElementById('generateQR');
+        const qrCodeContainer = document.getElementById('qrCodeContainer');
+        const downloadModal = document.getElementById('downloadModal');
+        const closeDownloadModal = document.getElementById('closeDownloadModal');
+        const fileName = document.getElementById('fileName');
+        const downloadStart = document.getElementById('downloadStart');
+        const downloadPdf = document.getElementById('downloadPdf');
+        const downloadMarkdown = document.getElementById('downloadMarkdown');
+        const downloadTxt = document.getElementById('downloadTxt');
+        const downloadHtml = document.getElementById('downloadHtml');
+        const tutorialModal = document.getElementById('tutorialModal');
+        const closeTutorialModal = document.getElementById('closeTutorialModal');
+        const closeTutorial = document.getElementById('closeTutorial');
+        const dontShowAgain = document.getElementById('dontShowAgain');
+        const exampleModal = document.getElementById('exampleModal');
+        const closeExampleModal = document.getElementById('closeExampleModal');
+        const closeExamples = document.getElementById('closeExamples');
+        const exampleItems = document.querySelectorAll('.example-item');
+        
+        // Objek untuk menyimpan hasil rangkuman saat ini
+        let currentSummary = null;
+        
+        // Variabel untuk menyimpan format download yang dipilih
+        let selectedFormat = 'pdf';
+        
+        // Cek apakah perlu menampilkan tutorial pertama kali
+        const shouldShowTutorial = localStorage.getItem('dontShowTutorial') !== 'true';
+        if (shouldShowTutorial && !localStorage.getItem('websiteSummaries')) {
+            setTimeout(() => {
+                tutorialModal.classList.remove('hidden');
+            }, 1000);
+        }
+        
+        // Inisialisasi pengaturan default
+        const defaultSettings = {
+            language: 'id',
+            style: 'comprehensive',
+            maxLength: 400,
+            useMarkdown: true,
+            includeConclusion: true,
+            detectClaims: true
+        };
+        
+        // Load settings from localStorage or use defaults
+        let currentSettings = JSON.parse(localStorage.getItem('summarizerSettings')) || defaultSettings;
+        applyCurrentSettings();
+        
+        // Update prompt berdasarkan pengaturan saat ini
+        updatePromptFromSettings();
+        
+        // Tab switching
+        tabUrl.addEventListener('click', () => switchTab('url'));
+        tabText.addEventListener('click', () => switchTab('text'));
+        tabSettings.addEventListener('click', () => switchTab('settings'));
+        
+        // Character counting for text input
+        inputText.addEventListener('input', updateCharCount);
+        
+        // Max length slider
+        maxLengthInput.addEventListener('input', () => {
+            maxLengthValue.textContent = maxLengthInput.value;
+        });
+        
+        // Event listener untuk perubahan bahasa dan gaya
+        languageSelect.addEventListener('change', updatePromptFromSettings);
+        styleSelect.addEventListener('change', updatePromptFromSettings);
+        
+        // Event listener untuk tombol restore default settings
+        restoreDefaultSettings.addEventListener('click', () => {
+            currentSettings = {...defaultSettings};
+            applyCurrentSettings();
+            updatePromptFromSettings();
+            alert('Pengaturan telah dikembalikan ke default.');
+        });
+        
+        // Event listener untuk tombol apply settings
+        applySettings.addEventListener('click', () => {
+            saveCurrentSettings();
+            switchTab('url');
+            alert('Pengaturan berhasil diterapkan.');
+        });
+        
+        // Event listener untuk tombol rangkum
+        summarizeBtn.addEventListener('click', async () => {
+            if (urlContent.classList.contains('hidden') && textContent.classList.contains('hidden')) {
+                switchTab('url');
+                return;
+            }
+            
+            saveCurrentSettings();
+            
+            if (!urlContent.classList.contains('hidden')) {
+                // Mode URL
+                const url = urlInput.value.trim();
+                if (!url) {
+                    alert('Silakan masukkan URL website terlebih dahulu.');
+                    return;
+                }
+                
+                if (!isValidUrl(url)) {
+                    alert('URL tidak valid. Pastikan URL dimulai dengan http:// atau https://');
+                    return;
+                }
+                
+                await summarizeContent(url, 'url');
+            } else {
+                // Mode Text
+                const text = inputText.value.trim();
+                if (!text) {
+                    alert('Silakan masukkan teks terlebih dahulu.');
+                    return;
+                }
+                
+                if (text.length < 100) {
+                    alert('Teks terlalu pendek. Minimal 100 karakter untuk hasil yang baik.');
+                    return;
+                }
+                
+                await summarizeContent(text, 'text');
+            }
+        });
+        
+        // Event listener untuk tombol reset
+        resetBtn.addEventListener('click', () => {
+            if (!urlContent.classList.contains('hidden')) {
+                urlInput.value = '';
+            } else if (!textContent.classList.contains('hidden')) {
+                inputText.value = '';
+                updateCharCount();
+            }
+            
+            resultContainer.classList.add('hidden');
+            currentSummary = null;
+        });
+        
+        // Event listener untuk tombol contoh
+        exampleBtn.addEventListener('click', () => {
+            exampleModal.classList.remove('hidden');
+        });
+        
+        // Event listener untuk item contoh
+        exampleItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const exampleUrl = item.querySelector('.example-url');
+                const exampleText = item.querySelector('.example-text');
+                
+                if (exampleUrl) {
+                    switchTab('url');
+                    urlInput.value = exampleUrl.value;
+                } else if (exampleText) {
+                    switchTab('text');
+                    inputText.value = exampleText.value;
+                    updateCharCount();
+                }
+                
+                exampleModal.classList.add('hidden');
+            });
+        });
+        
+        // Event listener untuk tombol simpan
+        saveBtn.addEventListener('click', () => {
+            if (!currentSummary) return;
+            
+            saveSummary(currentSummary);
+            showToast('Rangkuman berhasil disimpan!', 'success');
+        });
+        
+        // Event listener untuk tombol salin
+        copyBtn.addEventListener('click', () => {
+            if (!currentSummary) return;
+            
+            navigator.clipboard.writeText(currentSummary.text)
+                .then(() => {
+                    showToast('Rangkuman berhasil disalin ke clipboard!', 'success');
+                })
+                .catch(err => {
+                    console.error('Gagal menyalin teks: ', err);
+                    showToast('Gagal menyalin teks.', 'error');
+                });
+        });
+        
+        // Event listener untuk tombol bagikan
+        shareBtn.addEventListener('click', () => {
+            if (!currentSummary) return;
+            
+            // Generate a "share link" (in real app, this would be a real link)
+            // For demo, we'll create a base64 encoded version of the summary
+            const shareData = {
+                id: currentSummary.id,
+                title: currentSummary.title || 'Rangkuman',
+                text: currentSummary.text.substring(0, 500) // Limit for demo purposes
+            };
+            
+            const shareCode = btoa(JSON.stringify(shareData));
+            const shareUrl = `${window.location.origin}${window.location.pathname}?share=${shareCode}`;
+            
+            shareLink.value = shareUrl;
+            shareModal.classList.remove('hidden');
+        });
+        
+        // Event listener untuk tombol unduh
+        downloadBtn.addEventListener('click', () => {
+            if (!currentSummary) return;
+            
+            // Set default filename based on source or title
+            fileName.value = currentSummary.title ? 
+                currentSummary.title.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 
+                'rangkuman_' + new Date().toISOString().slice(0, 10);
+            
+            downloadModal.classList.remove('hidden');
+        });
+        
+        // Event listeners untuk format unduhan
+        downloadPdf.addEventListener('click', () => selectDownloadFormat('pdf'));
+        downloadMarkdown.addEventListener('click', () => selectDownloadFormat('md'));
+        downloadTxt.addEventListener('click', () => selectDownloadFormat('txt'));
+        downloadHtml.addEventListener('click', () => selectDownloadFormat('html'));
+        
+        // Event listener untuk tombol mulai unduh
+        downloadStart.addEventListener('click', () => {
+            if (!currentSummary || !fileName.value) return;
+            
+            downloadSummary(currentSummary, fileName.value, selectedFormat);
+            downloadModal.classList.add('hidden');
+        });
+        
+        // Event listener untuk tombol ekspor semua
+        exportAllBtn.addEventListener('click', exportAllSummaries);
+        
+        // Event listener untuk tombol hapus semua
+        clearAllBtn.addEventListener('click', () => {
+            if (confirm('Anda yakin ingin menghapus semua rangkuman tersimpan? Tindakan ini tidak dapat dibatalkan.')) {
+                localStorage.removeItem('websiteSummaries');
+                loadSavedSummaries();
+                showToast('Semua rangkuman telah dihapus.', 'info');
+            }
+        });
+        
+        // Event listener untuk kotak pencarian
+        searchSummaries.addEventListener('input', () => {
+            const searchTerm = searchSummaries.value.toLowerCase().trim();
+            filterSavedSummaries(searchTerm);
+        });
+        
+        // Event listener untuk tombol tutup pada modal share
+        closeShareModal.addEventListener('click', () => {
+            shareModal.classList.add('hidden');
+        });
+        
+        // Event listener untuk tombol salin link pada modal share
+        copyShareLink.addEventListener('click', () => {
+            shareLink.select();
+            document.execCommand('copy');
+            showToast('Link berhasil disalin!', 'success');
+        });
+        
+        // Event listener untuk tombol tutup pada modal download
+        closeDownloadModal.addEventListener('click', () => {
+            downloadModal.classList.add('hidden');
+        });
+        
+        // Event listener untuk tombol generate QR code
+        generateQR.addEventListener('click', () => {
+            qrCodeContainer.classList.remove('hidden');
+            generateQRCode(shareLink.value);
+        });
+        
+        // Event listener untuk tombol share pada modal
+        shareBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const platform = btn.getAttribute('data-platform');
+                shareTo(platform, shareLink.value, currentSummary?.title || 'Rangkuman');
+            });
+        });
+        
+        // Event listener untuk tombol tutorial
+        showTutorialBtn.addEventListener('click', () => {
+            tutorialModal.classList.remove('hidden');
+        });
+        
+        // Event listener untuk tombol tutup pada modal tutorial
+        closeTutorialModal.addEventListener('click', () => {
+            tutorialModal.classList.add('hidden');
+        });
+        
+        // Event listener untuk tombol tutup pada modal tutorial (tombol mengerti)
+        closeTutorial.addEventListener('click', () => {
+            if (dontShowAgain.checked) {
+                localStorage.setItem('dontShowTutorial', 'true');
+            }
+            tutorialModal.classList.add('hidden');
+        });
+        
+        // Event listener untuk tombol tutup pada modal example
+        closeExampleModal.addEventListener('click', () => {
+            exampleModal.classList.add('hidden');
+        });
+        
+        // Event listener untuk tombol tutup pada modal example (tombol tutup)
+        closeExamples.addEventListener('click', () => {
+            exampleModal.classList.add('hidden');
+        });
+        
+        // Event listener untuk tombol feedback
+        feedbackBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const rating = parseInt(btn.getAttribute('data-rating'));
+                if (!currentSummary) return;
+                
+                // Update stars UI
+                feedbackBtns.forEach((b, index) => {
+                    const star = b.querySelector('i');
+                    if (index < rating) {
+                        star.classList.remove('far');
+                        star.classList.add('fas');
+                        star.classList.add('text-yellow-500');
+                    } else {
+                        star.classList.add('far');
+                        star.classList.remove('fas');
+                        star.classList.remove('text-yellow-500');
+                    }
+                });
+                
+                // Save the rating
+                if (currentSummary) {
+                    currentSummary.rating = rating;
+                    // If the summary is saved, update it in storage
+                    updateSavedSummaryRating(currentSummary.id, rating);
+                }
+                
+                showToast('Terima kasih atas penilaian Anda!', 'success');
+            });
+        });
+        
+        // Load saved summaries on page load
+        loadSavedSummaries();
+        
+        // Escape key to close all modals
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                shareModal.classList.add('hidden');
+                downloadModal.classList.add('hidden');
+                tutorialModal.classList.add('hidden');
+                exampleModal.classList.add('hidden');
+            }
+        });
+        
+        // Click outside to close modals
+        window.addEventListener('click', (e) => {
+            if (e.target === shareModal) shareModal.classList.add('hidden');
+            if (e.target === downloadModal) downloadModal.classList.add('hidden');
+            if (e.target === tutorialModal) tutorialModal.classList.add('hidden');
+            if (e.target === exampleModal) exampleModal.classList.add('hidden');
+        });
+        
+        // Fungsi untuk beralih antar tab
+        function switchTab(tab) {
+            // Reset active states
+            [tabUrl, tabText, tabSettings].forEach(t => t.classList.remove('tab-active'));
+            [urlContent, textContent, settingsContent].forEach(c => c.classList.add('hidden'));
+            
+            // Set active tab
+            if (tab === 'url') {
+                tabUrl.classList.add('tab-active');
+                urlContent.classList.remove('hidden');
+            } else if (tab === 'text') {
+                tabText.classList.add('tab-active');
+                textContent.classList.remove('hidden');
+            } else if (tab === 'settings') {
+                tabSettings.classList.add('tab-active');
+                settingsContent.classList.remove('hidden');
+            }
+        }
+        
+        // Fungsi untuk memperbarui hitungan karakter
+        function updateCharCount() {
+            const length = inputText.value.length;
+            charCount.textContent = `${length} karakter`;
+            
+            if (length < 100) {
+                charCount.classList.remove('text-green-500');
+                charCount.classList.add('text-gray-500');
+            } else {
+                charCount.classList.remove('text-gray-500');
+                charCount.classList.add('text-green-500');
+            }
+        }
+        
+        // Fungsi untuk validasi URL
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+        
+        // Fungsi untuk menerapkan pengaturan saat ini ke UI
+        function applyCurrentSettings() {
+            languageSelect.value = currentSettings.language;
+            styleSelect.value = currentSettings.style;
+            maxLengthInput.value = currentSettings.maxLength;
+            maxLengthValue.textContent = currentSettings.maxLength;
+            useMarkdown.checked = currentSettings.useMarkdown;
+            includeConclusion.checked = currentSettings.includeConclusion;
+            detectClaims.checked = currentSettings.detectClaims;
+        }
+        
+        // Fungsi untuk menyimpan pengaturan saat ini
+        function saveCurrentSettings() {
+            currentSettings = {
+                language: languageSelect.value,
+                style: styleSelect.value,
+                maxLength: parseInt(maxLengthInput.value),
+                useMarkdown: useMarkdown.checked,
+                includeConclusion: includeConclusion.checked,
+                detectClaims: detectClaims.checked
+            };
+            
+            localStorage.setItem('summarizerSettings', JSON.stringify(currentSettings));
+        }
+        
+        // Fungsi untuk memperbarui prompt berdasarkan pengaturan
+        function updatePromptFromSettings() {
+            const language = languageSelect.value;
+            const style = styleSelect.value;
+            
+            if (defaultPrompts[language] && defaultPrompts[language][style]) {
+                advancedPrompt.value = defaultPrompts[language][style];
+            }
+        }
+        
+        // Fungsi untuk merangkum konten
+        async function summarizeContent(content, type) {
+            // Show loading and hide results
+            loadingContainer.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+            
+            // Reset progress bar
+            progressBar.style.width = '0%';
+            
+            // Show a random tip
+            randomTip.textContent = randomTips[Math.floor(Math.random() * randomTips.length)];
+            
+            // Simulate progress bar
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 5;
+                if (progress > 95) progress = 95;
+                progressBar.style.width = `${progress}%`;
+            }, 300);
+            
+            try {
+                const language = currentSettings.language;
+                const style = currentSettings.style;
+                const maxLength = currentSettings.maxLength;
+                const useMarkdownFormat = currentSettings.useMarkdown;
+                const includeConclusion = currentSettings.includeConclusion;
+                const detectClaims = currentSettings.detectClaims;
+                
+                let prompt = advancedPrompt.value.trim();
+                
+                if (!prompt) {
+                    prompt = defaultPrompts[language][style];
+                }
+                
+                // Add additional instructions based on settings
+                let systemPrompt = language === 'id' ?
+                    `Kamu adalah asisten AI yang ahli dalam merangkum konten dengan komprehensif, akurat, dan mudah dibaca.` :
+                    `You are an AI assistant expert in summarizing content comprehensively, accurately, and in an easy-to-read format.`;
+                
+                // Add formatting instructions
+                if (useMarkdownFormat) {
+                    systemPrompt += language === 'id' ?
+                        ` Gunakan format Markdown untuk strukturisasi (headings, bold, lists).` :
+                        ` Use Markdown formatting for structure (headings, bold, lists).`;
+                }
+                
+                // Add length constraint
+                systemPrompt += language === 'id' ?
+                    ` Batasi ringkasan hingga maksimal ${maxLength} kata.` :
+                    ` Limit the summary to a maximum of ${maxLength} words.`;
+                
+                // Add conclusion instruction
+                if (includeConclusion) {
+                    systemPrompt += language === 'id' ?
+                        ` Sertakan bagian kesimpulan di akhir.` :
+                        ` Include a conclusion section at the end.`;
+                }
+                
+                // Add claims detection instruction
+                if (detectClaims) {
+                    systemPrompt += language === 'id' ?
+                        ` Identifikasi dan evaluasi klaim utama dalam konten.` :
+                        ` Identify and evaluate the main claims in the content.`;
+                }
+                
+                // Construct message for the API
+                const messages = [
+                    {
+                        "role": "system",
+                        "content": systemPrompt
+                    },
+                    {
+                        "role": "user",
+                        "content": type === 'url' ? 
+                            `${prompt}\n\nURL: ${content}` : 
+                            `${prompt}\n\nTeks yang akan dirangkum:\n${content}`
+                    }
+                ];
+                
+                const startTime = performance.now();
+                
+                // Make API request to Groq
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        "messages": messages,
+                        "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+                        "temperature": 0.7,
+                        "max_completion_tokens": 4000,
+                        "top_p": 1,
+                        "stream": false,
+                        "stop": null
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const summaryText = data.choices[0].message.content;
+                const endTime = performance.now();
+                const processingTime = ((endTime - startTime) / 1000).toFixed(1);
+                
+                // Complete progress bar animation
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
+                
+                setTimeout(() => {
+                    // Hide loading and display results after a small delay
+                    loadingContainer.classList.add('hidden');
+                    
+                    // Extract title from the summary (first line or heading)
+                    const title = extractTitleFromSummary(summaryText);
+                    
+                    // Count words in summary
+                    const wordCount = countWords(summaryText);
+                    
+                    // Calculate reading time (average 200 words per minute)
+                    const readingTime = Math.ceil(wordCount / 200);
+                    
+                    // Display the summary
+                    displaySummary({
+                        text: summaryText,
+                        title: title,
+                        source: type === 'url' ? content : 'Teks',
+                        language: language === 'id' ? 'Bahasa Indonesia' : 'English',
+                        type: getReadableStyle(style),
+                        processingTime: processingTime,
+                        wordCount: wordCount,
+                        readingTime: readingTime,
+                        contentType: type
+                    });
+                }, 500);
+            } catch (error) {
+                console.error('Error:', error);
+                clearInterval(progressInterval);
+                loadingContainer.classList.add('hidden');
+                showToast(`Terjadi kesalahan: ${error.message}`, 'error');
+            }
+        }
+        
+        // Fungsi untuk mendapatkan nama gaya yang dapat dibaca
+        function getReadableStyle(style) {
+            const styles = {
+                comprehensive: 'Komprehensif',
+                concise: 'Ringkas',
+                bullet: 'Poin-poin',
+                academic: 'Akademis',
+                simplified: 'Disederhanakan'
+            };
+            
+            return styles[style] || style;
+        }
+        
+        // Fungsi untuk menghitung jumlah kata
+        function countWords(text) {
+            return text.split(/\s+/).filter(word => word.length > 0).length;
+        }
+        
+        // Fungsi untuk mengekstrak judul dari ringkasan
+        function extractTitleFromSummary(text) {
+            // Try to get the first heading
+            const headingMatch = text.match(/^#\s+(.+?)$|^(.+?)\n=/m);
+            if (headingMatch) {
+                return headingMatch[1] || headingMatch[2];
+            }
+            
+            // Otherwise use the first line
+            const firstLine = text.split('\n')[0];
+            if (firstLine.length > 3 && firstLine.length < 100) {
+                return firstLine;
+            }
+            
+            // Default fallback
+            return 'Ringkasan';
+        }
+        
+        // Fungsi untuk menampilkan hasil rangkuman
+        function displaySummary(summary) {
+            const formattedText = formatSummaryText(summary.text);
+            summaryResult.innerHTML = formattedText;
+            
+            summaryStats.textContent = `${summary.wordCount} kata · Waktu baca: ${summary.readingTime} menit`;
+            summaryLanguage.textContent = summary.language;
+            summaryType.textContent = `Ringkasan ${summary.type}`;
+            summaryTime.textContent = `Waktu Pemrosesan: ${summary.processingTime}s`;
+            
+            if (summary.contentType === 'url') {
+                summarySource.innerHTML = `<i class="fas fa-link mr-1"></i> ${summary.source}`;
+            } else {
+                summarySource.innerHTML = `<i class="fas fa-file-alt mr-1"></i> Teks`;
+            }
+            
+            const now = new Date();
+            const formattedDate = now.toLocaleString();
+            summaryDate.textContent = formattedDate;
+            
+            // Reset feedback stars
+            feedbackBtns.forEach(btn => {
+                const star = btn.querySelector('i');
+                star.classList.add('far');
+                star.classList.remove('fas');
+                star.classList.remove('text-yellow-500');
+            });
+            
+            resultContainer.classList.remove('hidden');
+            
+            // Scroll to the result container
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // Simpan hasil rangkuman saat ini
+            currentSummary = {
+                id: Date.now().toString(),
+                title: summary.title,
+                text: summary.text,
+                source: summary.source,
+                timestamp: formattedDate,
+                language: summary.language,
+                type: summary.type,
+                wordCount: summary.wordCount,
+                contentType: summary.contentType
+            };
+        }
+        
+        // Fungsi untuk memformat teks ringkasan dengan markdown
+        function formatSummaryText(text) {
+            // Convert markdown to HTML
+            return marked.parse(text);
+        }
+        
+        // Fungsi untuk menyimpan rangkuman ke localStorage
+        function saveSummary(summary) {
+            let savedSummaries = JSON.parse(localStorage.getItem('websiteSummaries') || '[]');
+            savedSummaries.push(summary);
+            localStorage.setItem('websiteSummaries', JSON.stringify(savedSummaries));
+            
+            loadSavedSummaries();
+        }
+        
+        // Fungsi untuk memperbarui rating ringkuman yang tersimpan
+        function updateSavedSummaryRating(id, rating) {
+            let savedSummaries = JSON.parse(localStorage.getItem('websiteSummaries') || '[]');
+            const index = savedSummaries.findIndex(s => s.id === id);
+            
+            if (index !== -1) {
+                savedSummaries[index].rating = rating;
+                localStorage.setItem('websiteSummaries', JSON.stringify(savedSummaries));
+            }
+        }
+        
+        // Fungsi untuk memuat rangkuman dari localStorage
+        function loadSavedSummaries() {
+            const savedSummaries = JSON.parse(localStorage.getItem('websiteSummaries') || '[]');
+            
+            if (savedSummaries.length === 0) {
+                noSummaries.classList.remove('hidden');
+                summariesList.innerHTML = '';
+                summariesList.appendChild(noSummaries);
+                return;
+            }
+            
+            noSummaries.classList.add('hidden');
+            summariesList.innerHTML = '';
+            
+            // Sort by newest first
+            savedSummaries.sort((a, b) => b.id - a.id);
+            
+            savedSummaries.forEach(summary => {
+                const card = document.createElement('div');
+                card.className = 'border border-gray-200 rounded-lg p-4 hover:shadow-md transition';
+                
+                const title = summary.title || (summary.contentType === 'url' ? extractDomain(summary.source) : 'Ringkasan Teks');
+                const displayTitle = title.length > 40 ? title.substring(0, 40) + '...' : title;
+                
+                let sourceDisplay = '';
+                if (summary.contentType === 'url') {
+                    const domain = extractDomain(summary.source);
+                    sourceDisplay = `<span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">${domain}</span>`;
+                } else {
+                    sourceDisplay = `<span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Teks</span>`;
+                }
+                
+                // Format the rating stars if available
+                let ratingHtml = '';
+                if (summary.rating) {
+                    ratingHtml = '<div class="flex mt-1">';
+                    for (let i = 1; i <= 5; i++) {
+                        if (i <= summary.rating) {
+                            ratingHtml += '<i class="fas fa-star text-yellow-500 text-xs"></i>';
+                        } else {
+                            ratingHtml += '<i class="far fa-star text-gray-300 text-xs"></i>';
+                        }
+                    }
+                    ratingHtml += '</div>';
+                }
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-medium text-gray-800">${displayTitle}</h3>
+                            <div class="flex items-center mt-1 mb-2">
+                                ${sourceDisplay}
+                                <span class="text-xs text-gray-500 ml-2">${summary.timestamp}</span>
+                            </div>
+                            ${ratingHtml}
+                        </div>
+                        <div class="flex space-x-1">
+                            <button class="view-btn p-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs rounded transition tooltip" data-id="${summary.id}">
+                                <i class="fas fa-eye"></i>
+                                <span class="tooltiptext">Lihat</span>
+                            </button>
+                            <button class="delete-btn p-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded transition tooltip" data-id="${summary.id}">
+                                <i class="fas fa-trash-alt"></i>
+                                <span class="tooltiptext">Hapus</span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-sm mt-1 line-clamp-2">${summary.text.substring(0, 150).replace(/[#*_]/g, '')}...</p>
+                    <div class="flex items-center justify-between mt-2 text-xs text-gray-500">
+                        <span>${summary.wordCount} kata · ${Math.ceil(summary.wordCount / 200)} menit</span>
+                        <span>${summary.language} · ${summary.type}</span>
+                    </div>
+                `;
+                
+                summariesList.appendChild(card);
+                
+                // Add event listeners to view and delete buttons
+                card.querySelector('.view-btn').addEventListener('click', () => viewSummary(summary.id));
+                card.querySelector('.delete-btn').addEventListener('click', () => deleteSummary(summary.id));
+            });
+        }
+        
+        // Fungsi untuk memfilter rangkuman tersimpan berdasarkan kata kunci
+        function filterSavedSummaries(searchTerm) {
+            if (!searchTerm) {
+                loadSavedSummaries();
+                return;
+            }
+            
+            const savedSummaries = JSON.parse(localStorage.getItem('websiteSummaries') || '[]');
+            const filteredSummaries = savedSummaries.filter(summary => {
+                return (
+                    (summary.title && summary.title.toLowerCase().includes(searchTerm)) ||
+                    summary.text.toLowerCase().includes(searchTerm) ||
+                    summary.source.toLowerCase().includes(searchTerm)
+                );
+            });
+            
+            if (filteredSummaries.length === 0) {
+                summariesList.innerHTML = `
+                    <div class="text-gray-500 italic p-4 text-center">
+                        <i class="fas fa-search text-gray-300 text-2xl mb-2"></i>
+                        <p>Tidak ada hasil yang ditemukan untuk "${searchTerm}"</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            summariesList.innerHTML = '';
+            
+            // Sort by newest first
+            filteredSummaries.sort((a, b) => b.id - a.id);
+            
+            filteredSummaries.forEach(summary => {
+                const card = document.createElement('div');
+                card.className = 'border border-gray-200 rounded-lg p-4 hover:shadow-md transition';
+                
+                const title = summary.title || (summary.contentType === 'url' ? extractDomain(summary.source) : 'Ringkasan Teks');
+                const displayTitle = title.length > 40 ? title.substring(0, 40) + '...' : title;
+                
+                let sourceDisplay = '';
+                if (summary.contentType === 'url') {
+                    const domain = extractDomain(summary.source);
+                    sourceDisplay = `<span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">${domain}</span>`;
+                } else {
+                    sourceDisplay = `<span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Teks</span>`;
+                }
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-medium text-gray-800">${displayTitle}</h3>
+                            <div class="flex items-center mt-1">
+                                ${sourceDisplay}
+                                <span class="text-xs text-gray-500 ml-2">${summary.timestamp}</span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-1">
+                            <button class="view-btn p-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs rounded transition tooltip" data-id="${summary.id}">
+                                <i class="fas fa-eye"></i>
+                                <span class="tooltiptext">Lihat</span>
+                            </button>
+                            <button class="delete-btn p-1.5 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded transition tooltip" data-id="${summary.id}">
+                                <i class="fas fa-trash-alt"></i>
+                                <span class="tooltiptext">Hapus</span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-sm mt-2 line-clamp-2">${summary.text.substring(0, 150).replace(/[#*_]/g, '')}...</p>
+                    <div class="flex items-center justify-between mt-2 text-xs text-gray-500">
+                        <span>${summary.wordCount} kata · ${Math.ceil(summary.wordCount / 200)} menit</span>
+                        <span>${summary.language} · ${summary.type}</span>
+                    </div>
+                `;
+                
+                summariesList.appendChild(card);
+                
+                // Add event listeners to view and delete buttons
+                card.querySelector('.view-btn').addEventListener('click', () => viewSummary(summary.id));
+                card.querySelector('.delete-btn').addEventListener('click', () => deleteSummary(summary.id));
+            });
+        }
+        
+        // Fungsi untuk melihat rangkuman tersimpan
+        function viewSummary(id) {
+            const savedSummaries = JSON.parse(localStorage.getItem('websiteSummaries') || '[]');
+            const summary = savedSummaries.find(s => s.id === id);
+            
+            if (summary) {
+                // Set current summary
+                currentSummary = summary;
+                
+                // Display the summary
+                const formattedText = formatSummaryText(summary.text);
+                summaryResult.innerHTML = formattedText;
+                
+                summaryStats.textContent = `${summary.wordCount} kata · Waktu baca: ${Math.ceil(summary.wordCount / 200)} menit`;
+                summaryLanguage.textContent = summary.language;
+                summaryType.textContent = `Ringkasan ${summary.type}`;
+                summaryTime.textContent = `Disimpan pada: ${summary.timestamp}`;
+                
+                if (summary.contentType === 'url') {
+                    summarySource.innerHTML = `<i class="fas fa-link mr-1"></i> ${summary.source}`;
+                } else {
+                    summarySource.innerHTML = `<i class="fas fa-file-alt mr-1"></i> Teks`;
+                }
+                
+                summaryDate.textContent = summary.timestamp;
+                
+                // Set rating stars if available
+                feedbackBtns.forEach((btn, index) => {
+                    const star = btn.querySelector('i');
+                    if (summary.rating && index < summary.rating) {
+                        star.classList.remove('far');
+                        star.classList.add('fas');
+                        star.classList.add('text-yellow-500');
+                    } else {
+                        star.classList.add('far');
+                        star.classList.remove('fas');
+                        star.classList.remove('text-yellow-500');
+                    }
+                });
+                
+                resultContainer.classList.remove('hidden');
+                
+                // Scroll to the result container
+                resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        
+        // Fungsi untuk menghapus rangkuman tersimpan
+        function deleteSummary(id) {
+            if (confirm('Anda yakin ingin menghapus rangkuman ini?')) {
+                let savedSummaries = JSON.parse(localStorage.getItem('websiteSummaries') || '[]');
+                savedSummaries = savedSummaries.filter(s => s.id !== id);
+                localStorage.setItem('websiteSummaries', JSON.stringify(savedSummaries));
+                
+                loadSavedSummaries();
+                showToast('Rangkuman berhasil dihapus.', 'info');
+                
+                // If current summary is the one deleted, hide the result container
+                if (currentSummary && currentSummary.id === id) {
+                    resultContainer.classList.add('hidden');
+                    currentSummary = null;
+                }
+            }
+        }
+        
+        // Function to extract domain from URL
+        function extractDomain(url) {
+            try {
+                const domain = new URL(url).hostname;
+                return domain.replace('www.', '');
+            } catch (_) {
+                return url;
+            }
+        }
+        
+        // Function to select download format
+        function selectDownloadFormat(format) {
+            selectedFormat = format;
+            
+            // Update UI to show selected format
+            [downloadPdf, downloadMarkdown, downloadTxt, downloadHtml].forEach(btn => {
+                btn.classList.remove('bg-blue-50', 'border-blue-300');
+            });
+            
+            if (format === 'pdf') {
+                downloadPdf.classList.add('bg-blue-50', 'border-blue-300');
+            } else if (format === 'md') {
+                downloadMarkdown.classList.add('bg-blue-50', 'border-blue-300');
+            } else if (format === 'txt') {
+                downloadTxt.classList.add('bg-blue-50', 'border-blue-300');
+            } else if (format === 'html') {
+                downloadHtml.classList.add('bg-blue-50', 'border-blue-300');
+            }
+        }
+        
+        // Function to download summary
+        function downloadSummary(summary, filename, format) {
+            if (!summary) return;
+            
+            let content = '';
+            let mimeType = '';
+            let fileExtension = '';
+            
+            // Get current date for metadata
+            const now = new Date();
+            const dateString = now.toLocaleDateString();
+            const timeString = now.toLocaleTimeString();
+            
+            if (format === 'pdf') {
+                // For PDF, we'll use jsPDF
+                const doc = new jsPDF();
+                
+                // Set title
+                doc.setFontSize(16);
+                doc.text(summary.title || 'Ringkasan', 20, 20);
+                
+                // Add metadata
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Sumber: ${summary.source}`, 20, 30);
+                doc.text(`Tanggal: ${dateString} ${timeString}`, 20, 35);
+                doc.text(`Bahasa: ${summary.language} - Gaya: ${summary.type}`, 20, 40);
+                
+                // Add content
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                
+                // Split text into lines to fit on page
+                const textLines = doc.splitTextToSize(summary.text, 170);
+                doc.text(textLines, 20, 50);
+                
+                doc.save(`${filename}.pdf`);
+                return;
+            } else if (format === 'md') {
+                // For Markdown
+                content = `# ${summary.title || 'Ringkasan'}\n\n`;
+                content += `> **Sumber**: ${summary.source}  \n`;
+                content += `> **Tanggal**: ${dateString} ${timeString}  \n`;
+                content += `> **Bahasa**: ${summary.language} - **Gaya**: ${summary.type}  \n\n`;
+                content += summary.text;
+                
+                mimeType = 'text/markdown';
+                fileExtension = 'md';
+            } else if (format === 'txt') {
+                // For Plain Text
+                content = `${summary.title || 'Ringkasan'}\n\n`;
+                content += `Sumber: ${summary.source}\n`;
+                content += `Tanggal: ${dateString} ${timeString}\n`;
+                content += `Bahasa: ${summary.language} - Gaya: ${summary.type}\n\n`;
+                content += summary.text.replace(/#+\s/g, '').replace(/\*\*/g, '').replace(/\*/g, '');
+                
+                mimeType = 'text/plain';
+                fileExtension = 'txt';
+            } else if (format === 'html') {
+                // For HTML
+                content = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${summary.title || 'Ringkasan'}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            color: #333;
+        }
+        .metadata {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+        }
+        h1 {
+            color: #1a56db;
+        }
+        pre {
+            background-color: #f7fafc;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>${summary.title || 'Ringkasan'}</h1>
+    <div class="metadata">
+        <p><strong>Sumber:</strong> ${summary.source}</p>
+        <p><strong>Tanggal:</strong> ${dateString} ${timeString}</p>
+        <p><strong>Bahasa:</strong> ${summary.language} - <strong>Gaya:</strong> ${summary.type}</p>
+    </div>
+    <div class="content">
+        ${marked.parse(summary.text)}
+    </div>
+</body>
+</html>`;
+                
+                mimeType = 'text/html';
+                fileExtension = 'html';
+            }
+            
+            // Create blob and download
+            const blob = new Blob([content], { type: mimeType });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${filename}.${fileExtension}`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+        
+        // Function to generate QR code
+        function generateQRCode(text) {
+            // In a real application, you'd use a QR code library
+            // For this demo, we'll just create a placeholder
+            const qrCode = document.getElementById('qrCode');
+            
+            qrCode.innerHTML = `
+                <div class="flex flex-col items-center justify-center">
+                    <div class="w-32 h-32 bg-gray-100 rounded flex items-center justify-center">
+                        <i class="fas fa-qrcode text-gray-600 text-5xl"></i>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">QR Code demo</p>
+                </div>
+            `;
+        }
+        
+        // Function to share to different platforms
+        function shareTo(platform, url, title) {
+            let shareUrl;
+            
+            switch (platform) {
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+                    break;
+                case 'twitter':
+                    shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
+                    break;
+                case 'whatsapp':
+                    shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(title + ' ' + url)}`;
+                    break;
+                case 'linkedin':
+                    shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+                    break;
+                case 'email':
+                    shareUrl = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(url)}`;
+                    break;
+                default:
+                    shareUrl = null;
+            }
+            
+            if (shareUrl) {
+                window.open(shareUrl, '_blank');
+            }
+        }
+        
+        // Function to export all summaries
+        function exportAllSummaries() {
+            const savedSummaries = JSON.parse(localStorage.getItem('websiteSummaries') || '[]');
+            
+            if (savedSummaries.length === 0) {
+                showToast('Tidak ada ringkasan tersimpan untuk diekspor.', 'warning');
+                return;
+            }
+            
+            // Create a JSON file with all summaries
+            const dataStr = JSON.stringify(savedSummaries, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `all_summaries_${new Date().toISOString().slice(0, 10)}.json`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            
+            showToast('Semua ringkasan berhasil diekspor!', 'success');
+        }
+        
+        // Function to show toast notifications
+        function showToast(message, type = 'info') {
+            // Check if toast container exists
+            let toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainer';
+                toastContainer.className = 'fixed bottom-4 right-4 z-50 flex flex-col space-y-2';
+                document.body.appendChild(toastContainer);
+            }
+            
+            // Create toast
+            const toast = document.createElement('div');
+            let bgColor, textColor, icon;
+            
+            switch (type) {
+                case 'success':
+                    bgColor = 'bg-green-500';
+                    textColor = 'text-white';
+                    icon = '<i class="fas fa-check-circle mr-2"></i>';
+                    break;
+                case 'error':
+                    bgColor = 'bg-red-500';
+                    textColor = 'text-white';
+                    icon = '<i class="fas fa-exclamation-circle mr-2"></i>';
+                    break;
+                case 'warning':
+                    bgColor = 'bg-yellow-500';
+                    textColor = 'text-white';
+                    icon = '<i class="fas fa-exclamation-triangle mr-2"></i>';
+                    break;
+                default:
+                    bgColor = 'bg-blue-500';
+                    textColor = 'text-white';
+                    icon = '<i class="fas fa-info-circle mr-2"></i>';
+            }
+            
+            toast.className = `${bgColor} ${textColor} py-2 px-4 rounded-lg shadow-lg flex items-center justify-between max-w-xs transition transform duration-300 ease-in-out`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    ${icon}
+                    <span>${message}</span>
+                </div>
+                <button class="ml-2 focus:outline-none">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            // Add to container
+            toastContainer.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.classList.add('translate-y-0', 'opacity-100');
+            }, 10);
+            
+            // Close button
+            const closeBtn = toast.querySelector('button');
+            closeBtn.addEventListener('click', () => {
+                removeToast(toast);
+            });
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                removeToast(toast);
+            }, 5000);
+        }
+        
+        // Function to remove toast with animation
+        function removeToast(toast) {
+            toast.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
+        
+        // Markdown library (simplified for the example)
+        const marked = {
+            parse: function(text) {
+                if (!text) return '';
+                
+                // Basic markdown parsing
+                return text
+                    // Headers
+                    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+                    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                    // Bold
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    // Italic
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    // Bullet lists
+                    .replace(/^\* (.*$)/gm, '<li>$1</li>')
+                    .replace(/<\/li>\n<li>/g, '</li><li>')
+                    .replace(/<\/li>\n*$/, '</li>')
+                    .replace(/^<li>/, '<ul><li>')
+                    .replace(/<\/li>$/, '</li></ul>')
+                    // Numbered lists
+                    .replace(/^\d+\. (.*$)/gm, '<li>$1</li>')
+                    .replace(/<\/li>\n<li>/g, '</li><li>')
+                    .replace(/^<li>/, '<ol><li>')
+                    .replace(/<\/li>$/, '</li></ol>')
+                    // Links
+                    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-600 hover:underline">$1</a>')
+                    // Blockquotes
+                    .replace(/^> (.*$)/gm, '<blockquote class="border-l-4 border-gray-300 pl-4 py-2 my-2 text-gray-700">$1</blockquote>')
+                    // Code
+                    .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-red-600">$1</code>')
+                    // Paragraphs
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/^(?!<h|<ul|<ol|<blockquote|<p)(.+)/gm, '<p>$1</p>');
+            }
+        };
+        
+        // Simplified jsPDF for the example
+        const jsPDF = function() {
+            return {
+                setFontSize: function() {},
+                setTextColor: function() {},
+                text: function() {},
+                splitTextToSize: function(text) { return text.split('\n'); },
+                save: function(filename) {
+                    console.log(`Saving PDF as ${filename}`);
+                    showToast(`PDF disimpan sebagai ${filename}`, 'success');
+                }
+            };
+        };
+    </script>
+</body>
+</html>
