@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Perolehan</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+    <div class="container mx-auto p-4 max-w-lg">
+        <div class="bg-white shadow-lg rounded-lg p-6 mt-4">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Kalkulator Perolehan</h2>
+                <div class="flex space-x-2">
+                    <button id="historyBtn" class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-md hover:bg-blue-200 transition">
+                        <i class="fas fa-history mr-1"></i> Riwayat
+                    </button>
+                    <button id="resetBtn" class="text-sm bg-red-100 text-red-700 px-3 py-1 rounded-md hover:bg-red-200 transition">
+                        <i class="fas fa-trash-alt mr-1"></i> Reset
+                    </button>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="input-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">SS Awal:</label>
+                    <div class="relative">
+                        <input type="text" id="ssAwal" placeholder="Contoh: 4.219.147.106" class="w-full px-3 py-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="absolute left-3 top-2.5 text-gray-500"><i class="fas fa-coins"></i></span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Before Spend:</label>
+                    <div class="relative">
+                        <input type="text" id="beforeSpend" placeholder="Contoh: 4.219.147.106" class="w-full px-3 py-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="absolute left-3 top-2.5 text-gray-500"><i class="fas fa-wallet"></i></span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">After Spend:</label>
+                    <div class="relative">
+                        <input type="text" id="afterSpend" placeholder="Contoh: 4.219.147.106" class="w-full px-3 py-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="absolute left-3 top-2.5 text-gray-500"><i class="fas fa-wallet"></i></span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">SS Akhir:</label>
+                    <div class="relative">
+                        <input type="text" id="ssAkhir" placeholder="Contoh: 4.219.147.106" class="w-full px-3 py-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="absolute left-3 top-2.5 text-gray-500"><i class="fas fa-coins"></i></span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Perolehan Sebelumnya:</label>
+                    <div class="relative">
+                        <input type="text" id="perolehanSebelumnya" placeholder="Contoh: 4.219.147.106" class="w-full px-3 py-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="absolute left-3 top-2.5 text-gray-500"><i class="fas fa-chart-line"></i></span>
+                    </div>
+                </div>
+
+                <button id="calculateBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200 mt-2 flex items-center justify-center">
+                    <i class="fas fa-calculator mr-2"></i> Hitung
+                </button>
+            </div>
+
+            <div class="mt-6 p-4 bg-gray-100 rounded-md shadow-inner" id="result">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                    <i class="fas fa-chart-bar mr-2 text-blue-600"></i> Hasil Perhitungan
+                </h3>
+                
+                <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span class="font-medium text-gray-700">Total Spend:</span>
+                    <div class="flex items-center">
+                        <span id="totalSpend" class="mr-2 text-lg font-semibold">0</span>
+                        <button class="copy-btn bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-xs" 
+                                onclick="copyToClipboard('totalSpend')">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span class="font-medium text-gray-700">Perolehan:</span>
+                    <div class="flex items-center">
+                        <span id="perolehan" class="mr-2 text-lg font-semibold">0</span>
+                        <button class="copy-btn bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-xs" 
+                                onclick="copyToClipboard('perolehan')">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between py-2">
+                    <span class="font-medium text-gray-700">Total Perolehan:</span>
+                    <div class="flex items-center">
+                        <span id="totalPerolehan" class="mr-2 text-xl font-bold text-blue-600">0</span>
+                        <button class="copy-btn bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-xs" 
+                                onclick="copyToClipboard('totalPerolehan')">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mt-4 flex justify-end">
+                    <button id="saveHistoryBtn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-1.5 px-3 rounded-md text-sm transition duration-200 flex items-center">
+                        <i class="fas fa-save mr-1"></i> Simpan ke Riwayat
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Riwayat -->
+        <div id="historyModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center hidden">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-xl font-bold text-gray-800">Riwayat Perhitungan</h3>
+                    <button id="closeHistoryBtn" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="overflow-y-auto p-4 flex-grow" id="historyList">
+                    <!-- Riwayat akan dimasukkan di sini -->
+                    <div class="text-center text-gray-500 py-8" id="emptyHistoryMessage">
+                        <i class="fas fa-history text-4xl mb-3"></i>
+                        <p>Belum ada riwayat perhitungan</p>
+                    </div>
+                </div>
+                
+                <div class="p-4 border-t flex justify-between">
+                    <button id="clearHistoryBtn" class="bg-red-100 text-red-700 px-4 py-2 rounded-md hover:bg-red-200 transition flex items-center">
+                        <i class="fas fa-trash-alt mr-1"></i> Hapus Semua
+                    </button>
+                    <button id="exportHistoryBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition flex items-center">
+                        <i class="fas fa-download mr-1"></i> Export Data
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Toast Notifikasi -->
+        <div id="toast" class="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle mr-2"></i>
+                <span id="toastMessage">Berhasil disimpan!</span>
+            </div>
+        </div>
+        
+        <div class="text-center text-gray-500 text-sm mt-4">
+            © 2025 Kalkulator Perolehan - Semua data disimpan secara lokal di perangkat Anda
+        </div>
+    </div>
+
+    <script>
+        // Struktur data untuk menyimpan riwayat
+        let calculationHistory = [];
+        
+        // Fungsi untuk mengonversi string dengan format angka Indonesia ke number
+        function parseIDNumber(strNumber) {
+            if (!strNumber) return 0;
+            // Menghapus semua titik sebagai pemisah ribuan
+            const cleanedNumber = strNumber.replace(/\./g, '');
+            return parseFloat(cleanedNumber) || 0;
+        }
+
+        // Fungsi untuk memformat tampilan input dengan titik sebagai pemisah ribuan
+        function formatNumberInput(inputElement) {
+            inputElement.addEventListener('input', function(e) {
+                // Simpan posisi kursor
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                const valueLength = this.value.length;
+                
+                // Hapus semua karakter kecuali angka
+                let value = this.value.replace(/[^\d]/g, '');
+                
+                // Format angka dengan titik sebagai pemisah ribuan
+                if (value) {
+                    this.value = new Intl.NumberFormat('id-ID').format(parseInt(value)).replace(/,/g, '.');
+                } else {
+                    this.value = '';
+                }
+                
+                // Menyimpan ke localStorage
+                saveInputToLocalStorage();
+                
+                // Mengatur ulang posisi kursor dengan mempertimbangkan perbedaan panjang string
+                const newLength = this.value.length;
+                const diff = newLength - valueLength;
+                this.setSelectionRange(start + diff, end + diff);
+            });
+        }
+
+        // Fungsi untuk menyimpan input ke localStorage
+        function saveInputToLocalStorage() {
+            const data = {
+                ssAwal: document.getElementById('ssAwal').value,
+                beforeSpend: document.getElementById('beforeSpend').value,
+                afterSpend: document.getElementById('afterSpend').value,
+                ssAkhir: document.getElementById('ssAkhir').value,
+                perolehanSebelumnya: document.getElementById('perolehanSebelumnya').value,
+                totalSpend: document.getElementById('totalSpend').textContent,
+                perolehan: document.getElementById('perolehan').textContent,
+                totalPerolehan: document.getElementById('totalPerolehan').textContent
+            };
+            
+            localStorage.setItem('kalkulatorPerolehanData', JSON.stringify(data));
+        }
+
+        // Fungsi untuk memuat data dari localStorage
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('kalkulatorPerolehanData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                
+                document.getElementById('ssAwal').value = data.ssAwal || '';
+                document.getElementById('beforeSpend').value = data.beforeSpend || '';
+                document.getElementById('afterSpend').value = data.afterSpend || '';
+                document.getElementById('ssAkhir').value = data.ssAkhir || '';
+                document.getElementById('perolehanSebelumnya').value = data.perolehanSebelumnya || '';
+                
+                document.getElementById('totalSpend').textContent = data.totalSpend || '0';
+                document.getElementById('perolehan').textContent = data.perolehan || '0';
+                document.getElementById('totalPerolehan').textContent = data.totalPerolehan || '0';
+            }
+            
+            // Memuat riwayat perhitungan
+            const savedHistory = localStorage.getItem('kalkulatorPerolehanHistory');
+            if (savedHistory) {
+                calculationHistory = JSON.parse(savedHistory);
+            }
+        }
+
+        // Fungsi untuk menampilkan toast notifikasi
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            
+            toast.classList.remove('translate-y-10', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        // Fungsi untuk menyimpan perhitungan ke riwayat
+        function saveToHistory() {
+            const ssAwal = document.getElementById('ssAwal').value;
+            const beforeSpend = document.getElementById('beforeSpend').value;
+            const afterSpend = document.getElementById('afterSpend').value;
+            const ssAkhir = document.getElementById('ssAkhir').value;
+            const perolehanSebelumnya = document.getElementById('perolehanSebelumnya').value;
+            const totalSpend = document.getElementById('totalSpend').textContent;
+            const perolehan = document.getElementById('perolehan').textContent;
+            const totalPerolehan = document.getElementById('totalPerolehan').textContent;
+
+            // Buat entri riwayat baru
+            const historyEntry = {
+                id: Date.now(),
+                date: new Date().toLocaleString('id-ID'),
+                data: {
+                    ssAwal,
+                    beforeSpend,
+                    afterSpend,
+                    ssAkhir,
+                    perolehanSebelumnya,
+                    totalSpend,
+                    perolehan,
+                    totalPerolehan
+                }
+            };
+
+            // Tambahkan ke array riwayat
+            calculationHistory.unshift(historyEntry);
+            
+            // Batasi jumlah riwayat (opsional)
+            if (calculationHistory.length > 50) {
+                calculationHistory = calculationHistory.slice(0, 50);
+            }
+            
+            // Simpan ke localStorage
+            localStorage.setItem('kalkulatorPerolehanHistory', JSON.stringify(calculationHistory));
+            
+            // Tampilkan notifikasi
+            showToast('Perhitungan berhasil disimpan ke riwayat');
+            
+            // Perbarui tampilan riwayat jika sedang terbuka
+            if (!document.getElementById('historyModal').classList.contains('hidden')) {
+                renderHistoryList();
+            }
+        }
+
+        // Fungsi untuk menampilkan daftar riwayat
+        function renderHistoryList() {
+            const historyListElement = document.getElementById('historyList');
+            const emptyHistoryMessage = document.getElementById('emptyHistoryMessage');
+            
+            // Kosongkan konten saat ini kecuali pesan 'kosong'
+            while (historyListElement.firstChild && historyListElement.firstChild !== emptyHistoryMessage) {
+                historyListElement.removeChild(historyListElement.firstChild);
+            }
+            
+            if (calculationHistory.length === 0) {
+                emptyHistoryMessage.classList.remove('hidden');
+                return;
+            }
+            
+            emptyHistoryMessage.classList.add('hidden');
+            
+            // Render setiap item riwayat
+            calculationHistory.forEach((entry, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'bg-white p-3 rounded-lg shadow mb-3 border border-gray-200';
+                historyItem.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-xs text-gray-500">${entry.date}</span>
+                            <h4 class="font-semibold text-gray-800">Total Perolehan: ${entry.data.totalPerolehan}</h4>
+                        </div>
+                        <div class="flex space-x-1">
+                            <button class="load-history-btn bg-blue-100 hover:bg-blue-200 text-blue-700 p-1 rounded" 
+                                    data-id="${entry.id}" title="Muat data">
+                                <i class="fas fa-redo-alt"></i>
+                            </button>
+                            <button class="delete-history-btn bg-red-100 hover:bg-red-200 text-red-700 p-1 rounded" 
+                                    data-id="${entry.id}" title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="text-gray-600">SS Awal: <span class="font-medium">${entry.data.ssAwal || '0'}</span></div>
+                        <div class="text-gray-600">Before Spend: <span class="font-medium">${entry.data.beforeSpend || '0'}</span></div>
+                        <div class="text-gray-600">After Spend: <span class="font-medium">${entry.data.afterSpend || '0'}</span></div>
+                        <div class="text-gray-600">SS Akhir: <span class="font-medium">${entry.data.ssAkhir || '0'}</span></div>
+                        <div class="text-gray-600">Total Spend: <span class="font-medium">${entry.data.totalSpend}</span></div>
+                        <div class="text-gray-600">Perolehan: <span class="font-medium">${entry.data.perolehan}</span></div>
+                    </div>
+                `;
+                
+                historyListElement.appendChild(historyItem);
+            });
+            
+            // Tambahkan event listeners untuk tombol-tombol
+            document.querySelectorAll('.load-history-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    loadHistoryItem(id);
+                });
+            });
+            
+            document.querySelectorAll('.delete-history-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    deleteHistoryItem(id);
+                });
+            });
+        }
+
+        // Fungsi untuk memuat data dari item riwayat
+        function loadHistoryItem(id) {
+            const entry = calculationHistory.find(item => item.id === id);
+            if (!entry) return;
+            
+            document.getElementById('ssAwal').value = entry.data.ssAwal;
+            document.getElementById('beforeSpend').value = entry.data.beforeSpend;
+            document.getElementById('afterSpend').value = entry.data.afterSpend;
+            document.getElementById('ssAkhir').value = entry.data.ssAkhir;
+            document.getElementById('perolehanSebelumnya').value = entry.data.perolehanSebelumnya;
+            
+            document.getElementById('totalSpend').textContent = entry.data.totalSpend;
+            document.getElementById('perolehan').textContent = entry.data.perolehan;
+            document.getElementById('totalPerolehan').textContent = entry.data.totalPerolehan;
+            
+            // Simpan ke localStorage
+            saveInputToLocalStorage();
+            
+            // Tutup modal riwayat
+            document.getElementById('historyModal').classList.add('hidden');
+            
+            // Tampilkan notifikasi
+            showToast('Data riwayat berhasil dimuat');
+        }
+
+        // Fungsi untuk menghapus item riwayat
+        function deleteHistoryItem(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+                calculationHistory = calculationHistory.filter(item => item.id !== id);
+                localStorage.setItem('kalkulatorPerolehanHistory', JSON.stringify(calculationHistory));
+                renderHistoryList();
+                showToast('Data riwayat berhasil dihapus');
+            }
+        }
+
+        // Fungsi untuk mengekspor riwayat
+        function exportHistory() {
+            if (calculationHistory.length === 0) {
+                alert('Tidak ada data riwayat untuk diekspor');
+                return;
+            }
+            
+            // Format data untuk ekspor
+            let csvContent = 'data:text/csv;charset=utf-8,';
+            csvContent += 'Tanggal,SS Awal,Before Spend,After Spend,SS Akhir,Perolehan Sebelumnya,Total Spend,Perolehan,Total Perolehan\n';
+            
+            calculationHistory.forEach(entry => {
+                const row = [
+                    entry.date,
+                    entry.data.ssAwal.replace(/\./g, ''),
+                    entry.data.beforeSpend.replace(/\./g, ''),
+                    entry.data.afterSpend.replace(/\./g, ''),
+                    entry.data.ssAkhir.replace(/\./g, ''),
+                    entry.data.perolehanSebelumnya.replace(/\./g, ''),
+                    entry.data.totalSpend.replace(/\./g, ''),
+                    entry.data.perolehan.replace(/\./g, ''),
+                    entry.data.totalPerolehan.replace(/\./g, '')
+                ].join(',');
+                csvContent += row + '\n';
+            });
+            
+            // Buat link untuk download
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `perhitungan_perolehan_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Untuk perhitungan dan pemformatan
+        function calculate() {
+            // Mengambil nilai input dan mengonversinya
+            const ssAwal = parseIDNumber(document.getElementById('ssAwal').value);
+            const beforeSpend = parseIDNumber(document.getElementById('beforeSpend').value);
+            const afterSpend = parseIDNumber(document.getElementById('afterSpend').value);
+            const ssAkhir = parseIDNumber(document.getElementById('ssAkhir').value);
+            const perolehanSebelumnya = parseIDNumber(document.getElementById('perolehanSebelumnya').value);
+
+            // Menghitung total spend
+            const totalSpend = beforeSpend - afterSpend;
+
+            // Menghitung perolehan
+            const perolehan = (ssAkhir - ssAwal) + (beforeSpend - afterSpend);
+
+            // Menghitung total perolehan
+            const totalPerolehan = perolehan + perolehanSebelumnya;
+
+            // Menampilkan hasil dengan format angka Indonesia (menggunakan titik sebagai pemisah ribuan)
+            document.getElementById('totalSpend').textContent = new Intl.NumberFormat('id-ID').format(totalSpend).replace(/,/g, '.');
+            document.getElementById('perolehan').textContent = new Intl.NumberFormat('id-ID').format(perolehan).replace(/,/g, '.');
+            document.getElementById('totalPerolehan').textContent = new Intl.NumberFormat('id-ID').format(totalPerolehan).replace(/,/g, '.');
+            
+            // Simpan hasil ke localStorage
+            saveInputToLocalStorage();
+            
+            // Animasi hasil
+            const resultElement = document.getElementById('result');
+            resultElement.classList.add('bg-green-50');
+            setTimeout(() => {
+                resultElement.classList.remove('bg-green-50');
+            }, 500);
+            
+            // Tampilkan notifikasi
+            showToast('Perhitungan berhasil');
+        }
+
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            const textArea = document.createElement('textarea');
+            textArea.value = text.replace(/\./g, ''); // Menghapus titik saat menyalin
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            // Tampilkan notifikasi yang lebih elegan
+            const element = document.getElementById(elementId);
+            const originalText = element.textContent;
+            element.textContent = '✓ Disalin!';
+            element.classList.add('text-green-600');
+            
+            setTimeout(() => {
+                element.textContent = originalText;
+                element.classList.remove('text-green-600');
+            }, 1000);
+        }
+
+        // Inisialisasi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = [
+                document.getElementById('ssAwal'),
+                document.getElementById('beforeSpend'),
+                document.getElementById('afterSpend'),
+                document.getElementById('ssAkhir'),
+                document.getElementById('perolehanSebelumnya')
+            ];
+            
+            inputs.forEach(input => formatNumberInput(input));
+            
+            // Muat data dari localStorage saat halaman dimuat
+            loadFromLocalStorage();
+            
+            // Event listener untuk tombol calculate
+            document.getElementById('calculateBtn').addEventListener('click', calculate);
+            
+            // Event listener untuk tombol reset
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                if (confirm('Apakah Anda yakin ingin menghapus semua data?')) {
+                    localStorage.removeItem('kalkulatorPerolehanData');
+                    inputs.forEach(input => input.value = '');
+                    document.getElementById('totalSpend').textContent = '0';
+                    document.getElementById('perolehan').textContent = '0';
+                    document.getElementById('totalPerolehan').textContent = '0';
+                    showToast('Data berhasil direset');
+                }
+            });
+            
+            // Event listener untuk tombol simpan ke riwayat
+            document.getElementById('saveHistoryBtn').addEventListener('click', saveToHistory);
+            
+            // Event listener untuk tombol riwayat (buka modal)
+            document.getElementById('historyBtn').addEventListener('click', function() {
+                document.getElementById('historyModal').classList.remove('hidden');
+                renderHistoryList();
+            });
+            
+            // Event listener untuk tombol tutup modal riwayat
+            document.getElementById('closeHistoryBtn').addEventListener('click', function() {
+                document.getElementById('historyModal').classList.add('hidden');
+            });
+            
+            // Event listener untuk tombol hapus semua riwayat
+            document.getElementById('clearHistoryBtn').addEventListener('click', function() {
+                if (confirm('Apakah Anda yakin ingin menghapus semua riwayat?')) {
+                    calculationHistory = [];
+                    localStorage.setItem('kalkulatorPerolehanHistory', JSON.stringify(calculationHistory));
+                    renderHistoryList();
+                    showToast('Semua riwayat berhasil dihapus');
+                }
+            });
+            
+            // Event listener untuk tombol ekspor riwayat
+            document.getElementById('exportHistoryBtn').addEventListener('click', exportHistory);
+            
+            // Tutup modal jika klik di luar
+            window.addEventListener('click', function(event) {
+                const modal = document.getElementById('historyModal');
+                if (event.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+            
+            // Support tombol Enter untuk menghitung
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    calculate();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
