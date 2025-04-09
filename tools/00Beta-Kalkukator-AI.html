@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Perolehan</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <!-- Cropperjs - untuk cropping gambar -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+    <div class="container mx-auto p-4 max-w-lg">
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-gray-200 mb-4">
+            <button id="tabPerolehan" class="py-2 px-4 border-b-2 border-blue-500 text-blue-600 font-medium">
+                <i class="fas fa-calculator mr-1"></i> Perolehan
+            </button>
+            <button id="tabSpreadsheet" class="py-2 px-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium">
+                <i class="fas fa-table mr-1"></i> Spreadsheet
+            </button>
+            <button id="tabSettings" class="py-2 px-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium">
+                <i class="fas fa-cog mr-1"></i> Pengaturan
+            </button>
+        </div>
+
+        <!-- Tab Content: Perolehan -->
+        <div id="contentPerolehan" class="tab-content">
+            <div class="bg-white shadow-lg rounded-lg p-6 mt-4">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Kalkulator Perolehan</h2>
+                    <div class="flex space-x-2">
+                        <button id="scanBtn" class="text-sm bg-green-100 text-green-700 px-3 py-1 rounded-md hover:bg-green-200 transition">
+                            <i class="fas fa-camera mr-1"></i> Scan
+                        </button>
+                        <button id="historyBtn" class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-md hover:bg-blue-200 transition">
+                            <i class="fas fa-history mr-1"></i> Riwayat
+                        </button>
+                        <button id="resetBtn" class="text-sm bg-red-100 text-red-700 px-3 py-1 rounded-md hover:bg-red-200 transition">
+                            <i class="fas fa-trash-alt mr-1"></i> Reset
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="input-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">SS Awal:</label>
+                        <div class="relative">
+                            <input type="text" id="ssAwal" placeholder="Contoh: 4.219.147.106" class="w-full px-3 py-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <span class="absolute left-3 top-2.5 text-gray-500"><i class="fas fa-coins"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Before Spend:</label>
+                        <div class="relative">
+                            <input type="text" id="beforeSpend" placeholder="Contoh: 4.219.147.106" class="w-full px-3 py-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <span class="absolute left-3 top-2.5 text-gray-500"><i class="fas fa-wallet"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">After Spend:</label>
+                        <div class="relative">
+                            <input type="text" id="afterSpend" placeholder="Contoh: 4.219.147.106" class="w-full px-3 py-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <span class="absolute left-3 top-2.5 text-gray-500"><i class="fas fa-wallet"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">SS Akhir:</label>
+                        <div class="relative">
+                            <input type="text" id="ssAkhir" placeholder="Contoh: 4.219.147.106" class="w-full px-3 py-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <span class="absolute left-3 top-2.5 text-gray-500"><i class="fas fa-coins"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Perolehan Sebelumnya:</label>
+                        <div class="relative">
+                            <input type="text" id="perolehanSebelumnya" placeholder="Contoh: 4.219.147.106" class="w-full px-3 py-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <span class="absolute left-3 top-2.5 text-gray-500"><i class="fas fa-chart-line"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center mb-2">
+                        <input type="checkbox" id="kirimGroupCheckbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="kirimGroupCheckbox" class="ml-2 text-sm text-gray-700">
+                            Kirim hasil ke Grup Telegram
+                        </label>
+                    </div>
+
+                    <button id="calculateBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200 mt-2 flex items-center justify-center">
+                        <i class="fas fa-calculator mr-2"></i> Hitung
+                    </button>
+                </div>
+
+                <div class="mt-6 p-4 bg-gray-100 rounded-md shadow-inner" id="result">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-chart-bar mr-2 text-blue-600"></i> Hasil Perhitungan
+                    </h3>
+                    
+                    <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                        <span class="font-medium text-gray-700">Total Spend:</span>
+                        <div class="flex items-center">
+                            <span id="totalSpend" class="mr-2 text-lg font-semibold">0</span>
+                            <button class="copy-btn bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-xs" 
+                                    onclick="copyToClipboard('totalSpend')">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                        <span class="font-medium text-gray-700">Perolehan:</span>
+                        <div class="flex items-center">
+                            <span id="perolehan" class="mr-2 text-lg font-semibold">0</span>
+                            <button class="copy-btn bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-xs" 
+                                    onclick="copyToClipboard('perolehan')">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between py-2">
+                        <span class="font-medium text-gray-700">Total Perolehan:</span>
+                        <div class="flex items-center">
+                            <span id="totalPerolehan" class="mr-2 text-xl font-bold text-blue-600">0</span>
+                            <button class="copy-btn bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-xs" 
+                                    onclick="copyToClipboard('totalPerolehan')">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 flex justify-between">
+                        <button id="sendTelegramBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-1.5 px-3 rounded-md text-sm transition duration-200 flex items-center">
+                            <i class="fab fa-telegram-plane mr-1"></i> Kirim ke Telegram
+                        </button>
+                        <button id="saveHistoryBtn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-1.5 px-3 rounded-md text-sm transition duration-200 flex items-center">
+                            <i class="fas fa-save mr-1"></i> Simpan ke Riwayat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Spreadsheet Calculator -->
+        <div id="contentSpreadsheet" class="tab-content hidden">
+            <div class="bg-white shadow-lg rounded-lg p-6 mt-4">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Kalkulator Spreadsheet</h2>
+                    <div class="flex space-x-2">
+                        <button id="addRowBtn" class="text-sm bg-green-100 text-green-700 px-3 py-1 rounded-md hover:bg-green-200 transition">
+                            <i class="fas fa-plus mr-1"></i> Tambah Baris
+                        </button>
+                        <button id="resetSpreadsheetBtn" class="text-sm bg-red-100 text-red-700 px-3 py-1 rounded-md hover:bg-red-200 transition">
+                            <i class="fas fa-trash-alt mr-1"></i> Reset
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto mb-4">
+                    <table class="min-w-full border border-gray-200 rounded-lg" id="spreadsheetTable">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider border-b">#</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider border-b">Nilai</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider border-b">Operator</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider border-b">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spreadsheetBody">
+                            <!-- Initial two rows -->
+                            <tr class="spreadsheet-row hover:bg-gray-50 transition-colors">
+                                <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-500 row-number border-b">1</td>
+                                <td class="px-3 py-3 whitespace-nowrap border-b">
+                                    <input type="text" class="spreadsheet-value w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nilai">
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap border-b">
+                                    <select class="spreadsheet-operator w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="+">+</option>
+                                        <option value="-">-</option>
+                                        <option value="*">×</option>
+                                        <option value="/">÷</option>
+                                    </select>
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap border-b">
+                                    <button class="delete-row-btn text-red-600 hover:text-red-800 p-1" title="Hapus baris">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="spreadsheet-row hover:bg-gray-50 transition-colors">
+                                <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-500 row-number border-b">2</td>
+                                <td class="px-3 py-3 whitespace-nowrap border-b">
+                                    <input type="text" class="spreadsheet-value w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nilai">
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap border-b">
+                                    <select class="spreadsheet-operator w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="+">+</option>
+                                        <option value="-">-</option>
+                                        <option value="*">×</option>
+                                        <option value="/">÷</option>
+                                    </select>
+                                </td>
+                                <td class="px-3 py-3 whitespace-nowrap border-b">
+                                    <button class="delete-row-btn text-red-600 hover:text-red-800 p-1" title="Hapus baris">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex items-center mb-4">
+                    <input type="checkbox" id="kirimGroupSpreadsheetCheckbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="kirimGroupSpreadsheetCheckbox" class="ml-2 text-sm text-gray-700">
+                        Kirim hasil ke Grup Telegram
+                    </label>
+                </div>
+
+                <div class="mt-2">
+                    <button id="calculateSpreadsheetBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200 flex items-center justify-center">
+                        <i class="fas fa-calculator mr-2"></i> Hitung
+                    </button>
+                </div>
+
+                <div class="mt-6 p-4 bg-gray-100 rounded-md shadow-inner">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-equals mr-2 text-blue-600"></i> Hasil
+                    </h3>
+                    
+                    <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                        <span class="font-medium text-gray-700">Total:</span>
+                        <div class="flex items-center">
+                            <span id="spreadsheetResult" class="mr-2 text-xl font-bold text-blue-600">0</span>
+                            <button class="copy-btn bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-xs" 
+                                    onclick="copyToClipboard('spreadsheetResult')">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 text-sm text-gray-600 p-2 border border-gray-200 rounded-md bg-white">
+                        <div id="calculationSteps"></div>
+                    </div>
+
+                    <div class="mt-4 flex justify-between">
+                        <button id="sendSpreadsheetTelegramBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-1.5 px-3 rounded-md text-sm transition duration-200 flex items-center">
+                            <i class="fab fa-telegram-plane mr-1"></i> Kirim ke Telegram
+                        </button>
+                        <button id="copyAllBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-1.5 px-3 rounded-md text-sm transition duration-200 flex items-center">
+                            <i class="fas fa-copy mr-1"></i> Copy Semua
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Settings -->
+        <div id="contentSettings" class="tab-content hidden">
+            <div class="bg-white shadow-lg rounded-lg p-6 mt-4">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Pengaturan</h2>
+                
+                <div class="divide-y divide-gray-200">
+                    <div class="py-4">
+                        <h3 class="text-lg font-medium text-gray-800 mb-2">Telegram</h3>
+                        <p class="text-sm text-gray-600 mb-3">Atur pengiriman otomatis ke Telegram</p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="autoSendTelegram" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="autoSendTelegram" class="ml-2 block text-sm text-gray-700">
+                                    Kirim hasil otomatis ke Telegram
+                                </label>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tujuan Pengiriman Default:</label>
+                                <div class="flex space-x-4">
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="telegramDestination" value="private" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                        <span class="ml-2 text-sm text-gray-700">Chat Pribadi</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="telegramDestination" value="group" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" checked>
+                                        <span class="ml-2 text-sm text-gray-700">Grup</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="py-4">
+                        <h3 class="text-lg font-medium text-gray-800 mb-2">Tampilan</h3>
+                        <p class="text-sm text-gray-600 mb-3">Sesuaikan tampilan aplikasi</p>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Format Angka:</label>
+                                <select id="numberFormat" class="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="id">Indonesia (1.234.567)</option>
+                                    <option value="en">Inggris (1,234,567)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="py-4">
+                        <h3 class="text-lg font-medium text-gray-800 mb-2">Tentang</h3>
+                        <p class="text-sm text-gray-600">
+                            Kalkulator Perolehan v1.3<br>
+                            © 2025 - Semua data disimpan secara lokal di perangkat Anda
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <button id="saveSettingsBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200 flex items-center justify-center">
+                        <i class="fas fa-save mr-2"></i> Simpan Pengaturan
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Riwayat -->
+        <div id="historyModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center hidden">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-xl font-bold text-gray-800">Riwayat Perhitungan</h3>
+                    <button id="closeHistoryBtn" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="overflow-y-auto p-4 flex-grow" id="historyList">
+                    <!-- Riwayat akan dimasukkan di sini -->
+                    <div class="text-center text-gray-500 py-8" id="emptyHistoryMessage">
+                        <i class="fas fa-history text-4xl mb-3"></i>
+                        <p>Belum ada riwayat perhitungan</p>
+                    </div>
+                </div>
+                
+                <div class="p-4 border-t flex justify-between">
+                    <button id="clearHistoryBtn" class="bg-red-100 text-red-700 px-4 py-2 rounded-md hover:bg-red-200 transition flex items-center">
+                        <i class="fas fa-trash-alt mr-1"></i> Hapus Semua
+                    </button>
+                    <button id="exportHistoryBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition flex items-center">
+                        <i class="fas fa-download mr-1"></i> Export Data
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Scan OCR -->
+        <div id="scanModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center hidden">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col">
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-xl font-bold text-gray-800">Scan Angka dari Gambar</h3>
+                    <button id="closeScanBtn" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="p-4 flex-grow overflow-y-auto">
+                    <div class="mb-4">
+                        <div class="flex flex-wrap gap-2 items-center mb-2">
+                            <label class="block text-sm font-medium text-gray-700">Gambar:</label>
+                            <div class="flex space-x-2">
+                                <label for="imageUpload" class="cursor-pointer text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-md hover:bg-blue-200 transition flex items-center">
+                                    <i class="fas fa-upload mr-1"></i> Upload
+                                </label>
+                                <button id="pasteBtnImage" class="text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-md hover:bg-purple-200 transition flex items-center">
+                                    <i class="fas fa-paste mr-1"></i> Paste
+                                </button>
+                            </div>
+                        </div>
+                        <input type="file" id="imageUpload" accept="image/*" class="hidden">
+                        <div class="mt-2 p-2 bg-gray-50 border border-dashed border-gray-300 rounded-md text-center text-sm text-gray-500" id="pasteArea">
+                            <p>Paste gambar dengan Ctrl+V atau klik tombol Paste</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4 hidden" id="imagePreviewContainer">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-medium text-gray-700">Preview:</label>
+                            <button id="cropImageBtn" class="text-sm bg-yellow-100 text-yellow-700 px-3 py-1 rounded-md hover:bg-yellow-200 transition flex items-center">
+                                <i class="fas fa-crop-alt mr-1"></i> Crop
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <div class="max-h-60 overflow-auto">
+                                <img id="imagePreview" class="max-w-full h-auto rounded-md border border-gray-300" alt="Preview">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Container untuk Cropper.js -->
+                    <div class="mb-4 hidden" id="cropContainer">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-medium text-gray-700">Crop Gambar:</label>
+                            <div class="flex space-x-2">
+                                <button id="applyCropBtn" class="text-sm bg-green-100 text-green-700 px-3 py-1 rounded-md hover:bg-green-200 transition flex items-center">
+                                    <i class="fas fa-check mr-1"></i> Terapkan
+                                </button>
+                                <button id="cancelCropBtn" class="text-sm bg-red-100 text-red-700 px-3 py-1 rounded-md hover:bg-red-200 transition flex items-center">
+                                    <i class="fas fa-times mr-1"></i> Batal
+                                </button>
+                            </div>
+                        </div>
+                        <div class="max-h-60 overflow-auto">
+                            <img id="cropImage" class="max-w-full h-auto rounded-md border border-gray-300" alt="Crop">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Target Field:</label>
+                        <select id="targetField" class="w-full py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="ssAwal">SS Awal</option>
+                            <option value="beforeSpend">Before Spend</option>
+                            <option value="afterSpend">After Spend</option>
+                            <option value="ssAkhir">SS Akhir</option>
+                            <option value="perolehanSebelumnya">Perolehan Sebelumnya</option>
+                        </select>
+                    </div>
+                    
+                    <div id="scanResults" class="hidden space-y-2 mb-4">
+                        <div class="p-3 bg-gray-100 rounded-md">
+                            <h4 class="font-medium text-gray-800 mb-1">Hasil Scan:</h4>
+                            <div id="extractedNumber" class="font-bold text-lg">-</div>
+                        </div>
+                    </div>
+                    
+                    <div id="scanLoading" class="hidden">
+                        <div class="flex items-center justify-center space-x-2 my-4">
+                            <div class="w-4 h-4 bg-blue-600 rounded-full animate-pulse"></div>
+                            <div class="w-4 h-4 bg-blue-600 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+                            <div class="w-4 h-4 bg-blue-600 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+                        </div>
+                        <p class="text-center text-gray-600">Memproses gambar...</p>
+                    </div>
+                </div>
+                
+                <div class="p-4 border-t flex justify-end">
+                    <button id="processImageBtn" disabled class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition flex items-center opacity-50">
+                        <i class="fas fa-magic mr-1"></i> Proses Gambar
+                    </button>
+                    <button id="applyResultBtn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition flex items-center ml-2 hidden">
+                        <i class="fas fa-check mr-1"></i> Terapkan
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Toast Notifikasi -->
+        <div id="toast" class="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 z-50">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle mr-2"></i>
+                <span id="toastMessage">Berhasil disimpan!</span>
+            </div>
+        </div>
+        
+        <div class="text-center text-gray-500 text-sm mt-4">
+            © 2025 Kalkulator Perolehan - Semua data disimpan secara lokal di perangkat Anda
+        </div>
+    </div>
+
+    <script>
+        // Struktur data untuk menyimpan riwayat
+        let calculationHistory = [];
+        
+        // Nilai yang diekstrak dari OCR
+        let extractedValue = null;
+        
+        // Variabel untuk cropper
+        let cropper = null;
+        
+        // Data pengaturan
+        let appSettings = {
+            autoSendTelegram: true,
+            telegramDestination: 'group',
+            numberFormat: 'id'
+        };
+        
+        // Bot & Chat ID
+        const TELEGRAM_BOT_TOKEN = "8030542723:AAG6SkkwXQidR4hSC8MhqDwFQmltDJpfgAw";
+        const TELEGRAM_PRIVATE_CHAT_ID = "7294126603";
+        const TELEGRAM_GROUP_CHAT_ID = "-4764850904";
+        
+        // API Key untuk Google Gemini
+        const GEMINI_API_KEY = "AIzaSyC7UZC9dg915QDQ5WlDnqca7_2IRIE3WJc";
+        
+        // Fungsi untuk mengonversi string dengan format angka Indonesia ke number
+        function parseIDNumber(strNumber) {
+            if (!strNumber) return 0;
+            // Menghapus semua titik sebagai pemisah ribuan
+            const cleanedNumber = strNumber.replace(/\./g, '');
+            return parseFloat(cleanedNumber) || 0;
+        }
+
+        // Fungsi untuk memformat tampilan input dengan titik sebagai pemisah ribuan
+        function formatNumberInput(inputElement) {
+            inputElement.addEventListener('input', function(e) {
+                // Simpan posisi kursor
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                const valueLength = this.value.length;
+                
+                // Hapus semua karakter kecuali angka
+                let value = this.value.replace(/[^\d]/g, '');
+                
+                // Format angka dengan titik atau koma sebagai pemisah ribuan sesuai pengaturan
+                if (value) {
+                    if (appSettings.numberFormat === 'id') {
+                        this.value = new Intl.NumberFormat('id-ID').format(parseInt(value)).replace(/,/g, '.');
+                    } else {
+                        this.value = new Intl.NumberFormat('en-US').format(parseInt(value));
+                    }
+                } else {
+                    this.value = '';
+                }
+                
+                // Menyimpan ke localStorage
+                saveInputToLocalStorage();
+                
+                // Mengatur ulang posisi kursor dengan mempertimbangkan perbedaan panjang string
+                const newLength = this.value.length;
+                const diff = newLength - valueLength;
+                this.setSelectionRange(start + diff, end + diff);
+            });
+        }
+
+        // Fungsi untuk menyimpan input ke localStorage
+        function saveInputToLocalStorage() {
+            const data = {
+                ssAwal: document.getElementById('ssAwal').value,
+                beforeSpend: document.getElementById('beforeSpend').value,
+                afterSpend: document.getElementById('afterSpend').value,
+                ssAkhir: document.getElementById('ssAkhir').value,
+                perolehanSebelumnya: document.getElementById('perolehanSebelumnya').value,
+                totalSpend: document.getElementById('totalSpend').textContent,
+                perolehan: document.getElementById('perolehan').textContent,
+                totalPerolehan: document.getElementById('totalPerolehan').textContent,
+                kirimGroupCheckbox: document.getElementById('kirimGroupCheckbox').checked
+            };
+            
+            localStorage.setItem('kalkulatorPerolehanData', JSON.stringify(data));
+        }
+
+        // Fungsi untuk menyimpan pengaturan ke localStorage
+        function saveSettingsToLocalStorage() {
+            localStorage.setItem('kalkulatorPerolehanSettings', JSON.stringify(appSettings));
+        }
+
+        // Fungsi untuk memuat data dari localStorage
+        function loadFromLocalStorage() {
+            // Memuat pengaturan
+            const savedSettings = localStorage.getItem('kalkulatorPerolehanSettings');
+            if (savedSettings) {
+                appSettings = JSON.parse(savedSettings);
+                
+                // Menerapkan pengaturan ke UI
+                document.getElementById('autoSendTelegram').checked = appSettings.autoSendTelegram;
+                document.querySelector(`input[name="telegramDestination"][value="${appSettings.telegramDestination}"]`).checked = true;
+                document.getElementById('numberFormat').value = appSettings.numberFormat;
+            }
+            
+            // Memuat data perhitungan
+            const savedData = localStorage.getItem('kalkulatorPerolehanData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                
+                document.getElementById('ssAwal').value = data.ssAwal || '';
+                document.getElementById('beforeSpend').value = data.beforeSpend || '';
+                document.getElementById('afterSpend').value = data.afterSpend || '';
+                document.getElementById('ssAkhir').value = data.ssAkhir || '';
+                document.getElementById('perolehanSebelumnya').value = data.perolehanSebelumnya || '';
+                
+                document.getElementById('totalSpend').textContent = data.totalSpend || '0';
+                document.getElementById('perolehan').textContent = data.perolehan || '0';
+                document.getElementById('totalPerolehan').textContent = data.totalPerolehan || '0';
+                
+                // Memuat status checkbox kirim ke grup
+                if (data.kirimGroupCheckbox !== undefined) {
+                    document.getElementById('kirimGroupCheckbox').checked = data.kirimGroupCheckbox;
+                } else {
+                    // Default ke true jika belum ada data
+                    document.getElementById('kirimGroupCheckbox').checked = true;
+                }
+            } else {
+                // Default ke true jika belum ada data
+                document.getElementById('kirimGroupCheckbox').checked = true;
+            }
+            
+            // Memuat data spreadsheet
+            const savedSpreadsheetData = localStorage.getItem('kalkulatorSpreadsheetData');
+            if (savedSpreadsheetData) {
+                try {
+                    const spreadsheetData = JSON.parse(savedSpreadsheetData);
+                    // Clear existing rows except header
+                    const tbody = document.getElementById('spreadsheetBody');
+                    tbody.innerHTML = '';
+                    
+                    // Add saved rows
+                    spreadsheetData.rows.forEach((row, index) => {
+                        addSpreadsheetRow(row.value, row.operator);
+                    });
+                    
+                    // Update spreadsheet result
+                    document.getElementById('spreadsheetResult').textContent = spreadsheetData.result;
+                    document.getElementById('calculationSteps').innerHTML = spreadsheetData.steps || '';
+                    
+                    // Memuat status checkbox kirim ke grup untuk spreadsheet
+                    if (spreadsheetData.kirimGroupSpreadsheetCheckbox !== undefined) {
+                        document.getElementById('kirimGroupSpreadsheetCheckbox').checked = spreadsheetData.kirimGroupSpreadsheetCheckbox;
+                    } else {
+                        // Default ke true jika belum ada data
+                        document.getElementById('kirimGroupSpreadsheetCheckbox').checked = true;
+                    }
+                } catch (e) {
+                    console.error('Error loading spreadsheet data:', e);
+                }
+            } else {
+                // Default ke true jika belum ada data
+                document.getElementById('kirimGroupSpreadsheetCheckbox').checked = true;
+            }
+            
+            // Memuat riwayat perhitungan
+            const savedHistory = localStorage.getItem('kalkulatorPerolehanHistory');
+            if (savedHistory) {
+                calculationHistory = JSON.parse(savedHistory);
+            }
+        }
+
+        // Fungsi untuk menyimpan data spreadsheet ke localStorage
+        function saveSpreadsheetData() {
+            const rows = [];
+            document.querySelectorAll('.spreadsheet-row').forEach(row => {
+                const value = row.querySelector('.spreadsheet-value').value;
+                const operator = row.querySelector('.spreadsheet-operator').value;
+                rows.push({ value, operator });
+            });
+            
+            const data = {
+                rows,
+                result: document.getElementById('spreadsheetResult').textContent,
+                steps: document.getElementById('calculationSteps').innerHTML,
+                kirimGroupSpreadsheetCheckbox: document.getElementById('kirimGroupSpreadsheetCheckbox').checked
+            };
+            
+            localStorage.setItem('kalkulatorSpreadsheetData', JSON.stringify(data));
+        }
+
+        // Fungsi untuk menampilkan toast notifikasi
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            
+            toast.classList.remove('translate-y-10', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        // Fungsi untuk menyimpan perhitungan ke riwayat
+        function saveToHistory() {
+            const ssAwal = document.getElementById('ssAwal').value;
+            const beforeSpend = document.getElementById('beforeSpend').value;
+            const afterSpend = document.getElementById('afterSpend').value;
+            const ssAkhir = document.getElementById('ssAkhir').value;
+            const perolehanSebelumnya = document.getElementById('perolehanSebelumnya').value;
+            const totalSpend = document.getElementById('totalSpend').textContent;
+            const perolehan = document.getElementById('perolehan').textContent;
+            const totalPerolehan = document.getElementById('totalPerolehan').textContent;
+
+            // Buat entri riwayat baru
+            const historyEntry = {
+                id: Date.now(),
+                date: new Date().toLocaleString('id-ID'),
+                data: {
+                    ssAwal,
+                    beforeSpend,
+                    afterSpend,
+                    ssAkhir,
+                    perolehanSebelumnya,
+                    totalSpend,
+                    perolehan,
+                    totalPerolehan
+                }
+            };
+
+            // Tambahkan ke array riwayat
+            calculationHistory.unshift(historyEntry);
+            
+            // Batasi jumlah riwayat (opsional)
+            if (calculationHistory.length > 50) {
+                calculationHistory = calculationHistory.slice(0, 50);
+            }
+            
+            // Simpan ke localStorage
+            localStorage.setItem('kalkulatorPerolehanHistory', JSON.stringify(calculationHistory));
+            
+            // Tampilkan notifikasi
+            showToast('Perhitungan berhasil disimpan ke riwayat');
+            
+            // Perbarui tampilan riwayat jika sedang terbuka
+            if (!document.getElementById('historyModal').classList.contains('hidden')) {
+                renderHistoryList();
+            }
+        }
+
+        // Fungsi untuk mengirim hasil perhitungan ke Telegram
+        async function sendToTelegram() {
+            try {
+                // Menentukan chat ID berdasarkan pengaturan atau checkbox
+                let useGroupChat = document.getElementById('kirimGroupCheckbox').checked;
+                const chatId = useGroupChat
+                    ? TELEGRAM_GROUP_CHAT_ID
+                    : TELEGRAM_PRIVATE_CHAT_ID;
+                
+                // Memformat pesan
+                const ssAwal = document.getElementById('ssAwal').value || '0';
+                const beforeSpend = document.getElementById('beforeSpend').value || '0';
+                const afterSpend = document.getElementById('afterSpend').value || '0';
+                const ssAkhir = document.getElementById('ssAkhir').value || '0';
+                const perolehanSebelumnya = document.getElementById('perolehanSebelumnya').value || '0';
+                const totalSpend = document.getElementById('totalSpend').textContent;
+                const perolehan = document.getElementById('perolehan').textContent;
+                const totalPerolehan = document.getElementById('totalPerolehan').textContent;
+                
+                const message = `
+🔢 *KALKULATOR PEROLEHAN*
+---------------------------
+📊 *Input:*
+• SS Awal: ${ssAwal}
+• Before Spend: ${beforeSpend}
+• After Spend: ${afterSpend}
+• SS Akhir: ${ssAkhir}
+• Perolehan Sebelumnya: ${perolehanSebelumnya}
+
+🧮 *Hasil:*
+• Total Spend: *${totalSpend}*
+• Perolehan: *${perolehan}*
+• Total Perolehan: *${totalPerolehan}*
+---------------------------
+⏱ ${new Date().toLocaleString('id-ID')}
+                `;
+                
+                // Kirim pesan ke Telegram
+                const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: message,
+                        parse_mode: 'Markdown'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    showToast('Berhasil dikirim ke ' + (useGroupChat ? 'Grup Telegram' : 'Telegram Pribadi'));
+                } else {
+                    throw new Error(data.description || 'Gagal mengirim ke Telegram');
+                }
+            } catch (error) {
+                console.error('Error sending to Telegram:', error);
+                showToast('Gagal mengirim ke Telegram: ' + error.message);
+            }
+        }
+
+        // Fungsi untuk mengirim hasil spreadsheet ke Telegram
+        async function sendSpreadsheetToTelegram() {
+            try {
+                // Menentukan chat ID berdasarkan checkbox
+                let useGroupChat = document.getElementById('kirimGroupSpreadsheetCheckbox').checked;
+                const chatId = useGroupChat
+                    ? TELEGRAM_GROUP_CHAT_ID
+                    : TELEGRAM_PRIVATE_CHAT_ID;
+                
+                // Mengumpulkan data spreadsheet
+                const rows = [];
+                document.querySelectorAll('.spreadsheet-row').forEach((row, index) => {
+                    const value = row.querySelector('.spreadsheet-value').value || '0';
+                    const operator = row.querySelector('.spreadsheet-operator').value;
+                    // Untuk baris pertama, tidak perlu operator
+                    if (index === 0) {
+                        rows.push(value);
+                    } else {
+                        rows.push(`${operator} ${value}`);
+                    }
+                });
+                
+                const result = document.getElementById('spreadsheetResult').textContent;
+                
+                // Menyusun pesan
+                let rowsText = rows.join(' ');
+                
+                const message = `
+🔢 *KALKULATOR SPREADSHEET*
+---------------------------
+📊 *Perhitungan:*
+${rowsText} = *${result}*
+---------------------------
+⏱ ${new Date().toLocaleString('id-ID')}
+                `;
+                
+                // Kirim pesan ke Telegram
+                const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: message,
+                        parse_mode: 'Markdown'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    showToast('Berhasil dikirim ke ' + (useGroupChat ? 'Grup Telegram' : 'Telegram Pribadi'));
+                } else {
+                    throw new Error(data.description || 'Gagal mengirim ke Telegram');
+                }
+            } catch (error) {
+                console.error('Error sending to Telegram:', error);
+                showToast('Gagal mengirim ke Telegram: ' + error.message);
+            }
+        }
+
+        // Fungsi untuk menyalin semua perhitungan spreadsheet ke clipboard
+        function copyAllSpreadsheetCalculation() {
+            // Mengumpulkan data spreadsheet
+            const rows = [];
+            document.querySelectorAll('.spreadsheet-row').forEach((row, index) => {
+                const value = row.querySelector('.spreadsheet-value').value || '0';
+                const operator = row.querySelector('.spreadsheet-operator').value;
+                // Untuk baris pertama, tidak perlu operator
+                if (index === 0) {
+                    rows.push(value);
+                } else {
+                    rows.push(`${operator} ${value}`);
+                }
+            });
+            
+            const result = document.getElementById('spreadsheetResult').textContent;
+            
+            // Menyusun teks
+            let rowsText = rows.join(' ');
+            const fullText = `${rowsText} = ${result}`;
+            
+            // Salin ke clipboard
+            navigator.clipboard.writeText(fullText)
+                .then(() => {
+                    showToast('Perhitungan berhasil disalin ke clipboard');
+                })
+                .catch(err => {
+                    console.error('Error copying to clipboard:', err);
+                    showToast('Gagal menyalin ke clipboard');
+                });
+        }
+
+        // Fungsi untuk menampilkan daftar riwayat
+        function renderHistoryList() {
+            const historyListElement = document.getElementById('historyList');
+            const emptyHistoryMessage = document.getElementById('emptyHistoryMessage');
+            
+            // Kosongkan konten saat ini kecuali pesan 'kosong'
+            while (historyListElement.firstChild && historyListElement.firstChild !== emptyHistoryMessage) {
+                historyListElement.removeChild(historyListElement.firstChild);
+            }
+            
+            if (calculationHistory.length === 0) {
+                emptyHistoryMessage.classList.remove('hidden');
+                return;
+            }
+            
+            emptyHistoryMessage.classList.add('hidden');
+            
+            // Render setiap item riwayat
+            calculationHistory.forEach((entry) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'bg-white p-3 rounded-lg shadow mb-3 border border-gray-200';
+                historyItem.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-xs text-gray-500">${entry.date}</span>
+                            <h4 class="font-semibold text-gray-800">Total Perolehan: ${entry.data.totalPerolehan}</h4>
+                        </div>
+                        <div class="flex space-x-1">
+                            <button class="load-history-btn bg-blue-100 hover:bg-blue-200 text-blue-700 p-1 rounded" 
+                                    data-id="${entry.id}" title="Muat data">
+                                <i class="fas fa-redo-alt"></i>
+                            </button>
+                            <button class="delete-history-btn bg-red-100 hover:bg-red-200 text-red-700 p-1 rounded" 
+                                    data-id="${entry.id}" title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="text-gray-600">SS Awal: <span class="font-medium">${entry.data.ssAwal || '0'}</span></div>
+                        <div class="text-gray-600">Before Spend: <span class="font-medium">${entry.data.beforeSpend || '0'}</span></div>
+                        <div class="text-gray-600">After Spend: <span class="font-medium">${entry.data.afterSpend || '0'}</span></div>
+                        <div class="text-gray-600">SS Akhir: <span class="font-medium">${entry.data.ssAkhir || '0'}</span></div>
+                        <div class="text-gray-600">Total Spend: <span class="font-medium">${entry.data.totalSpend}</span></div>
+                        <div class="text-gray-600">Perolehan: <span class="font-medium">${entry.data.perolehan}</span></div>
+                    </div>
+                `;
+                
+                historyListElement.appendChild(historyItem);
+            });
+            
+            // Tambahkan event listeners untuk tombol-tombol
+            document.querySelectorAll('.load-history-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    loadHistoryItem(id);
+                });
+            });
+            
+            document.querySelectorAll('.delete-history-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    deleteHistoryItem(id);
+                });
+            });
+        }
+
+        // Fungsi untuk memuat data dari item riwayat
+        function loadHistoryItem(id) {
+            const entry = calculationHistory.find(item => item.id === id);
+            if (!entry) return;
+            
+            document.getElementById('ssAwal').value = entry.data.ssAwal;
+            document.getElementById('beforeSpend').value = entry.data.beforeSpend;
+            document.getElementById('afterSpend').value = entry.data.afterSpend;
+            document.getElementById('ssAkhir').value = entry.data.ssAkhir;
+            document.getElementById('perolehanSebelumnya').value = entry.data.perolehanSebelumnya;
+            
+            document.getElementById('totalSpend').textContent = entry.data.totalSpend;
+            document.getElementById('perolehan').textContent = entry.data.perolehan;
+            document.getElementById('totalPerolehan').textContent = entry.data.totalPerolehan;
+            
+            // Simpan ke localStorage
+            saveInputToLocalStorage();
+            
+            // Tutup modal riwayat
+            document.getElementById('historyModal').classList.add('hidden');
+            
+            // Tampilkan notifikasi
+            showToast('Data riwayat berhasil dimuat');
+        }
+
+        // Fungsi untuk menghapus item riwayat
+        function deleteHistoryItem(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+                calculationHistory = calculationHistory.filter(item => item.id !== id);
+                localStorage.setItem('kalkulatorPerolehanHistory', JSON.stringify(calculationHistory));
+                renderHistoryList();
+                showToast('Data riwayat berhasil dihapus');
+            }
+        }
+
+        // Fungsi untuk mengekspor riwayat
+        function exportHistory() {
+            if (calculationHistory.length === 0) {
+                alert('Tidak ada data riwayat untuk diekspor');
+                return;
+            }
+            
+            // Format data untuk ekspor
+            let csvContent = 'data:text/csv;charset=utf-8,';
+            csvContent += 'Tanggal,SS Awal,Before Spend,After Spend,SS Akhir,Perolehan Sebelumnya,Total Spend,Perolehan,Total Perolehan\n';
+            
+            calculationHistory.forEach(entry => {
+                const row = [
+                    entry.date,
+                    entry.data.ssAwal.replace(/\./g, ''),
+                    entry.data.beforeSpend.replace(/\./g, ''),
+                    entry.data.afterSpend.replace(/\./g, ''),
+                    entry.data.ssAkhir.replace(/\./g, ''),
+                    entry.data.perolehanSebelumnya.replace(/\./g, ''),
+                    entry.data.totalSpend.replace(/\./g, ''),
+                    entry.data.perolehan.replace(/\./g, ''),
+                    entry.data.totalPerolehan.replace(/\./g, '')
+                ].join(',');
+                csvContent += row + '\n';
+            });
+            
+            // Buat link untuk download
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `perhitungan_perolehan_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Fungsi untuk memproses gambar dari clipboard
+        function handlePastedImage(event) {
+            const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+            
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const blob = items[i].getAsFile();
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        // Tampilkan preview gambar
+                        document.getElementById('imagePreview').src = e.target.result;
+                        document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                        
+                        // Aktifkan tombol proses
+                        document.getElementById('processImageBtn').disabled = false;
+                        document.getElementById('processImageBtn').classList.remove('opacity-50');
+                        
+                        // Sembunyikan hasil sebelumnya
+                        document.getElementById('scanResults').classList.add('hidden');
+                        document.getElementById('applyResultBtn').classList.add('hidden');
+                    };
+                    
+                    reader.readAsDataURL(blob);
+                    break;
+                }
+            }
+        }
+        
+        // Fungsi untuk mengatur cropper pada gambar
+        function setupCropper() {
+            // Sembunyikan preview container dan tampilkan crop container
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+            document.getElementById('cropContainer').classList.remove('hidden');
+            
+            // Clone gambar preview ke crop image
+            const imgSrc = document.getElementById('imagePreview').src;
+            const cropImage = document.getElementById('cropImage');
+            cropImage.src = imgSrc;
+            
+            // Inisialisasi cropper
+            if (cropper) {
+                cropper.destroy();
+            }
+            
+            cropper = new Cropper(cropImage, {
+                aspectRatio: NaN,
+                viewMode: 1,
+                autoCropArea: 0.8,
+                responsive: true,
+                guides: true,
+                highlight: true,
+                cropBoxResizable: true
+            });
+        }
+        
+        // Fungsi untuk menerapkan crop pada gambar
+        function applyCrop() {
+            if (!cropper) return;
+            
+            // Dapatkan hasil crop
+            const canvas = cropper.getCroppedCanvas({
+                maxWidth: 1920,
+                maxHeight: 1080,
+                fillColor: '#fff'
+            });
+            
+            if (!canvas) return;
+            
+            // Konversi canvas ke data URL
+            const croppedImageUrl = canvas.toDataURL('image/jpeg');
+            
+            // Tampilkan hasil crop
+            document.getElementById('imagePreview').src = croppedImageUrl;
+            document.getElementById('imagePreviewContainer').classList.remove('hidden');
+            document.getElementById('cropContainer').classList.add('hidden');
+            
+            // Hancurkan instance cropper
+            cropper.destroy();
+            cropper = null;
+        }
+        
+        // Fungsi untuk membatalkan crop
+        function cancelCrop() {
+            document.getElementById('imagePreviewContainer').classList.remove('hidden');
+            document.getElementById('cropContainer').classList.add('hidden');
+            
+            // Hancurkan instance cropper
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        }
+        
+        // Fungsi untuk ekstrak teks dari gambar menggunakan Google Gemini API
+        async function extractTextFromImage(imageFile) {
+            try {
+                // Menunjukkan loading
+                document.getElementById('scanLoading').classList.remove('hidden');
+                document.getElementById('scanResults').classList.add('hidden');
+                document.getElementById('applyResultBtn').classList.add('hidden');
+                
+                // Konversi gambar ke base64
+                const base64Image = await fileToBase64(imageFile);
+                
+                // Buat request ke Gemini API
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            role: 'user',
+                            parts: [
+                                {
+                                    inlineData: {
+                                        mimeType: 'image/jpeg',
+                                        data: base64Image.split(',')[1]
+                                    }
+                                },
+                                {
+                                    text: 'Ekstrak semua angka yang ada di gambar ini. Hanya berikan angkanya saja tanpa penjelasan apapun. Jika ada beberapa angka, pilih angka terbesar. Format angka tanpa pemisah ribuan (titik atau koma). Contoh hasil yang diharapkan: 4219147106'
+                                }
+                            ]
+                        }]
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to extract text from image');
+                }
+                
+                const data = await response.json();
+                
+                // Sembunyikan loading
+                document.getElementById('scanLoading').classList.add('hidden');
+                
+                // Ekstrak teks dari respons
+                let extractedText = '';
+                if (data.candidates && data.candidates.length > 0 && 
+                    data.candidates[0].content && data.candidates[0].content.parts) {
+                    extractedText = data.candidates[0].content.parts[0].text.trim();
+                }
+                
+                // Hapus karakter non-numerik dan spasi
+                extractedText = extractedText.replace(/\D/g, '');
+                
+                if (extractedText) {
+                    // Format angka dengan titik atau koma sebagai pemisah ribuan sesuai pengaturan
+                    let formattedNumber;
+                    if (appSettings.numberFormat === 'id') {
+                        formattedNumber = new Intl.NumberFormat('id-ID').format(parseInt(extractedText)).replace(/,/g, '.');
+                    } else {
+                        formattedNumber = new Intl.NumberFormat('en-US').format(parseInt(extractedText));
+                    }
+                    extractedValue = formattedNumber;
+                    
+                    // Tampilkan hasil
+                    document.getElementById('extractedNumber').textContent = formattedNumber;
+                    document.getElementById('scanResults').classList.remove('hidden');
+                    document.getElementById('applyResultBtn').classList.remove('hidden');
+                    
+                    return formattedNumber;
+                } else {
+                    document.getElementById('extractedNumber').textContent = 'Tidak dapat mendeteksi angka';
+                    document.getElementById('scanResults').classList.remove('hidden');
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error extracting text:', error);
+                document.getElementById('scanLoading').classList.add('hidden');
+                document.getElementById('extractedNumber').textContent = 'Error: ' + error.message;
+                document.getElementById('scanResults').classList.remove('hidden');
+                return null;
+            }
+        }
+        
+        // Fungsi untuk mengkonversi file ke base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+        
+        // Fungsi untuk mendapatkan blob dari data URL
+        function dataURLtoBlob(dataURL) {
+            const arr = dataURL.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            
+            return new Blob([u8arr], { type: mime });
+        }
+
+        // Untuk perhitungan dan pemformatan kalkulator perolehan
+        function calculate() {
+            // Mengambil nilai input dan mengonversinya
+            const ssAwal = parseIDNumber(document.getElementById('ssAwal').value);
+            const beforeSpend = parseIDNumber(document.getElementById('beforeSpend').value);
+            const afterSpend = parseIDNumber(document.getElementById('afterSpend').value);
+            const ssAkhir = parseIDNumber(document.getElementById('ssAkhir').value);
+            const perolehanSebelumnya = parseIDNumber(document.getElementById('perolehanSebelumnya').value);
+
+            // Menghitung total spend
+            const totalSpend = beforeSpend - afterSpend;
+
+            // Menghitung perolehan
+            const perolehan = (ssAkhir - ssAwal) + (beforeSpend - afterSpend);
+
+            // Menghitung total perolehan
+            const totalPerolehan = perolehan + perolehanSebelumnya;
+
+            // Menampilkan hasil dengan format angka sesuai pengaturan
+            if (appSettings.numberFormat === 'id') {
+                document.getElementById('totalSpend').textContent = new Intl.NumberFormat('id-ID').format(totalSpend).replace(/,/g, '.');
+                document.getElementById('perolehan').textContent = new Intl.NumberFormat('id-ID').format(perolehan).replace(/,/g, '.');
+                document.getElementById('totalPerolehan').textContent = new Intl.NumberFormat('id-ID').format(totalPerolehan).replace(/,/g, '.');
+            } else {
+                document.getElementById('totalSpend').textContent = new Intl.NumberFormat('en-US').format(totalSpend);
+                document.getElementById('perolehan').textContent = new Intl.NumberFormat('en-US').format(perolehan);
+                document.getElementById('totalPerolehan').textContent = new Intl.NumberFormat('en-US').format(totalPerolehan);
+            }
+            
+            // Simpan hasil ke localStorage
+            saveInputToLocalStorage();
+            
+            // Animasi hasil
+            const resultElement = document.getElementById('result');
+            resultElement.classList.add('bg-green-50');
+            setTimeout(() => {
+                resultElement.classList.remove('bg-green-50');
+            }, 500);
+            
+            // Tampilkan notifikasi
+            showToast('Perhitungan berhasil');
+            
+            // Kirim ke Telegram jika checkbox dicentang
+            if (document.getElementById('kirimGroupCheckbox').checked) {
+                sendToTelegram();
+            }
+            
+            // Simpan ke riwayat secara otomatis
+            saveToHistory();
+        }
+
+        // Fungsi untuk menambah baris di spreadsheet
+        function addSpreadsheetRow(value = '', operator = '+') {
+            const tbody = document.getElementById('spreadsheetBody');
+            const rowCount = tbody.querySelectorAll('tr').length + 1;
+            
+            const newRow = document.createElement('tr');
+            newRow.className = 'spreadsheet-row hover:bg-gray-50 transition-colors';
+            newRow.innerHTML = `
+                <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-500 row-number border-b">${rowCount}</td>
+                <td class="px-3 py-3 whitespace-nowrap border-b">
+                    <input type="text" class="spreadsheet-value w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nilai" value="${value}">
+                </td>
+                <td class="px-3 py-3 whitespace-nowrap border-b">
+                    <select class="spreadsheet-operator w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="+" ${operator === '+' ? 'selected' : ''}>+</option>
+                        <option value="-" ${operator === '-' ? 'selected' : ''}>-</option>
+                        <option value="*" ${operator === '*' ? 'selected' : ''}>×</option>
+                        <option value="/" ${operator === '/' ? 'selected' : ''}>÷</option>
+                    </select>
+                </td>
+                <td class="px-3 py-3 whitespace-nowrap border-b">
+                    <button class="delete-row-btn text-red-600 hover:text-red-800 p-1" title="Hapus baris">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(newRow);
+            
+            // Add event listener to format input
+            const input = newRow.querySelector('.spreadsheet-value');
+            input.addEventListener('input', function() {
+                // Format angka sesuai pengaturan
+                const value = this.value.replace(/[^\d.,]/g, '');
+                if (value) {
+                    if (appSettings.numberFormat === 'id') {
+                        // Format dengan titik sebagai pemisah ribuan
+                        this.value = value.replace(/[,.]/g, '')
+                            .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    } else {
+                        // Format dengan koma sebagai pemisah ribuan
+                        this.value = value.replace(/[,.]/g, '')
+                            .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                    }
+                }
+                saveSpreadsheetData();
+            });
+            
+            // Add event listener for delete button
+            newRow.querySelector('.delete-row-btn').addEventListener('click', function() {
+                if (tbody.querySelectorAll('tr').length > 1) {
+                    tbody.removeChild(newRow);
+                    updateRowNumbers();
+                    saveSpreadsheetData();
+                } else {
+                    showToast('Tidak dapat menghapus baris terakhir');
+                }
+            });
+            
+            // Add change event for operator
+            newRow.querySelector('.spreadsheet-operator').addEventListener('change', function() {
+                saveSpreadsheetData();
+            });
+            
+            return newRow;
+        }
+
+        // Fungsi untuk memperbarui nomor baris di spreadsheet
+        function updateRowNumbers() {
+            const rows = document.querySelectorAll('.spreadsheet-row');
+            rows.forEach((row, index) => {
+                row.querySelector('.row-number').textContent = index + 1;
+            });
+        }
+
+        // Fungsi untuk menghitung hasil di spreadsheet
+        function calculateSpreadsheet() {
+            const rows = document.querySelectorAll('.spreadsheet-row');
+            let result = 0;
+            let steps = '';
+            let calculation = '';
+            
+            // Proses setiap baris
+            rows.forEach((row, index) => {
+                const valueInput = row.querySelector('.spreadsheet-value');
+                const operatorSelect = row.querySelector('.spreadsheet-operator');
+                
+                let value = valueInput.value;
+                // Parse angka sesuai format saat ini
+                if (appSettings.numberFormat === 'id') {
+                    // Handle titik sebagai pemisah ribuan
+                    value = value.replace(/\./g, '');
+                } else {
+                    // Handle koma sebagai pemisah ribuan
+                    value = value.replace(/,/g, '');
+                }
+                
+                // Convert to number
+                value = parseFloat(value) || 0;
+                const operator = operatorSelect.value;
+                
+                // Calculation for first row is just the value
+                if (index === 0) {
+                    result = value;
+                    calculation = value.toString();
+                } else {
+                    // Apply operator with previous result
+                    const prevOperator = rows[index-1].querySelector('.spreadsheet-operator').value;
+                    calculation += ` ${prevOperator} ${value}`;
+                    
+                    switch (prevOperator) {
+                        case '+':
+                            result += value;
+                            break;
+                        case '-':
+                            result -= value;
+                            break;
+                        case '*':
+                            result *= value;
+                            break;
+                        case '/':
+                            if (value !== 0) {
+                                result /= value;
+                            } else {
+                                showToast('Peringatan: Pembagian dengan nol');
+                            }
+                            break;
+                    }
+                }
+            });
+            
+            // Format result according to settings
+            let formattedResult;
+            if (appSettings.numberFormat === 'id') {
+                formattedResult = new Intl.NumberFormat('id-ID').format(result).replace(/,/g, '.');
+            } else {
+                formattedResult = new Intl.NumberFormat('en-US').format(result);
+            }
+            
+            // Display calculation steps
+            steps = `<span class="font-semibold">Langkah Perhitungan:</span> ${calculation} = <span class="font-bold">${formattedResult}</span>`;
+            
+            // Update UI
+            document.getElementById('spreadsheetResult').textContent = formattedResult;
+            document.getElementById('calculationSteps').innerHTML = steps;
+            
+            // Save to local storage
+            saveSpreadsheetData();
+            
+            // Animation
+            const spreadsheetResult = document.getElementById('spreadsheetResult');
+            spreadsheetResult.classList.add('text-green-600');
+            setTimeout(() => {
+                spreadsheetResult.classList.remove('text-green-600');
+            }, 500);
+            
+            // Show toast
+            showToast('Perhitungan spreadsheet berhasil');
+            
+            // Kirim ke Telegram jika checkbox dicentang
+            if (document.getElementById('kirimGroupSpreadsheetCheckbox').checked) {
+                sendSpreadsheetToTelegram();
+            }
+        }
+
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            const textArea = document.createElement('textarea');
+            // Text dengan format titik pemisah ribuan
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            // Tampilkan notifikasi yang lebih elegan
+            const element = document.getElementById(elementId);
+            const originalText = element.textContent;
+            element.textContent = '✓ Disalin!';
+            element.classList.add('text-green-600');
+            
+            setTimeout(() => {
+                element.textContent = originalText;
+                element.classList.remove('text-green-600');
+            }, 1000);
+        }
+
+        // Inisialisasi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            // === Tab Navigation ===
+            document.getElementById('tabPerolehan').addEventListener('click', function() {
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+                document.getElementById('contentPerolehan').classList.remove('hidden');
+                
+                document.querySelectorAll('#tabPerolehan, #tabSpreadsheet, #tabSettings').forEach(tab => {
+                    tab.classList.remove('border-blue-500', 'text-blue-600');
+                    tab.classList.add('border-transparent', 'text-gray-500');
+                });
+                this.classList.remove('border-transparent', 'text-gray-500');
+                this.classList.add('border-blue-500', 'text-blue-600');
+            });
+            
+            document.getElementById('tabSpreadsheet').addEventListener('click', function() {
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+                document.getElementById('contentSpreadsheet').classList.remove('hidden');
+                
+                document.querySelectorAll('#tabPerolehan, #tabSpreadsheet, #tabSettings').forEach(tab => {
+                    tab.classList.remove('border-blue-500', 'text-blue-600');
+                    tab.classList.add('border-transparent', 'text-gray-500');
+                });
+                this.classList.remove('border-transparent', 'text-gray-500');
+                this.classList.add('border-blue-500', 'text-blue-600');
+            });
+            
+            document.getElementById('tabSettings').addEventListener('click', function() {
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+                document.getElementById('contentSettings').classList.remove('hidden');
+                
+                document.querySelectorAll('#tabPerolehan, #tabSpreadsheet, #tabSettings').forEach(tab => {
+                    tab.classList.remove('border-blue-500', 'text-blue-600');
+                    tab.classList.add('border-transparent', 'text-gray-500');
+                });
+                this.classList.remove('border-transparent', 'text-gray-500');
+                this.classList.add('border-blue-500', 'text-blue-600');
+            });
+            
+            // === Initialize Kalkulator Perolehan ===
+            const inputs = [
+                document.getElementById('ssAwal'),
+                document.getElementById('beforeSpend'),
+                document.getElementById('afterSpend'),
+                document.getElementById('ssAkhir'),
+                document.getElementById('perolehanSebelumnya')
+            ];
+            
+            // Format inputs
+            inputs.forEach(input => formatNumberInput(input));
+            
+            // Muat data dari localStorage saat halaman dimuat
+            loadFromLocalStorage();
+            
+            // Event listener untuk checkbox kirim ke grup
+            document.getElementById('kirimGroupCheckbox').addEventListener('change', function() {
+                saveInputToLocalStorage();
+            });
+            
+            // Event listener untuk checkbox kirim ke grup (spreadsheet)
+            document.getElementById('kirimGroupSpreadsheetCheckbox').addEventListener('change', function() {
+                saveSpreadsheetData();
+            });
+            
+            // Event listener untuk tombol calculate
+            document.getElementById('calculateBtn').addEventListener('click', calculate);
+            
+            // Event listener untuk tombol reset
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                if (confirm('Apakah Anda yakin ingin menghapus semua data?')) {
+                    localStorage.removeItem('kalkulatorPerolehanData');
+                    inputs.forEach(input => input.value = '');
+                    document.getElementById('totalSpend').textContent = '0';
+                    document.getElementById('perolehan').textContent = '0';
+                    document.getElementById('totalPerolehan').textContent = '0';
+                    document.getElementById('kirimGroupCheckbox').checked = true;
+                    showToast('Data berhasil direset');
+                }
+            });
+            
+            // Event listener untuk tombol simpan ke riwayat
+            document.getElementById('saveHistoryBtn').addEventListener('click', saveToHistory);
+            
+            // Event listener untuk tombol kirim ke Telegram
+            document.getElementById('sendTelegramBtn').addEventListener('click', sendToTelegram);
+            
+            // === Initialize Spreadsheet ===
+            // Event listener untuk tombol tambah baris
+            document.getElementById('addRowBtn').addEventListener('click', function() {
+                addSpreadsheetRow();
+                saveSpreadsheetData();
+            });
+            
+            // Event listener untuk tombol hitung spreadsheet
+            document.getElementById('calculateSpreadsheetBtn').addEventListener('click', calculateSpreadsheet);
+            
+            // Event listener untuk tombol kirim spreadsheet ke Telegram
+            document.getElementById('sendSpreadsheetTelegramBtn').addEventListener('click', sendSpreadsheetToTelegram);
+            
+            // Event listener untuk tombol copy all di spreadsheet
+            document.getElementById('copyAllBtn').addEventListener('click', copyAllSpreadsheetCalculation);
+            
+            // Event listener untuk tombol reset spreadsheet
+            document.getElementById('resetSpreadsheetBtn').addEventListener('click', function() {
+                if (confirm('Apakah Anda yakin ingin mereset spreadsheet?')) {
+                    // Keep just two rows
+                    const tbody = document.getElementById('spreadsheetBody');
+                    tbody.innerHTML = '';
+                    
+                    // Add two empty rows
+                    addSpreadsheetRow();
+                    addSpreadsheetRow();
+                    
+                    // Reset result
+                    document.getElementById('spreadsheetResult').textContent = '0';
+                    document.getElementById('calculationSteps').innerHTML = '';
+                    document.getElementById('kirimGroupSpreadsheetCheckbox').checked = true;
+                    
+                    // Save to localStorage
+                    saveSpreadsheetData();
+                    
+                    showToast('Spreadsheet berhasil direset');
+                }
+            });
+            
+            // === Initialize Settings ===
+            // Event listener untuk tombol simpan pengaturan
+            document.getElementById('saveSettingsBtn').addEventListener('click', function() {
+                // Update settings from UI
+                appSettings.autoSendTelegram = document.getElementById('autoSendTelegram').checked;
+                appSettings.telegramDestination = document.querySelector('input[name="telegramDestination"]:checked').value;
+                appSettings.numberFormat = document.getElementById('numberFormat').value;
+                
+                // Save settings
+                saveSettingsToLocalStorage();
+                
+                showToast('Pengaturan berhasil disimpan');
+            });
+            
+            // Event listeners untuk pengaturan format angka
+            document.getElementById('numberFormat').addEventListener('change', function() {
+                appSettings.numberFormat = this.value;
+                saveSettingsToLocalStorage();
+                
+                // Re-format existing numbers as needed
+                location.reload(); // Simple solution to refresh all formatting
+            });
+            
+            // === Initialize Modal & Other Features ===
+            // Event listener untuk tombol riwayat (buka modal)
+            document.getElementById('historyBtn').addEventListener('click', function() {
+                document.getElementById('historyModal').classList.remove('hidden');
+                renderHistoryList();
+            });
+            
+            // Event listener untuk tombol tutup modal riwayat
+            document.getElementById('closeHistoryBtn').addEventListener('click', function() {
+                document.getElementById('historyModal').classList.add('hidden');
+            });
+            
+            // Event listener untuk tombol hapus semua riwayat
+            document.getElementById('clearHistoryBtn').addEventListener('click', function() {
+                if (confirm('Apakah Anda yakin ingin menghapus semua riwayat?')) {
+                    calculationHistory = [];
+                    localStorage.setItem('kalkulatorPerolehanHistory', JSON.stringify(calculationHistory));
+                    renderHistoryList();
+                    showToast('Semua riwayat berhasil dihapus');
+                }
+            });
+            
+            // Event listener untuk tombol ekspor riwayat
+            document.getElementById('exportHistoryBtn').addEventListener('click', exportHistory);
+            
+            // Event listener untuk tombol scan (buka modal)
+            document.getElementById('scanBtn').addEventListener('click', function() {
+                document.getElementById('scanModal').classList.remove('hidden');
+                document.getElementById('imagePreviewContainer').classList.add('hidden');
+                document.getElementById('cropContainer').classList.add('hidden');
+                document.getElementById('scanResults').classList.add('hidden');
+                document.getElementById('scanLoading').classList.add('hidden');
+                document.getElementById('applyResultBtn').classList.add('hidden');
+                document.getElementById('processImageBtn').disabled = true;
+                document.getElementById('processImageBtn').classList.add('opacity-50');
+                document.getElementById('imageUpload').value = '';
+            });
+            
+            // Event listener untuk tombol tutup modal scan
+            document.getElementById('closeScanBtn').addEventListener('click', function() {
+                document.getElementById('scanModal').classList.add('hidden');
+                
+                // Hancurkan instance cropper jika ada
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+            });
+            
+            // Event listener untuk unggah gambar
+            document.getElementById('imageUpload').addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    
+                    // Tampilkan preview gambar
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        document.getElementById('imagePreview').src = event.target.result;
+                        document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                        document.getElementById('cropContainer').classList.add('hidden');
+                    }
+                    reader.readAsDataURL(file);
+                    
+                    // Aktifkan tombol proses
+                    document.getElementById('processImageBtn').disabled = false;
+                    document.getElementById('processImageBtn').classList.remove('opacity-50');
+                    
+                    // Sembunyikan hasil sebelumnya
+                    document.getElementById('scanResults').classList.add('hidden');
+                    document.getElementById('applyResultBtn').classList.add('hidden');
+                }
+            });
+            
+            // Event listener untuk tombol proses gambar
+            document.getElementById('processImageBtn').addEventListener('click', async function() {
+                let imageFile;
+                const imagePreview = document.getElementById('imagePreview');
+                
+                if (document.getElementById('imageUpload').files[0]) {
+                    // Jika ada file yang diupload
+                    imageFile = document.getElementById('imageUpload').files[0];
+                } else if (imagePreview.src) {
+                    // Jika ada gambar dari paste atau crop
+                    imageFile = dataURLtoBlob(imagePreview.src);
+                }
+                
+                if (imageFile) {
+                    await extractTextFromImage(imageFile);
+                }
+            });
+            
+            // Event listener untuk tombol terapkan hasil OCR
+            document.getElementById('applyResultBtn').addEventListener('click', function() {
+                if (extractedValue) {
+                    const targetField = document.getElementById('targetField').value;
+                    document.getElementById(targetField).value = extractedValue;
+                    document.getElementById('scanModal').classList.add('hidden');
+                    showToast('Nilai berhasil diterapkan ke ' + document.getElementById('targetField').options[document.getElementById('targetField').selectedIndex].text);
+                    
+                    // Hancurkan instance cropper jika ada
+                    if (cropper) {
+                        cropper.destroy();
+                        cropper = null;
+                    }
+                    
+                    // Simpan input ke localStorage
+                    saveInputToLocalStorage();
+                }
+            });
+            
+            // Event listener untuk paste area
+            const pasteArea = document.getElementById('pasteArea');
+            pasteArea.addEventListener('click', function() {
+                document.getElementById('pasteBtnImage').click();
+            });
+            
+            // Event listener untuk tombol paste
+            document.getElementById('pasteBtnImage').addEventListener('click', function() {
+                navigator.clipboard.read().then(items => {
+                    for (let item of items) {
+                        if (item.types.includes('image/png') || item.types.includes('image/jpeg')) {
+                            item.getType('image/png').then(blob => {
+                                const reader = new FileReader();
+                                reader.onload = function(e) {
+                                    document.getElementById('imagePreview').src = e.target.result;
+                                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                                    document.getElementById('cropContainer').classList.add('hidden');
+                                    
+                                    // Aktifkan tombol proses
+                                    document.getElementById('processImageBtn').disabled = false;
+                                    document.getElementById('processImageBtn').classList.remove('opacity-50');
+                                    
+                                    // Sembunyikan hasil sebelumnya
+                                    document.getElementById('scanResults').classList.add('hidden');
+                                    document.getElementById('applyResultBtn').classList.add('hidden');
+                                };
+                                reader.readAsDataURL(blob);
+                            });
+                            break;
+                        }
+                    }
+                }).catch(err => {
+                    console.error('Error reading clipboard:', err);
+                    alert('Tidak dapat mengakses clipboard. Pastikan Anda mengizinkan akses clipboard.');
+                });
+            });
+            
+            // Event listener untuk tombol crop
+            document.getElementById('cropImageBtn').addEventListener('click', setupCropper);
+            
+            // Event listener untuk tombol terapkan crop
+            document.getElementById('applyCropBtn').addEventListener('click', applyCrop);
+            
+            // Event listener untuk tombol batal crop
+            document.getElementById('cancelCropBtn').addEventListener('click', cancelCrop);
+            
+            // Event listener untuk paste gambar
+            document.addEventListener('paste', handlePastedImage);
+            
+            // Tutup modal jika klik di luar
+            window.addEventListener('click', function(event) {
+                const historyModal = document.getElementById('historyModal');
+                const scanModal = document.getElementById('scanModal');
+                
+                if (event.target === historyModal) {
+                    historyModal.classList.add('hidden');
+                }
+                
+                if (event.target === scanModal) {
+                    scanModal.classList.add('hidden');
+                    
+                    // Hancurkan instance cropper jika ada
+                    if (cropper) {
+                        cropper.destroy();
+                        cropper = null;
+                    }
+                }
+            });
+            
+            // Support tombol Enter untuk menghitung dan kirim ke Telegram
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    // Check which tab is active
+                    if (!document.getElementById('contentPerolehan').classList.contains('hidden')) {
+                        calculate(); // Ini akan mengirim ke Telegram jika checkbox dicentang
+                    } else if (!document.getElementById('contentSpreadsheet').classList.contains('hidden')) {
+                        calculateSpreadsheet(); // Ini juga akan mengirim ke Telegram jika checkbox dicentang
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
