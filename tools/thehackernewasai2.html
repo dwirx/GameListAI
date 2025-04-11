@@ -1,0 +1,1668 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Hacker News Clone - Tech News Hub</title>
+        <meta
+            name="description"
+            content="Stay updated with the latest tech news from Hacker News"
+        />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+            rel="stylesheet"
+        />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/framer-motion/4.1.17/framer-motion.min.js"></script>
+        <script>
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            dark: {
+                                bg: "#1a202c",
+                                text: "#e2e8f0",
+                            },
+                            primary: {
+                                100: "#feebc8",
+                                200: "#fbd38d",
+                                300: "#f6ad55",
+                                400: "#ed8936",
+                                500: "#dd6b20",
+                                600: "#c05621",
+                                700: "#9c4221",
+                                800: "#7b341e",
+                                900: "#652b19",
+                            }
+                        },
+                    },
+                },
+            };
+        </script>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+            body {
+                font-family: "Inter", sans-serif;
+            }
+            .loader {
+                border-top-color: #f6ad55;
+                -webkit-animation: spinner 1.5s linear infinite;
+                animation: spinner 1.5s linear infinite;
+            }
+            @-webkit-keyframes spinner {
+                0% {
+                    -webkit-transform: rotate(0deg);
+                }
+                100% {
+                    -webkit-transform: rotate(360deg);
+                }
+            }
+            @keyframes spinner {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+            .category-btn {
+                white-space: nowrap;
+            }
+            .category-scroll {
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            .category-scroll::-webkit-scrollbar {
+                display: none;
+            }
+            .summary-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 100;
+                backdrop-filter: blur(5px);
+            }
+            .summary-content {
+                max-width: 800px;
+                width: 90%;
+                max-height: 90%;
+                overflow-y: auto;
+                border-radius: 8px;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            }
+            .language-toggle {
+                position: relative;
+                display: inline-block;
+                width: 60px;
+                height: 30px;
+            }
+            .language-toggle input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+            .language-slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #ccc;
+                transition: .4s;
+                border-radius: 30px;
+            }
+            .language-slider:before {
+                position: absolute;
+                content: "";
+                height: 22px;
+                width: 22px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                transition: .4s;
+                border-radius: 50%;
+            }
+            input:checked + .language-slider {
+                background-color: #f6ad55;
+            }
+            input:checked + .language-slider:before {
+                transform: translateX(30px);
+            }
+            .language-label {
+                display: flex;
+                align-items: center;
+            }
+
+            /* Custom scrollbar */
+            .summary-content::-webkit-scrollbar {
+                width: 8px;
+            }
+            .summary-content::-webkit-scrollbar-track {
+                background: rgba(229, 231, 235, 0.1);
+                border-radius: 10px;
+            }
+            .summary-content::-webkit-scrollbar-thumb {
+                background: rgba(156, 163, 175, 0.5);
+                border-radius: 10px;
+            }
+            .summary-content::-webkit-scrollbar-thumb:hover {
+                background: rgba(156, 163, 175, 0.8);
+            }
+
+            /* Reading progress bar */
+            .progress-container {
+                width: 100%;
+                height: 4px;
+                background: transparent;
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 1000;
+            }
+            .progress-bar {
+                height: 4px;
+                background: #f6ad55;
+                width: 0%;
+            }
+
+            /* Pulse animation for new stories */
+            @keyframes pulse {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(246, 173, 85, 0.7);
+                }
+                70% {
+                    box-shadow: 0 0 0 10px rgba(246, 173, 85, 0);
+                }
+                100% {
+                    box-shadow: 0 0 0 0 rgba(246, 173, 85, 0);
+                }
+            }
+            .pulse {
+                animation: pulse 1.5s infinite;
+            }
+
+            /* Toast notifications */
+            .toast {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                padding: 12px 24px;
+                border-radius: 8px;
+                color: white;
+                z-index: 1000;
+                transform: translateX(120%);
+                transition: transform 0.3s ease-in-out;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+            .toast.show {
+                transform: translateX(0);
+            }
+
+            /* Share modal */
+            .share-options {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+            }
+            .share-option {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 10px;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .share-option:hover {
+                background-color: rgba(0, 0, 0, 0.05);
+            }
+            .share-option i {
+                font-size: 24px;
+                margin-bottom: 5px;
+            }
+
+            /* AI model selector */
+            .model-selector {
+                width: 100%;
+                padding: 8px 12px;
+                border-radius: 6px;
+                border: 1px solid #e2e8f0;
+                background-color: white;
+                color: #1a202c;
+                font-size: 14px;
+                margin-bottom: 12px;
+            }
+            .dark .model-selector {
+                background-color: #2d3748;
+                border-color: #4a5568;
+                color: white;
+            }
+        </style>
+    </head>
+    <body
+        class="bg-gray-100 text-gray-900 dark:bg-dark-bg dark:text-dark-text transition-colors duration-300"
+    >
+        <!-- Reading Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar" id="readingProgress"></div>
+        </div>
+
+        <header class="bg-orange-500 text-white shadow-lg sticky top-0 z-50">
+            <div
+                class="container mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center"
+            >
+                <h1 class="text-2xl sm:text-3xl font-bold mb-2 sm:mb-0">
+                    <i class="fas fa-newspaper mr-2"></i>Tech News Hub
+                </h1>
+                <div
+                    class="flex items-center space-x-2 sm:space-x-4 flex-wrap justify-center"
+                >
+                    <button
+                        id="refreshBtn"
+                        class="bg-white text-orange-500 hover:bg-orange-100 font-bold py-2 px-3 sm:px-4 rounded transition duration-300 text-sm sm:text-base"
+                    >
+                        <i class="fas fa-sync-alt mr-1 sm:mr-2"></i>Segarkan
+                    </button>
+                    <button
+                        id="bookmarksBtn"
+                        class="bg-white text-orange-500 hover:bg-orange-100 font-bold py-2 px-3 sm:px-4 rounded transition duration-300 text-sm sm:text-base"
+                    >
+                        <i class="fas fa-bookmark mr-1 sm:mr-2"></i>Bookmark
+                    </button>
+                    <button
+                        id="darkModeToggle"
+                        class="bg-white text-orange-500 hover:bg-orange-100 font-bold py-2 px-3 sm:px-4 rounded transition duration-300 text-sm sm:text-base"
+                    >
+                        <i class="fas fa-moon mr-1 sm:mr-2"></i>Mode Gelap
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <nav class="bg-gray-200 dark:bg-gray-800 py-2 sm:py-4 overflow-hidden">
+            <div class="container mx-auto px-4">
+                <div
+                    class="flex flex-col sm:flex-row justify-between items-center"
+                >
+                    <ul
+                        class="category-scroll flex space-x-2 sm:space-x-4 overflow-x-auto mb-2 sm:mb-0 w-full sm:w-auto pb-2 sm:pb-0"
+                    >
+                        <li>
+                            <button
+                                class="category-btn bg-orange-500 text-white px-3 py-1 sm:px-4 sm:py-2 rounded text-sm sm:text-base transition duration-300"
+                                data-category="featured"
+                            >
+                                <i class="fas fa-star mr-1"></i>Unggulan
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                class="category-btn bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 sm:px-4 sm:py-2 rounded text-sm sm:text-base transition duration-300"
+                                data-category="mostpopular"
+                            >
+                                <i class="fas fa-fire mr-1"></i>Terpopuler
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                class="category-btn bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 sm:px-4 sm:py-2 rounded text-sm sm:text-base transition duration-300"
+                                data-category="newest"
+                            >
+                                <i class="fas fa-clock mr-1"></i>Terbaru
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                class="category-btn bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 sm:px-4 sm:py-2 rounded text-sm sm:text-base transition duration-300"
+                                data-category="past"
+                            >
+                                <i class="fas fa-history mr-1"></i>Terdahulu
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                class="category-btn bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 sm:px-4 sm:py-2 rounded text-sm sm:text-base transition duration-300"
+                                data-category="ask"
+                            >
+                                <i class="fas fa-question-circle mr-1"></i>Tanya
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                class="category-btn bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 sm:px-4 sm:py-2 rounded text-sm sm:text-base transition duration-300"
+                                data-category="show"
+                            >
+                                <i class="fas fa-tv mr-1"></i>Tunjukan
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                class="category-btn bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white px-3 py-1 sm:px-4 sm:py-2 rounded text-sm sm:text-base transition duration-300"
+                                data-category="jobs"
+                            >
+                                <i class="fas fa-briefcase mr-1"></i>Karir
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="w-full sm:w-64 mt-2 sm:mt-0 relative">
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Cari berita..."
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-400 pl-10"
+                        />
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="container mx-auto px-4 py-4 sm:py-8">
+            <div
+                id="loader"
+                class="hidden loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16 mx-auto mb-4"
+            ></div>
+
+            <!-- Trending Tags -->
+            <div id="trendingTags" class="mb-6 hidden">
+                <h3 class="text-lg font-bold mb-2 text-gray-700 dark:text-gray-300">Topik Tren</h3>
+                <div class="flex flex-wrap gap-2" id="tagsContainer"></div>
+            </div>
+
+            <div
+                id="newsList"
+                class="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+            ></div>
+            <div class="text-center mt-8">
+                <button
+                    id="loadMoreBtn"
+                    class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded transition duration-300"
+                >
+                    Muat Lainnya
+                </button>
+            </div>
+        </main>
+
+        <footer class="bg-gray-800 text-white py-6 mt-8">
+            <div class="container mx-auto px-4">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="mb-4 md:mb-0">
+                        <h3 class="text-xl font-bold mb-2">Tech News Hub</h3>
+                        <p class="text-gray-400">Berita teknologi terkini dari Hacker News</p>
+                    </div>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-github text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition duration-300">
+                            <i class="fab fa-linkedin text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="border-t border-gray-700 mt-4 pt-4 text-center text-gray-400">
+                    <p>&copy; 2025 Tech News Hub. Dibuat dengan <i class="fas fa-heart text-red-500"></i> untuk teknologi.</p>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast"></div>
+
+        <!-- Summary Modal -->
+        <div id="summaryModal" class="summary-modal hidden">
+            <div class="summary-content bg-white dark:bg-gray-800 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white" id="summaryTitle"></h2>
+                    <div class="flex space-x-2">
+                        <button id="shareBtn" class="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300">
+                            <i class="fas fa-share-alt text-lg"></i>
+                        </button>
+                        <button id="copyBtn" class="text-green-500 dark:text-green-400 hover:text-green-600 dark:hover:text-green-300">
+                            <i class="fas fa-copy text-lg"></i>
+                        </button>
+                        <button id="closeSummaryBtn" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                    <div class="language-label">
+                        <span class="mr-2 text-gray-700 dark:text-gray-300">🇬🇧 English</span>
+                        <label class="language-toggle">
+                            <input type="checkbox" id="languageToggle" checked>
+                            <span class="language-slider"></span>
+                        </label>
+                        <span class="ml-2 text-gray-700 dark:text-gray-300">🇮🇩 Indonesia</span>
+                    </div>
+                    <div class="flex items-center">
+                        <select id="modelSelector" class="model-selector mr-2">
+                            <optgroup label="Llama Models">
+                                <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 (Cepat)</option>
+                                <option value="meta-llama/llama-4-open-8b">Llama 4 Open (Ringan)</option>
+                                <option value="meta-llama/llama-4-27b-16e-instruct">Llama 4 27B (Akurat)</option>
+                            </optgroup>
+                            <optgroup label="Claude Models">
+                                <option value="claude-3-5-sonnet-20240620">Claude 3.5 Sonnet</option>
+                            </optgroup>
+                            <optgroup label="Gemini Models">
+                                <option value="gemini-2.5-pro-preview-03-25">Gemini 2.5 Pro (Terbaik)</option>
+                                <option value="gemini-2.0-flash">Gemini 2.0 Flash (Cepat)</option>
+                                <option value="gemini-2.0-flash-thinking-exp-01-21">Gemini 2.0 Flash Thinking</option>
+                            </optgroup>
+                        </select>
+                        <button id="regenerateSummaryBtn" class="bg-orange-500 hover:bg-orange-600 text-white text-sm px-3 py-1 rounded transition duration-300">
+                            <i class="fas fa-redo-alt mr-1"></i> Buat Ulang
+                        </button>
+                    </div>
+                </div>
+                <div id="summaryLoader" class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-10 w-10 mx-auto mb-4"></div>
+                <div id="summaryContent" class="text-gray-700 dark:text-gray-300"></div>
+            </div>
+        </div>
+
+        <!-- Share Modal -->
+        <div id="shareModal" class="summary-modal hidden">
+            <div class="summary-content bg-white dark:bg-gray-800 p-6" style="max-width: 400px;">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Bagikan Artikel</h2>
+                    <button id="closeShareBtn" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+                <div class="share-options">
+                    <div class="share-option" data-platform="twitter">
+                        <i class="fab fa-twitter text-blue-400"></i>
+                        <span class="text-sm">Twitter</span>
+                    </div>
+                    <div class="share-option" data-platform="facebook">
+                        <i class="fab fa-facebook text-blue-600"></i>
+                        <span class="text-sm">Facebook</span>
+                    </div>
+                    <div class="share-option" data-platform="whatsapp">
+                        <i class="fab fa-whatsapp text-green-500"></i>
+                        <span class="text-sm">WhatsApp</span>
+                    </div>
+                    <div class="share-option" data-platform="telegram">
+                        <i class="fab fa-telegram text-blue-500"></i>
+                        <span class="text-sm">Telegram</span>
+                    </div>
+                    <div class="share-option" data-platform="linkedin">
+                        <i class="fab fa-linkedin text-blue-700"></i>
+                        <span class="text-sm">LinkedIn</span>
+                    </div>
+                    <div class="share-option" data-platform="reddit">
+                        <i class="fab fa-reddit text-orange-600"></i>
+                        <span class="text-sm">Reddit</span>
+                    </div>
+                    <div class="share-option" data-platform="email">
+                        <i class="fas fa-envelope text-gray-600"></i>
+                        <span class="text-sm">Email</span>
+                    </div>
+                    <div class="share-option" data-platform="copy">
+                        <i class="fas fa-link text-purple-600"></i>
+                        <span class="text-sm">Salin Link</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const apiUrl = "https://hacker-news.firebaseio.com/v0";
+            const groqApiKey = "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";
+            const geminiApiKey = "AIzaSyC7UZC9dg915QDQ5WlDnqca7_2IRIE3WJc";
+            const newsContainer = document.getElementById("newsList");
+            const loader = document.getElementById("loader");
+            const refreshBtn = document.getElementById("refreshBtn");
+            const bookmarksBtn = document.getElementById("bookmarksBtn");
+            const loadMoreBtn = document.getElementById("loadMoreBtn");
+            const darkModeToggle = document.getElementById("darkModeToggle");
+            const categoryButtons = document.querySelectorAll(".category-btn");
+            const searchInput = document.getElementById("searchInput");
+            const summaryModal = document.getElementById("summaryModal");
+            const closeSummaryBtn = document.getElementById("closeSummaryBtn");
+            const summaryTitle = document.getElementById("summaryTitle");
+            const summaryContent = document.getElementById("summaryContent");
+            const summaryLoader = document.getElementById("summaryLoader");
+            const languageToggle = document.getElementById("languageToggle");
+            const regenerateSummaryBtn = document.getElementById("regenerateSummaryBtn");
+            const modelSelector = document.getElementById("modelSelector");
+            const shareBtn = document.getElementById("shareBtn");
+            const copyBtn = document.getElementById("copyBtn");
+            const shareModal = document.getElementById("shareModal");
+            const closeShareBtn = document.getElementById("closeShareBtn");
+            const shareOptions = document.querySelectorAll(".share-option");
+            const toast = document.getElementById("toast");
+            const trendingTags = document.getElementById("trendingTags");
+            const tagsContainer = document.getElementById("tagsContainer");
+            const readingProgress = document.getElementById("readingProgress");
+
+            let currentStories = [];
+            let currentIndex = 0;
+            const storiesPerPage = 15;
+            let currentCategory = "featured";
+            let isBookmarkView = false;
+            let searchTerm = "";
+            let currentStoryForSummary = null;
+            let currentShareUrl = "";
+            let currentShareTitle = "";
+            let allTags = {};
+            let lastLoadTime = 0;
+
+            // Load language preference - Default to Indonesian (true)
+            let useIndonesian = localStorage.getItem("useIndonesian") !== "false";
+            languageToggle.checked = useIndonesian;
+
+            async function fetchTopStories() {
+                const response = await fetch(`${apiUrl}/topstories.json`);
+                return await response.json();
+            }
+
+            async function fetchNewStories() {
+                const response = await fetch(`${apiUrl}/newstories.json`);
+                return await response.json();
+            }
+
+            async function fetchBestStories() {
+                const response = await fetch(`${apiUrl}/beststories.json`);
+                return await response.json();
+            }
+
+            async function fetchAskStories() {
+                const response = await fetch(`${apiUrl}/askstories.json`);
+                return await response.json();
+            }
+
+            async function fetchShowStories() {
+                const response = await fetch(`${apiUrl}/showstories.json`);
+                return await response.json();
+            }
+
+            async function fetchJobStories() {
+                const response = await fetch(`${apiUrl}/jobstories.json`);
+                return await response.json();
+            }
+
+            async function fetchStory(id) {
+                const response = await fetch(`${apiUrl}/item/${id}.json`);
+                return await response.json();
+            }
+
+            async function fetchStoryWithComments(storyId) {
+                const story = await fetchStory(storyId);
+                if (!story.kids || story.kids.length === 0) {
+                    return { story, comments: [] };
+                }
+
+                // Get top comments (limit to 10 for better context)
+                const topCommentIds = story.kids.slice(0, 10);
+                const commentPromises = topCommentIds.map(async (commentId) => {
+                    return await fetchStory(commentId);
+                });
+
+                const comments = await Promise.all(commentPromises);
+                return { story, comments };
+            }
+
+            function createEnglishPrompt(story, comments) {
+                let prompt = `
+# Task: Comprehensive Summary of Hacker News Discussion
+
+## Article Information
+- Title: "${story.title}"
+${story.text ? `- Text Content: ${story.text}` : ""}
+${story.url ? `- URL: ${story.url}` : ""}
+- Posted by: ${story.by}
+- Score: ${story.score}
+- Date: ${formatDate(story.time)}
+
+## Top Comments (${comments.length})
+`;
+
+                comments.forEach((comment, i) => {
+                    if (comment && comment.text) {
+                        prompt += `
+### Comment ${i+1} by ${comment.by}:
+${comment.text}
+`;
+                    }
+                });
+
+                prompt += `
+## Instructions:
+1. Provide a concise but comprehensive summary (3-5 paragraphs) of the main article content
+2. Highlight the key technological concepts, innovations, or discussions
+3. Summarize the most insightful points from the comments
+4. Identify any consensus or disagreements in the discussion
+5. Add relevant technical context that helps understand the topic better
+6. Structure your response with clear headings
+7. Write in a clear, professional tone for a technical audience
+
+Your summary should be helpful for someone who wants to quickly understand the technical discussion without reading the full thread.
+`;
+
+                return prompt;
+            }
+
+            function createIndonesianPrompt(story, comments) {
+                let prompt = `
+# Tugas: Ringkasan Komprehensif Diskusi Hacker News
+
+## Informasi Artikel
+- Judul: "${story.title}"
+${story.text ? `- Konten Teks: ${story.text}` : ""}
+${story.url ? `- URL: ${story.url}` : ""}
+- Diposting oleh: ${story.by}
+- Skor: ${story.score}
+- Tanggal: ${formatDate(story.time)}
+
+## Komentar Teratas (${comments.length})
+`;
+
+                comments.forEach((comment, i) => {
+                    if (comment && comment.text) {
+                        prompt += `
+### Komentar ${i+1} oleh ${comment.by}:
+${comment.text}
+`;
+                    }
+                });
+
+                prompt += `
+## Instruksi:
+1. Berikan ringkasan yang singkat namun komprehensif (3-5 paragraf) tentang konten artikel utama
+2. Sorot konsep, inovasi, atau diskusi teknologi utama
+3. Rangkum poin-poin paling berwawasan dari komentar-komentar
+4. Identifikasi konsensus atau ketidaksepakatan dalam diskusi
+5. Tambahkan konteks teknis yang relevan yang membantu memahami topik dengan lebih baik
+6. Strukturkan respons Anda dengan judul yang jelas
+7. Tulis dalam bahasa Indonesia yang jelas dan formal
+
+Ringkasan Anda harus membantu seseorang yang ingin dengan cepat memahami diskusi teknis tanpa membaca seluruh thread. Berikan ringkasan dalam Bahasa Indonesia yang baik dan benar.
+`;
+
+                return prompt;
+            }
+
+            async function generateGeminiSummary(prompt, modelId) {
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${geminiApiKey}`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            contents: [
+                                {
+                                    role: "user",
+                                    parts: [
+                                        {
+                                            text: prompt
+                                        }
+                                    ]
+                                }
+                            ],
+                            generationConfig: {
+                                temperature: 0.7,
+                                maxOutputTokens: 1024,
+                                topP: 1,
+                            }
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.candidates && data.candidates.length > 0 && 
+                        data.candidates[0].content && 
+                        data.candidates[0].content.parts && 
+                        data.candidates[0].content.parts.length > 0) {
+                        return data.candidates[0].content.parts[0].text;
+                    } else {
+                        throw new Error("Unexpected response structure from Gemini API");
+                    }
+                } catch (error) {
+                    console.error("Error with Gemini API:", error);
+                    throw error;
+                }
+            }
+
+            async function generateGroqSummary(prompt, modelId) {
+                try {
+                    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${groqApiKey}`
+                        },
+                        body: JSON.stringify({
+                            messages: [
+                                {
+                                    role: "user",
+                                    content: prompt
+                                }
+                            ],
+                            model: modelId,
+                            temperature: 0.7,
+                            max_completion_tokens: 1024,
+                            top_p: 1,
+                            stream: false,
+                            stop: null
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.choices && data.choices.length > 0) {
+                        return data.choices[0].message.content;
+                    } else {
+                        throw new Error("Unexpected response structure from Groq API");
+                    }
+                } catch (error) {
+                    console.error("Error with Groq API:", error);
+                    throw error;
+                }
+            }
+
+            async function generateSummary(storyId) {
+                summaryModal.classList.remove("hidden");
+                summaryTitle.textContent = "Loading...";
+                summaryContent.textContent = "";
+                summaryLoader.classList.remove("hidden");
+                currentStoryForSummary = storyId;
+
+                try {
+                    const { story, comments } = await fetchStoryWithComments(storyId);
+
+                    // Save story title and URL for sharing
+                    summaryTitle.textContent = story.title;
+                    currentShareUrl = story.url || `https://news.ycombinator.com/item?id=${story.id}`;
+                    currentShareTitle = story.title;
+
+                    // Format content for the AI based on language preference
+                    const prompt = useIndonesian 
+                        ? createIndonesianPrompt(story, comments)
+                        : createEnglishPrompt(story, comments);
+
+                    // Get selected model
+                    const selectedModel = modelSelector.value;
+                    let summary;
+
+                    // Check if we're using Gemini or Groq API
+                    if (selectedModel.startsWith('gemini')) {
+                        summary = await generateGeminiSummary(prompt, selectedModel);
+                    } else {
+                        summary = await generateGroqSummary(prompt, selectedModel);
+                    }
+
+                    // Convert markdown to HTML with improved formatting
+                    const formattedSummary = summary
+                        .replace(/^# (.*$)/gm, '<h1 class="text-xl font-bold mb-3 mt-4 text-orange-500 dark:text-orange-400">$1</h1>')
+                        .replace(/^## (.*$)/gm, '<h2 class="text-lg font-bold mb-2 mt-4 text-gray-800 dark:text-gray-200">$1</h2>')
+                        .replace(/^### (.*$)/gm, '<h3 class="text-md font-bold mb-2 mt-3 text-gray-700 dark:text-gray-300">$1</h3>')
+                        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+                        .replace(/`(.*?)`/g, '<code class="bg-gray-100 dark:bg-gray-700 rounded px-1 py-0.5 font-mono text-sm">$1</code>')
+                        .replace(/\n\n/g, '</p><p class="mb-3">')
+                        .replace(/\n/g, '<br>');
+
+                    summaryContent.innerHTML = `<p class="mb-3">${formattedSummary}</p>`;
+
+                    // Save summary to localStorage for offline access
+                    saveSummaryToStorage(storyId, {
+                        title: story.title,
+                        content: formattedSummary,
+                        language: useIndonesian ? 'id' : 'en',
+                        timestamp: new Date().getTime()
+                    });
+
+                    showToast(useIndonesian ? "Ringkasan berhasil dibuat!" : "Summary successfully generated!", "bg-green-500");
+                } catch (error) {
+                    console.error("Error generating summary:", error);
+                    summaryTitle.textContent = "Error";
+                    summaryContent.textContent = useIndonesian 
+                        ? "Gagal menghasilkan ringkasan. Silakan coba lagi nanti."
+                        : "Failed to generate summary. Please try again later.";
+
+                    showToast(useIndonesian ? "Gagal membuat ringkasan" : "Failed to generate summary", "bg-red-500");
+                } finally {
+                    summaryLoader.classList.add("hidden");
+                }
+            }
+
+            function saveSummaryToStorage(storyId, summaryData) {
+                const savedSummaries = JSON.parse(localStorage.getItem("savedSummaries") || "{}");
+                savedSummaries[storyId] = summaryData;
+
+                // Limit storage to prevent exceeding quota
+                const summaryIds = Object.keys(savedSummaries);
+                if (summaryIds.length > 50) {
+                    // Remove oldest summaries
+                    const oldestIds = summaryIds
+                        .sort((a, b) => savedSummaries[a].timestamp - savedSummaries[b].timestamp)
+                        .slice(0, summaryIds.length - 50);
+
+                    oldestIds.forEach(id => {
+                        delete savedSummaries[id];
+                    });
+                }
+
+                localStorage.setItem("savedSummaries", JSON.stringify(savedSummaries));
+            }
+
+            function getSavedSummary(storyId) {
+                const savedSummaries = JSON.parse(localStorage.getItem("savedSummaries") || "{}");
+                return savedSummaries[storyId];
+            }
+
+            function formatDate(timestamp) {
+                const date = new Date(timestamp * 1000);
+
+                // Use relative time for recent items
+                const now = new Date();
+                const diffMs = now - date;
+                const diffSec = Math.floor(diffMs / 1000);
+                const diffMin = Math.floor(diffSec / 60);
+                const diffHour = Math.floor(diffMin / 60);
+                const diffDay = Math.floor(diffHour / 24);
+
+                if (diffDay < 1) {
+                    if (diffHour < 1) {
+                        if (diffMin < 1) {
+                            return useIndonesian ? "Baru saja" : "Just now";
+                        }
+                        return useIndonesian 
+                            ? `${diffMin} menit yang lalu` 
+                            : `${diffMin} minute${diffMin !== 1 ? 's' : ''} ago`;
+                    }
+                    return useIndonesian
+                        ? `${diffHour} jam yang lalu`
+                        : `${diffHour} hour${diffHour !== 1 ? 's' : ''} ago`;
+                }
+                if (diffDay < 7) {
+                    return useIndonesian
+                        ? `${diffDay} hari yang lalu`
+                        : `${diffDay} day${diffDay !== 1 ? 's' : ''} ago`;
+                }
+
+                // Fall back to regular date format for older items
+                return date.toLocaleString(useIndonesian ? "id-ID" : "en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+            }
+
+            function extractDomain(url) {
+                if (!url) return null;
+                try {
+                    const domain = new URL(url).hostname.replace('www.', '');
+                    return domain;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function extractTags(story) {
+                const tags = [];
+                const title = story.title.toLowerCase();
+
+                // Check for tech-related keywords in title
+                const keywords = [
+                    'javascript', 'python', 'java', 'react', 'vue', 'angular',
+                    'node', 'frontend', 'backend', 'fullstack', 'ai', 'machine learning',
+                    'ml', 'api', 'cloud', 'aws', 'azure', 'gcp', 'google', 'apple', 'microsoft',
+                    'database', 'sql', 'nosql', 'devops', 'kubernetes', 'docker', 'blockchain',
+                    'crypto', 'security', 'linux', 'windows', 'ios', 'android', 'mobile',
+                    'web', 'css', 'html', 'ui', 'ux', 'design', 'git', 'github'
+                ];
+
+                keywords.forEach(keyword => {
+                    // Check for whole word matches
+                    const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+                    if (regex.test(title)) {
+                        tags.push(keyword.toLowerCase());
+                    }
+                });
+
+                // Extract domain as a tag
+                const domain = extractDomain(story.url);
+                if (domain) {
+                    tags.push(domain);
+                }
+
+                // Add category tags from type
+                if (story.type) {
+                    tags.push(story.type);
+                }
+
+                // Add unique tags only
+                return [...new Set(tags)];
+            }
+
+            function updateTrendingTags() {
+                // Sort tags by frequency
+                const sortedTags = Object.entries(allTags)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 10); // Get top 10 tags
+
+                if (sortedTags.length > 0) {
+                    trendingTags.classList.remove('hidden');
+                    tagsContainer.innerHTML = '';
+
+                    sortedTags.forEach(([tag, count]) => {
+                        const tagElement = document.createElement('button');
+                        tagElement.className = 'bg-gray-200 dark:bg-gray-700 hover:bg-orange-100 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-300 text-xs rounded-full px-3 py-1 transition duration-300';
+                        tagElement.innerHTML = `#${tag} <span class="text-orange-500">${count}</span>`;
+
+                        tagElement.addEventListener('click', () => {
+                            searchInput.value = tag;
+                            searchTerm = tag;
+                            if (isBookmarkView) {
+                                loadBookmarks();
+                            } else {
+                                loadNews();
+                            }
+                        });
+
+                        tagsContainer.appendChild(tagElement);
+                    });
+                }
+            }
+
+            function createStoryElement(story) {
+                const storyElement = document.createElement("article");
+
+                // Check if story is new (posted within last hour)
+                const isNew = (Date.now()/1000 - story.time) < 3600;
+
+                storyElement.className =
+                    `bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105 ${isNew ? 'pulse' : ''}`;
+
+                // Extract domain
+                const domain = extractDomain(story.url);
+
+                // Extract tags
+                const tags = extractTags(story);
+
+                // Update tags frequency counter
+                tags.forEach(tag => {
+                    allTags[tag] = (allTags[tag] || 0) + 1;
+                });
+
+                const savedStories = JSON.parse(
+                    localStorage.getItem("savedStories") || "[]",
+                );
+                const isBookmarked = savedStories.includes(story.id.toString());
+
+                // Check if we have a saved summary
+                const hasSummary = getSavedSummary(story.id) !== undefined;
+
+                storyElement.innerHTML = `
+                    <div class="p-4 sm:p-6">
+                        ${isNew ? '<span class="bg-orange-500 text-white text-xs px-2 py-1 rounded-full absolute top-2 right-2">NEW</span>' : ''}
+                        <h2 class="text-lg sm:text-xl font-semibold mb-2">
+                            <a href="${story.url || `https://news.ycombinator.com/item?id=${story.id}`}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">${story.title}</a>
+                        </h2>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">${useIndonesian ? 'Oleh' : 'By'} ${story.by}</span>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">•</span>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">${useIndonesian ? 'Skor' : 'Score'}: ${story.score}</span>
+                            ${domain ? `<span class="text-sm text-gray-600 dark:text-gray-400">•</span>
+                            <span class="text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">${domain}</span>` : ''}
+                        </div>
+                        <p class="text-xs text-gray-500 dark:text-gray-500 mb-3">
+                            <i class="far fa-clock mr-1"></i> ${formatDate(story.time)}
+                        </p>
+                        ${story.text ? `<p class="text-sm text-gray-700 dark:text-gray-300 mt-2 line-clamp-3">${story.text}</p>` : ""}
+                        ${tags.length > 0 ? `
+                        <div class="mt-3 flex flex-wrap gap-1">
+                            ${tags.map(tag => `<span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full">#${tag}</span>`).join('')}
+                        </div>` : ''}
+                    </div>
+                    <div class="bg-gray-100 dark:bg-gray-700 px-4 sm:px-6 py-3 flex justify-between items-center">
+                        <div class="flex space-x-3">
+                            <a href="https://news.ycombinator.com/item?id=${story.id}" target="_blank" class="text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 text-sm">
+                                <i class="far fa-comment mr-1"></i> ${story.descendants || 0} ${useIndonesian ? 'komentar' : 'comments'}
+                            </a>
+                            <button class="summarizeBtn text-purple-500 dark:text-purple-400 hover:text-purple-600 dark:hover:text-purple-300 text-sm flex items-center" data-id="${story.id}">
+                                <i class="fas fa-robot mr-1"></i> ${hasSummary ? (useIndonesian ? 'Lihat Ringkasan' : 'View Summary') : (useIndonesian ? 'Ringkas AI' : 'AI Summary')}
+                            </button>
+                        </div>
+                        <button class="${isBookmarked ? "deleteBookmarkBtn bg-red-500 hover:bg-red-600" : "saveBtn bg-green-500 hover:bg-green-600"} text-white text-xs sm:text-sm py-1 px-2 rounded transition duration-300" data-id="${story.id}">
+                            <i class="${isBookmarked ? "fas fa-trash" : "far fa-bookmark"} mr-1"></i> ${isBookmarked ? (useIndonesian ? "Hapus" : "Delete") : (useIndonesian ? "Simpan" : "Save")}
+                        </button>
+                    </div>
+                `;
+
+                framerMotion(storyElement);
+
+                return storyElement;
+            }
+
+            function framerMotion(element) {
+                element.style.transform = "scale(0)";
+                element.style.opacity = "0";
+                element.animate(
+                    [
+                        { transform: "scale(0)", opacity: 0 },
+                        { transform: "scale(1)", opacity: 1 },
+                    ],
+                    {
+                        duration: 500,
+                        easing: "ease-in-out",
+                        fill: "forwards",
+                    },
+                );
+            }
+
+            async function loadNews(append = false) {
+                if (!append) {
+                    newsContainer.innerHTML = "";
+                    currentIndex = 0;
+                }
+                loader.classList.remove("hidden");
+
+                // Throttle new data fetching to avoid hammering the API
+                const now = Date.now();
+                const shouldFetchFresh = now - lastLoadTime > 60000; // 1 minute
+
+                if (currentStories.length === 0 || shouldFetchFresh) {
+                    lastLoadTime = now;
+                    try {
+                        switch (currentCategory) {
+                            case "featured":
+                                currentStories = await fetchBestStories();
+                                break;
+                            case "mostpopular":
+                                currentStories = await fetchTopStories();
+                                break;
+                            case "newest":
+                                currentStories = await fetchNewStories();
+                                break;
+                            case "past":
+                                currentStories = await fetchNewStories();
+                                // Filter to only include older stories (24+ hours)
+                                const oneDayAgo = Math.floor(Date.now() / 1000) - 86400;
+                                const storiesWithDetails = await Promise.all(
+                                    currentStories.slice(0, 100).map(fetchStory)
+                                );
+                                currentStories = storiesWithDetails
+                                    .filter(story => story.time < oneDayAgo)
+                                    .map(story => story.id);
+                                break;
+                            case "ask":
+                                currentStories = await fetchAskStories();
+                                break;
+                            case "show":
+                                currentStories = await fetchShowStories();
+                                break;
+                            case "jobs":
+                                currentStories = await fetchJobStories();
+                                break;
+                        }
+                    } catch (error) {
+                        console.error("Error fetching stories:", error);
+                        newsContainer.innerHTML = useIndonesian
+                            ? '<p class="text-center text-red-500 dark:text-red-400 py-4">Gagal memuat berita. Silakan coba lagi nanti.</p>'
+                            : '<p class="text-center text-red-500 dark:text-red-400 py-4">Failed to load news. Please try again later.</p>';
+                        loader.classList.add("hidden");
+                        return;
+                    }
+                }
+
+                const storiesToLoad = currentStories.slice(
+                    currentIndex,
+                    currentIndex + storiesPerPage,
+                );
+                const stories = await Promise.all(
+                    storiesToLoad.map(fetchStory),
+                );
+
+                // Filter out duplicates
+                const uniqueStories = stories.reduce((acc, story) => {
+                    if (story && !acc.find((s) => s.id === story.id)) {
+                        acc.push(story);
+                    }
+                    return acc;
+                }, []);
+
+                const filteredStories = uniqueStories.filter(
+                    (story) =>
+                        story && 
+                        (story.title && story.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        (story.text && story.text.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                        (story.by && story.by.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                        (story.url && story.url.toLowerCase().includes(searchTerm.toLowerCase())))
+                );
+
+                if (filteredStories.length > 0) {
+                    filteredStories.forEach((story) => {
+                        if (story) {
+                            const storyElement = createStoryElement(story);
+                            newsContainer.appendChild(storyElement);
+                        }
+                    });
+
+                    // Update trending tags
+                    updateTrendingTags();
+                } else if (!append) {
+                    newsContainer.innerHTML = useIndonesian
+                        ? '<p class="text-center text-gray-500 dark:text-gray-400 py-8">Tidak ada cerita yang cocok dengan pencarian Anda.</p>'
+                        : '<p class="text-center text-gray-500 dark:text-gray-400 py-8">No stories found matching your search.</p>';
+                }
+
+                currentIndex += storiesPerPage;
+                loader.classList.add("hidden");
+                loadMoreBtn.classList.toggle(
+                    "hidden",
+                    currentIndex >= currentStories.length ||
+                        filteredStories.length === 0
+                );
+            }
+
+            function toggleDarkMode() {
+                document.documentElement.classList.toggle("dark");
+                const isDarkMode =
+                    document.documentElement.classList.contains("dark");
+                localStorage.setItem("darkMode", isDarkMode);
+                darkModeToggle.innerHTML = isDarkMode
+                    ? '<i class="fas fa-sun mr-2"></i>' + (useIndonesian ? 'Mode Terang' : 'Light Mode')
+                    : '<i class="fas fa-moon mr-2"></i>' + (useIndonesian ? 'Mode Gelap' : 'Dark Mode');
+            }
+
+            function initDarkMode() {
+                if (
+                    localStorage.getItem("darkMode") === "true" ||
+                    (!localStorage.getItem("darkMode") &&
+                        window.matchMedia("(prefers-color-scheme: dark)").matches)
+                ) {
+                    document.documentElement.classList.add("dark");
+                    darkModeToggle.innerHTML =
+                        '<i class="fas fa-sun mr-2"></i>' + (useIndonesian ? 'Mode Terang' : 'Light Mode');
+                } else {
+                    darkModeToggle.innerHTML = 
+                        '<i class="fas fa-moon mr-2"></i>' + (useIndonesian ? 'Mode Gelap' : 'Dark Mode');
+                }
+            }
+
+            async function loadBookmarks() {
+                isBookmarkView = true;
+                const savedStories = JSON.parse(
+                    localStorage.getItem("savedStories") || "[]",
+                );
+                newsContainer.innerHTML = "";
+                loader.classList.remove("hidden");
+
+                if (savedStories.length === 0) {
+                    newsContainer.innerHTML = useIndonesian
+                        ? '<div class="text-center py-10 col-span-full"><i class="far fa-bookmark text-5xl text-gray-300 dark:text-gray-600 mb-4"></i><p class="text-gray-500 dark:text-gray-400">Belum ada bookmark yang disimpan.</p><p class="text-sm text-gray-400 dark:text-gray-500 mt-2">Klik tombol "Simpan" pada artikel untuk menambahkannya ke Bookmark</p></div>'
+                        : '<div class="text-center py-10 col-span-full"><i class="far fa-bookmark text-5xl text-gray-300 dark:text-gray-600 mb-4"></i><p class="text-gray-500 dark:text-gray-400">No bookmarks saved yet.</p><p class="text-sm text-gray-400 dark:text-gray-500 mt-2">Click the "Save" button on articles to add them to your bookmarks</p></div>';
+                } else {
+                    try {
+                        const bookmarkedStories = await Promise.all(
+                            savedStories.map(id => fetchStory(id))
+                        );
+
+                        // Filter out null/undefined entries and duplicates
+                        const uniqueBookmarks = bookmarkedStories.reduce(
+                            (acc, story) => {
+                                if (story && !acc.find((s) => s.id === story.id)) {
+                                    acc.push(story);
+                                }
+                                return acc;
+                            },
+                            []
+                        );
+
+                        const filteredBookmarks = uniqueBookmarks.filter(
+                            (story) =>
+                                story && 
+                                (story.title && story.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                (story.text && story.text.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                                (story.by && story.by.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                                (story.url && story.url.toLowerCase().includes(searchTerm.toLowerCase())))
+                        );
+
+                        if (filteredBookmarks.length === 0) {
+                            newsContainer.innerHTML = useIndonesian
+                                ? '<p class="text-center text-gray-500 dark:text-gray-400 py-8">Tidak ada bookmark yang cocok dengan pencarian Anda.</p>'
+                                : '<p class="text-center text-gray-500 dark:text-gray-400 py-8">No bookmarks found matching your search.</p>';
+                        } else {
+                            filteredBookmarks.forEach((story) => {
+                                if (story) {
+                                    const storyElement = createStoryElement(story);
+                                    newsContainer.appendChild(storyElement);
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.error("Error loading bookmarks:", error);
+                        newsContainer.innerHTML = useIndonesian
+                            ? '<p class="text-center text-red-500 dark:text-red-400 py-4">Gagal memuat bookmark. Silakan coba lagi nanti.</p>'
+                            : '<p class="text-center text-red-500 dark:text-red-400 py-4">Failed to load bookmarks. Please try again later.</p>';
+                    }
+                }
+
+                loader.classList.add("hidden");
+                loadMoreBtn.classList.add("hidden");
+            }
+
+            function saveBookmark(storyId) {
+                let savedStories = JSON.parse(
+                    localStorage.getItem("savedStories") || "[]",
+                );
+                if (!savedStories.includes(storyId)) {
+                    savedStories.push(storyId);
+                    localStorage.setItem(
+                        "savedStories",
+                        JSON.stringify(savedStories),
+                    );
+                    showToast(useIndonesian ? "Artikel disimpan ke bookmark" : "Article saved to bookmarks", "bg-green-500");
+                }
+            }
+
+            function deleteBookmark(storyId) {
+                let savedStories = JSON.parse(
+                    localStorage.getItem("savedStories") || "[]",
+                );
+                const initialLength = savedStories.length;
+                savedStories = savedStories.filter((id) => id !== storyId);
+
+                if (initialLength !== savedStories.length) {
+                    localStorage.setItem(
+                        "savedStories",
+                        JSON.stringify(savedStories),
+                    );
+                    showToast(useIndonesian ? "Artikel dihapus dari bookmark" : "Article removed from bookmarks", "bg-red-500");
+                }
+
+                if (isBookmarkView) {
+                    loadBookmarks();
+                }
+            }
+
+            function copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast(useIndonesian ? "Disalin ke clipboard!" : "Copied to clipboard!", "bg-green-500");
+                }).catch(() => {
+                    showToast(useIndonesian ? "Gagal menyalin teks" : "Failed to copy text", "bg-red-500");
+                });
+            }
+
+            function sharePage(platform) {
+                let shareUrl = '';
+                const text = encodeURIComponent(currentShareTitle);
+                const url = encodeURIComponent(currentShareUrl);
+
+                switch (platform) {
+                    case 'twitter':
+                        shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+                        break;
+                    case 'facebook':
+                        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+                        break;
+                    case 'whatsapp':
+                        shareUrl = `https://api.whatsapp.com/send?text=${text}%20${url}`;
+                        break;
+                    case 'telegram':
+                        shareUrl = `https://t.me/share/url?url=${url}&text=${text}`;
+                        break;
+                    case 'linkedin':
+                        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+                        break;
+                    case 'reddit':
+                        shareUrl = `https://www.reddit.com/submit?url=${url}&title=${text}`;
+                        break;
+                    case 'email':
+                        shareUrl = `mailto:?subject=${text}&body=${text}%20${url}`;
+                        break;
+                    case 'copy':
+                        copyToClipboard(currentShareUrl);
+                        shareModal.classList.add('hidden');
+                        return;
+                }
+
+                window.open(shareUrl, '_blank');
+                shareModal.classList.add('hidden');
+                showToast(useIndonesian ? "Artikel dibagikan!" : "Article shared!", "bg-blue-500");
+            }
+
+            function showToast(message, bgColor) {
+                toast.textContent = message;
+                toast.className = `toast ${bgColor}`;
+
+                // Force reflow
+                void toast.offsetWidth;
+
+                toast.classList.add('show');
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+
+            // Update UI text based on language
+            function updateUILanguage() {
+                document.querySelectorAll('.saveBtn').forEach(btn => {
+                    const icon = btn.querySelector('i');
+                    btn.innerHTML = '';
+                    btn.appendChild(icon);
+                    btn.appendChild(document.createTextNode(useIndonesian ? ' Simpan' : ' Save'));
+                });
+
+                document.querySelectorAll('.deleteBookmarkBtn').forEach(btn => {
+                    const icon = btn.querySelector('i');
+                    btn.innerHTML = '';
+                    btn.appendChild(icon);
+                    btn.appendChild(document.createTextNode(useIndonesian ? ' Hapus' : ' Delete'));
+                });
+
+                document.querySelectorAll('.summarizeBtn').forEach(btn => {
+                    const icon = btn.querySelector('i');
+                    const hasSummary = getSavedSummary(btn.getAttribute("data-id")) !== undefined;
+                    btn.innerHTML = '';
+                    btn.appendChild(icon);
+                    btn.appendChild(document.createTextNode(
+                        hasSummary
+                            ? (useIndonesian ? ' Lihat Ringkasan' : ' View Summary')
+                            : (useIndonesian ? ' Ringkas AI' : ' AI Summary')
+                    ));
+                });
+
+                // Update other UI elements
+                regenerateSummaryBtn.innerHTML = `<i class="fas fa-redo-alt mr-1"></i> ${useIndonesian ? 'Buat Ulang' : 'Regenerate'}`;
+                loadMoreBtn.textContent = useIndonesian ? 'Muat Lainnya' : 'Load More';
+                bookmarksBtn.innerHTML = `<i class="fas fa-bookmark mr-1 sm:mr-2"></i>${useIndonesian ? 'Bookmark' : 'Bookmarks'}`;
+                refreshBtn.innerHTML = `<i class="fas fa-sync-alt mr-1 sm:mr-2"></i>${useIndonesian ? 'Segarkan' : 'Refresh'}`;
+                searchInput.placeholder = useIndonesian ? 'Cari berita...' : 'Search stories...';
+
+                categoryButtons.forEach(btn => {
+                    const category = btn.getAttribute('data-category');
+                    const icon = btn.querySelector('i');
+                    let newText;
+
+                    if (useIndonesian) {
+                        switch(category) {
+                            case 'featured': newText = 'Unggulan'; break;
+                            case 'mostpopular': newText = 'Terpopuler'; break;
+                            case 'newest': newText = 'Terbaru'; break;
+                            case 'past': newText = 'Terdahulu'; break;
+                            case 'ask': newText = 'Tanya'; break;
+                            case 'show': newText = 'Tunjukan'; break;
+                            case 'jobs': newText = 'Karir'; break;
+                        }
+                    } else {
+                        switch(category) {
+                            case 'featured': newText = 'Featured'; break;
+                            case 'mostpopular': newText = 'Most Popular'; break;
+                            case 'newest': newText = 'Newest'; break;
+                            case 'past': newText = 'Past'; break;
+                            case 'ask': newText = 'Ask'; break;
+                            case 'show': newText = 'Show'; break;
+                            case 'jobs': newText = 'Jobs'; break;
+                        }
+                    }
+
+                    btn.innerHTML = '';
+                    btn.appendChild(icon);
+                    btn.appendChild(document.createTextNode(' ' + newText));
+                });
+
+                darkModeToggle.innerHTML = document.documentElement.classList.contains("dark")
+                    ? '<i class="fas fa-sun mr-2"></i>' + (useIndonesian ? 'Mode Terang' : 'Light Mode')
+                    : '<i class="fas fa-moon mr-2"></i>' + (useIndonesian ? 'Mode Gelap' : 'Dark Mode');
+            }
+
+            // Window scroll event for reading progress
+            window.addEventListener("scroll", () => {
+                const windowHeight = window.innerHeight;
+                const fullHeight = document.documentElement.scrollHeight;
+                const scrolled = window.scrollY;
+
+                const progress = (scrolled / (fullHeight - windowHeight)) * 100;
+                readingProgress.style.width = progress + "%";
+            });
+
+            refreshBtn.addEventListener("click", () => {
+                isBookmarkView = false;
+                refreshBtn.disabled = true;
+                refreshBtn.classList.add("opacity-50", "cursor-not-allowed");
+                currentStories = [];
+                loadNews().then(() => {
+                    refreshBtn.disabled = false;
+                    refreshBtn.classList.remove(
+                        "opacity-50",
+                        "cursor-not-allowed",
+                    );
+                });
+            });
+
+            bookmarksBtn.addEventListener("click", loadBookmarks);
+            loadMoreBtn.addEventListener("click", () => loadNews(true));
+            darkModeToggle.addEventListener("click", toggleDarkMode);
+
+            // Language toggle
+            languageToggle.addEventListener("change", () => {
+                useIndonesian = languageToggle.checked;
+                localStorage.setItem("useIndonesian", useIndonesian);
+                updateUILanguage();
+
+                // If summary is open, regenerate in new language
+                if (!summaryModal.classList.contains("hidden") && currentStoryForSummary) {
+                    generateSummary(currentStoryForSummary);
+                }
+            });
+
+            // Regenerate summary button
+            regenerateSummaryBtn.addEventListener("click", () => {
+                if (currentStoryForSummary) {
+                    generateSummary(currentStoryForSummary);
+                }
+            });
+
+            // Close summary modal
+            closeSummaryBtn.addEventListener("click", () => {
+                summaryModal.classList.add("hidden");
+            });
+
+            // Copy button
+            copyBtn.addEventListener("click", () => {
+                const content = summaryContent.innerText;
+                copyToClipboard(content);
+            });
+
+            // Share button
+            shareBtn.addEventListener("click", () => {
+                shareModal.classList.remove("hidden");
+            });
+
+            // Share options
+            shareOptions.forEach(option => {
+                option.addEventListener("click", () => {
+                    const platform = option.getAttribute("data-platform");
+                    sharePage(platform);
+                });
+            });
+
+            // Close share modal
+            closeShareBtn.addEventListener("click", () => {
+                shareModal.classList.add("hidden");
+            });
+
+            // Close modal when clicking outside
+            summaryModal.addEventListener("click", (e) => {
+                if (e.target === summaryModal) {
+                    summaryModal.classList.add("hidden");
+                }
+            });
+
+            shareModal.addEventListener("click", (e) => {
+                if (e.target === shareModal) {
+                    shareModal.classList.add("hidden");
+                }
+            });
+
+            categoryButtons.forEach((button) => {
+                button.addEventListener("click", () => {
+                    isBookmarkView = false;
+                    categoryButtons.forEach((btn) =>
+                        btn.classList.remove("bg-orange-500", "text-white"),
+                    );
+                    categoryButtons.forEach((btn) =>
+                        btn.classList.add("bg-gray-300", "dark:bg-gray-600", "text-gray-800", "dark:text-white"),
+                    );
+                    button.classList.remove("bg-gray-300", "dark:bg-gray-600", "text-gray-800", "dark:text-white");
+                    button.classList.add("bg-orange-500", "text-white");
+                    currentCategory = button.dataset.category;
+                    currentStories = [];
+                    loadNews();
+                });
+            });
+
+            // Debounce function for search
+            const debounce = (func, delay) => {
+                let timeout;
+                return (...args) => {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func(...args), delay);
+                };
+            };
+
+            // Debounced search handler
+            const handleSearch = debounce((e) => {
+                searchTerm = e.target.value;
+                if (isBookmarkView) {
+                    loadBookmarks();
+                } else {
+                    loadNews();
+                }
+            }, 300);
+
+            searchInput.addEventListener("input", handleSearch);
+
+            document.addEventListener("click", (e) => {
+                if (e.target.classList.contains("saveBtn") || e.target.parentElement.classList.contains("saveBtn")) {
+                    const btn = e.target.classList.contains("saveBtn") ? e.target : e.target.parentElement;
+                    const storyId = btn.getAttribute("data-id");
+                    saveBookmark(storyId);
+                    btn.innerHTML = `<i class="fas fa-trash mr-1"></i> ${useIndonesian ? 'Hapus' : 'Delete'}`;
+                    btn.classList.replace("saveBtn", "deleteBookmarkBtn");
+                    btn.classList.replace("bg-green-500", "bg-red-500");
+                    btn.classList.replace(
+                        "hover:bg-green-600",
+                        "hover:bg-red-600",
+                    );
+                } else if (e.target.classList.contains("deleteBookmarkBtn") || e.target.parentElement.classList.contains("deleteBookmarkBtn")) {
+                    const btn = e.target.classList.contains("deleteBookmarkBtn") ? e.target : e.target.parentElement;
+                    const storyId = btn.getAttribute("data-id");
+                    deleteBookmark(storyId);
+                    if (!isBookmarkView) {
+                        btn.innerHTML = `<i class="far fa-bookmark mr-1"></i> ${useIndonesian ? 'Simpan' : 'Save'}`;
+                        btn.classList.replace(
+                            "deleteBookmarkBtn",
+                            "saveBtn",
+                        );
+                        btn.classList.replace(
+                            "bg-red-500",
+                            "bg-green-500",
+                        );
+                        btn.classList.replace(
+                            "hover:bg-red-600",
+                            "hover:bg-green-600",
+                        );
+                    }
+                } else if (e.target.classList.contains("summarizeBtn") || e.target.parentElement.classList.contains("summarizeBtn")) {
+                    const btn = e.target.classList.contains("summarizeBtn") ? e.target : e.target.parentElement;
+                    const storyId = btn.getAttribute("data-id");
+
+                    // Check if we already have a saved summary
+                    const savedSummary = getSavedSummary(storyId);
+
+                    if (savedSummary && savedSummary.language === (useIndonesian ? 'id' : 'en')) {
+                        // Use saved summary if language matches
+                        summaryModal.classList.remove("hidden");
+                        summaryTitle.textContent = savedSummary.title;
+                        summaryContent.innerHTML = savedSummary.content;
+                        summaryLoader.classList.add("hidden");
+                        currentStoryForSummary = storyId;
+
+                        // Update share URL
+                        const storyElement = btn.closest('article');
+                        const titleElement = storyElement.querySelector('h2 a');
+                        currentShareUrl = titleElement.href;
+                        currentShareTitle = titleElement.textContent;
+                    } else {
+                        // Generate new summary
+                        generateSummary(storyId);
+                    }
+                }
+            });
+
+            // Auto-refresh feature (every 5 minutes)
+            let autoRefreshInterval;
+
+            function startAutoRefresh() {
+                // Clear any existing interval
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                }
+
+                // Set new interval - 5 minutes
+                autoRefreshInterval = setInterval(() => {
+                    if (!isBookmarkView && document.visibilityState === 'visible') {
+                        // Only refresh data, not the whole view
+                        currentStories = [];
+                        showToast(useIndonesian ? "Memperbarui berita..." : "Updating news...", "bg-blue-500");
+
+                        loadNews(true).then(() => {
+                            showToast(useIndonesian ? "Berita telah diperbarui!" : "News updated!", "bg-green-500");
+                        });
+                    }
+                }, 300000); // 5 minutes
+            }
+
+            // Handle visibility change
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    // When tab becomes visible, refresh if it's been more than 5 minutes
+                    const now = Date.now();
+                    if (now - lastLoadTime > 300000 && !isBookmarkView) { // 5 minutes
+                        currentStories = [];
+                        loadNews(true);
+                    }
+                }
+            });
+
+            // Register service worker for offline capability
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js').then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    }).catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+                });
+            }
+
+            // Initial load
+            initDarkMode();
+            updateUILanguage();
+            loadNews();
+            startAutoRefresh();
+        </script>
+    </body>
+</html>
