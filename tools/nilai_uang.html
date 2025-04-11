@@ -1,212 +1,1054 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Kalkulator Nilai Tukar Mata Uang</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                min-height: 100vh;
-                margin: 0;
-                background-color: #f0f0f0;
-            }
-            .container {
-                background-color: white;
-                padding: 20px;
-                border-radius: 10px;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                width: 350px;
-            }
-            h1,
-            h2 {
-                text-align: center;
-                font-size: 24px;
-            }
-            #exchange-rate {
-                text-align: center;
-                margin-bottom: 20px;
-            }
-            input,
-            select,
-            button {
-                width: 100%;
-                margin-bottom: 10px;
-                padding: 5px;
-                box-sizing: border-box;
-            }
-            #result {
-                text-align: center;
-                font-weight: bold;
-                margin-top: 20px;
-            }
-            #country-list {
-                margin-top: 20px;
-                height: 200px;
-                overflow-y: auto;
-                border: 1px solid #ccc;
-                padding: 10px;
-            }
-            .currency-inputs {
-                display: flex;
-                align-items: center;
-            }
-            #switch-currencies {
-                margin: 0 10px;
-                padding: 5px 10px;
-                width: auto;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>Kalkulator Nilai Tukar Mata Uang</h1>
-            <div id="exchange-rate">Memuat...</div>
-            <input type="number" id="amount" placeholder="Masukkan jumlah" />
-            <div class="currency-inputs">
-                <select id="from-currency"></select>
-                <button id="switch-currencies">⇄</button>
-                <select id="to-currency"></select>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Konverter & Analisis Mata Uang</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.1/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.2.0/dist/chartjs-adapter-luxon.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Konverter & Analisis Mata Uang</h1>
+    
+    <!-- Tabs Navigation -->
+    <div class="flex flex-wrap justify-center mb-6 border-b border-gray-200">
+      <button id="tab-konverter" class="tab-btn px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600">
+        Konverter
+      </button>
+      <button id="tab-multi" class="tab-btn px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
+        Multi Konversi
+      </button>
+      <button id="tab-grafik" class="tab-btn px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
+        Grafik Historis
+      </button>
+      <button id="tab-riwayat" class="tab-btn px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
+        Riwayat Konversi
+      </button>
+    </div>
+    
+    <!-- Konverter Tab -->
+    <div id="konverter-content" class="tab-content block">
+      <div class="max-w-md mx-auto bg-white rounded-xl shadow-md p-6">
+        <div class="space-y-4">
+          <div class="flex flex-col">
+            <label for="jumlah" class="text-sm font-medium text-gray-700 mb-1">Jumlah</label>
+            <input type="number" id="jumlah" placeholder="Masukkan jumlah" value="1"
+                   class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col">
+              <label for="dari" class="text-sm font-medium text-gray-700 mb-1">Dari</label>
+              <select id="dari" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="IDR">IDR - Rupiah Indonesia</option>
+                <option value="USD" selected>USD - Dollar Amerika</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="JPY">JPY - Yen Jepang</option>
+                <option value="GBP">GBP - Pound Inggris</option>
+                <option value="AUD">AUD - Dollar Australia</option>
+                <option value="CAD">CAD - Dollar Kanada</option>
+                <option value="SGD">SGD - Dollar Singapura</option>
+                <option value="MYR">MYR - Ringgit Malaysia</option>
+                <option value="CNY">CNY - Yuan China</option>
+                <option value="KRW">KRW - Won Korea</option>
+                <option value="HKD">HKD - Dollar Hong Kong</option>
+              </select>
             </div>
-            <button onclick="convert()">Konversi</button>
-            <div id="result"></div>
-            <h2>Daftar Negara dan Mata Uang</h2>
-            <input
-                type="text"
-                id="search-country"
-                placeholder="Cari negara..."
-            />
-            <div id="country-list"></div>
+            
+            <div class="flex flex-col">
+              <label for="ke" class="text-sm font-medium text-gray-700 mb-1">Ke</label>
+              <select id="ke" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="IDR" selected>IDR - Rupiah Indonesia</option>
+                <option value="USD">USD - Dollar Amerika</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="JPY">JPY - Yen Jepang</option>
+                <option value="GBP">GBP - Pound Inggris</option>
+                <option value="AUD">AUD - Dollar Australia</option>
+                <option value="CAD">CAD - Dollar Kanada</option>
+                <option value="SGD">SGD - Dollar Singapura</option>
+                <option value="MYR">MYR - Ringgit Malaysia</option>
+                <option value="CNY">CNY - Yuan China</option>
+                <option value="KRW">KRW - Won Korea</option>
+                <option value="HKD">HKD - Dollar Hong Kong</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="flex items-center justify-center my-2">
+            <button id="switch-button" class="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+              </svg>
+            </button>
+          </div>
+          
+          <button id="konversi-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition-colors">
+            Konversi
+          </button>
+          
+          <div id="hasil-container" class="mt-4 p-4 bg-gray-50 rounded-md border border-gray-200 hidden">
+            <div class="text-center">
+              <p id="hasil-nilai" class="text-2xl font-bold text-gray-800"></p>
+              <p id="hasil-kurs" class="text-sm text-gray-600 mt-1"></p>
+            </div>
+          </div>
+          
+          <div id="error-container" class="mt-4 p-4 bg-red-50 rounded-md border border-red-200 text-red-700 hidden">
+            <p id="error-message"></p>
+          </div>
+          
+          <div id="loading" class="flex justify-center items-center py-4 hidden">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
         </div>
+      </div>
+    </div>
+    
+    <!-- Multi Konversi Tab -->
+    <div id="multi-content" class="tab-content hidden">
+      <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <div class="flex flex-col">
+              <label for="multi-jumlah" class="text-sm font-medium text-gray-700 mb-1">Jumlah</label>
+              <input type="number" id="multi-jumlah" placeholder="Masukkan jumlah" value="1"
+                    class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div class="flex flex-col">
+              <label for="multi-dari" class="text-sm font-medium text-gray-700 mb-1">Dari Mata Uang</label>
+              <select id="multi-dari" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="IDR">IDR - Rupiah Indonesia</option>
+                <option value="USD" selected>USD - Dollar Amerika</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="JPY">JPY - Yen Jepang</option>
+                <option value="GBP">GBP - Pound Inggris</option>
+                <option value="AUD">AUD - Dollar Australia</option>
+                <option value="CAD">CAD - Dollar Kanada</option>
+                <option value="SGD">SGD - Dollar Singapura</option>
+                <option value="MYR">MYR - Ringgit Malaysia</option>
+                <option value="CNY">CNY - Yuan China</option>
+                <option value="KRW">KRW - Won Korea</option>
+                <option value="HKD">HKD - Dollar Hong Kong</option>
+              </select>
+            </div>
+            
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-700 mb-1">Ke Mata Uang (Pilih Beberapa)</label>
+              <div id="multi-ke-container" class="space-y-2 max-h-60 overflow-y-auto p-3 border border-gray-300 rounded-md">
+                <div class="flex items-center">
+                  <input type="checkbox" id="multi-idr" value="IDR" class="multi-currency-checkbox mr-2" checked>
+                  <label for="multi-idr" class="text-sm">IDR - Rupiah Indonesia</label>
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" id="multi-usd" value="USD" class="multi-currency-checkbox mr-2">
+                  <label for="multi-usd" class="text-sm">USD - Dollar Amerika</label>
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" id="multi-eur" value="EUR" class="multi-currency-checkbox mr-2">
+                  <label for="multi-eur" class="text-sm">EUR - Euro</label>
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" id="multi-jpy" value="JPY" class="multi-currency-checkbox mr-2">
+                  <label for="multi-jpy" class="text-sm">JPY - Yen Jepang</label>
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" id="multi-gbp" value="GBP" class="multi-currency-checkbox mr-2">
+                  <label for="multi-gbp" class="text-sm">GBP - Pound Inggris</label>
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" id="multi-aud" value="AUD" class="multi-currency-checkbox mr-2">
+                  <label for="multi-aud" class="text-sm">AUD - Dollar Australia</label>
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" id="multi-cad" value="CAD" class="multi-currency-checkbox mr-2">
+                  <label for="multi-cad" class="text-sm">CAD - Dollar Kanada</label>
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" id="multi-sgd" value="SGD" class="multi-currency-checkbox mr-2">
+                  <label for="multi-sgd" class="text-sm">SGD - Dollar Singapura</label>
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" id="multi-myr" value="MYR" class="multi-currency-checkbox mr-2">
+                  <label for="multi-myr" class="text-sm">MYR - Ringgit Malaysia</label>
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" id="multi-cny" value="CNY" class="multi-currency-checkbox mr-2">
+                  <label for="multi-cny" class="text-sm">CNY - Yuan China</label>
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" id="multi-krw" value="KRW" class="multi-currency-checkbox mr-2">
+                  <label for="multi-krw" class="text-sm">KRW - Won Korea</label>
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" id="multi-hkd" value="HKD" class="multi-currency-checkbox mr-2">
+                  <label for="multi-hkd" class="text-sm">HKD - Dollar Hong Kong</label>
+                </div>
+              </div>
+            </div>
+            
+            <button id="multi-konversi-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition-colors">
+              Konversi ke Beberapa Mata Uang
+            </button>
+            
+            <div id="multi-error-container" class="mt-4 p-4 bg-red-50 rounded-md border border-red-200 text-red-700 hidden">
+              <p id="multi-error-message"></p>
+            </div>
+            
+            <div id="multi-loading" class="flex justify-center items-center py-4 hidden">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          </div>
+          
+          <div id="multi-hasil-container" class="space-y-4 hidden">
+            <h3 class="font-semibold text-lg text-gray-800">Hasil Konversi</h3>
+            <div id="multi-hasil-info" class="bg-blue-50 p-3 rounded-md text-sm text-blue-800 mb-4"></div>
+            <div id="multi-hasil-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
+            <button id="multi-simpan-button" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
+              Simpan Hasil
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Grafik Tab -->
+    <div id="grafik-content" class="tab-content hidden">
+      <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
+        <div class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col">
+              <label for="grafik-dari" class="text-sm font-medium text-gray-700 mb-1">Mata Uang Dasar</label>
+              <select id="grafik-dari" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="IDR">IDR - Rupiah Indonesia</option>
+                <option value="USD" selected>USD - Dollar Amerika</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="JPY">JPY - Yen Jepang</option>
+                <option value="GBP">GBP - Pound Inggris</option>
+                <option value="AUD">AUD - Dollar Australia</option>
+                <option value="CAD">CAD - Dollar Kanada</option>
+                <option value="SGD">SGD - Dollar Singapura</option>
+                <option value="MYR">MYR - Ringgit Malaysia</option>
+                <option value="CNY">CNY - Yuan China</option>
+              </select>
+            </div>
+            
+            <div class="flex flex-col">
+              <label for="grafik-ke" class="text-sm font-medium text-gray-700 mb-1">Mata Uang Tujuan</label>
+              <select id="grafik-ke" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="IDR" selected>IDR - Rupiah Indonesia</option>
+                <option value="USD">USD - Dollar Amerika</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="JPY">JPY - Yen Jepang</option>
+                <option value="GBP">GBP - Pound Inggris</option>
+                <option value="AUD">AUD - Dollar Australia</option>
+                <option value="CAD">CAD - Dollar Kanada</option>
+                <option value="SGD">SGD - Dollar Singapura</option>
+                <option value="MYR">MYR - Ringgit Malaysia</option>
+                <option value="CNY">CNY - Yuan China</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row gap-2">
+            <button id="grafik-1minggu" class="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 text-sm font-medium">
+              1 Minggu
+            </button>
+            <button id="grafik-1bulan" class="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 text-sm font-medium">
+              1 Bulan
+            </button>
+            <button id="grafik-3bulan" class="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 text-sm font-medium">
+              3 Bulan
+            </button>
+            <button id="grafik-6bulan" class="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 text-sm font-medium">
+              6 Bulan
+            </button>
+            <button id="grafik-1tahun" class="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-700 text-sm font-medium">
+              1 Tahun
+            </button>
+          </div>
+          
+          <div id="grafik-loading" class="flex justify-center items-center py-16 hidden">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+          
+          <div id="grafik-error-container" class="p-4 bg-red-50 rounded-md border border-red-200 text-red-700 hidden">
+            <p id="grafik-error-message"></p>
+          </div>
+          
+          <div id="grafik-container" class="w-full h-80 hidden">
+            <canvas id="kurs-chart"></canvas>
+          </div>
+          
+          <div id="grafik-info" class="p-4 bg-blue-50 rounded-md text-sm text-blue-800 hidden"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Riwayat Tab -->
+    <div id="riwayat-content" class="tab-content hidden">
+      <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+          <h3 class="font-semibold text-lg text-gray-800">Riwayat Konversi</h3>
+          <div class="space-x-2 mt-2 md:mt-0">
+            <button id="riwayat-hapus-semua" class="py-2 px-4 bg-red-500 hover:bg-red-600 text-white rounded-md text-sm font-medium">
+              Hapus Semua
+            </button>
+          </div>
+        </div>
+        
+        <div id="riwayat-empty" class="text-center py-12 text-gray-500">
+          Belum ada riwayat konversi. Silakan konversi mata uang dan simpan hasilnya.
+        </div>
+        
+        <div id="riwayat-list" class="space-y-4 max-h-[480px] overflow-y-auto"></div>
+      </div>
+    </div>
+  </div>
 
-        <script>
-            let exchangeRates = {};
-            let countries = [];
-
-            function populateCurrencySelects() {
-                const selects = document.querySelectorAll(
-                    "#from-currency, #to-currency",
-                );
-                selects.forEach((select) => {
-                    select.innerHTML = "";
-                    countries.forEach((country) => {
-                        if (country.currencies) {
-                            const currencyCode = Object.keys(
-                                country.currencies,
-                            )[0];
-                            const currencyName =
-                                country.currencies[currencyCode].name;
-                            let option = document.createElement("option");
-                            option.value = currencyCode;
-                            option.text = `${currencyCode} - ${currencyName} (${country.name.common})`;
-                            select.appendChild(option);
-                        }
-                    });
-                });
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Constants
+      const API_KEY = 'fca_live_oUCUPfBHPxmciuSbypvcS5Ex0SRYQx2T9C9kMe9Y';
+      const STORAGE_KEY = 'currency_converter_history';
+      let kursChart = null;
+      
+      // DOM Elements - Tabs
+      const tabButtons = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
+      
+      // DOM Elements - Konverter Tab
+      const jumlahInput = document.getElementById('jumlah');
+      const dariSelect = document.getElementById('dari');
+      const keSelect = document.getElementById('ke');
+      const switchButton = document.getElementById('switch-button');
+      const konversiButton = document.getElementById('konversi-button');
+      const hasilContainer = document.getElementById('hasil-container');
+      const hasilNilai = document.getElementById('hasil-nilai');
+      const hasilKurs = document.getElementById('hasil-kurs');
+      const errorContainer = document.getElementById('error-container');
+      const errorMessage = document.getElementById('error-message');
+      const loading = document.getElementById('loading');
+      
+      // DOM Elements - Multi Tab
+      const multiJumlahInput = document.getElementById('multi-jumlah');
+      const multiDariSelect = document.getElementById('multi-dari');
+      const multiCurrencyCheckboxes = document.querySelectorAll('.multi-currency-checkbox');
+      const multiKonversiButton = document.getElementById('multi-konversi-button');
+      const multiHasilContainer = document.getElementById('multi-hasil-container');
+      const multiHasilInfo = document.getElementById('multi-hasil-info');
+      const multiHasilList = document.getElementById('multi-hasil-list');
+      const multiErrorContainer = document.getElementById('multi-error-container');
+      const multiErrorMessage = document.getElementById('multi-error-message');
+      const multiLoading = document.getElementById('multi-loading');
+      const multiSimpanButton = document.getElementById('multi-simpan-button');
+      
+      // DOM Elements - Grafik Tab
+      const grafikDariSelect = document.getElementById('grafik-dari');
+      const grafikKeSelect = document.getElementById('grafik-ke');
+      const grafik1MingguBtn = document.getElementById('grafik-1minggu');
+      const grafik1BulanBtn = document.getElementById('grafik-1bulan');
+      const grafik3BulanBtn = document.getElementById('grafik-3bulan');
+      const grafik6BulanBtn = document.getElementById('grafik-6bulan');
+      const grafik1TahunBtn = document.getElementById('grafik-1tahun');
+      const grafikContainer = document.getElementById('grafik-container');
+      const grafikErrorContainer = document.getElementById('grafik-error-container');
+      const grafikErrorMessage = document.getElementById('grafik-error-message');
+      const grafikLoading = document.getElementById('grafik-loading');
+      const grafikInfo = document.getElementById('grafik-info');
+      
+      // DOM Elements - Riwayat Tab
+      const riwayatList = document.getElementById('riwayat-list');
+      const riwayatEmpty = document.getElementById('riwayat-empty');
+      const hapusSemuaButton = document.getElementById('riwayat-hapus-semua');
+      
+      // Currency data for better display
+      const currencyData = {
+        'IDR': { name: 'Rupiah Indonesia', locale: 'id-ID', symbol: 'Rp', flag: '🇮🇩' },
+        'USD': { name: 'Dollar Amerika', locale: 'en-US', symbol: '$', flag: '🇺🇸' },
+        'EUR': { name: 'Euro', locale: 'de-DE', symbol: '€', flag: '🇪🇺' },
+        'JPY': { name: 'Yen Jepang', locale: 'ja-JP', symbol: '¥', flag: '🇯🇵' },
+        'GBP': { name: 'Pound Inggris', locale: 'en-GB', symbol: '£', flag: '🇬🇧' },
+        'AUD': { name: 'Dollar Australia', locale: 'en-AU', symbol: 'A$', flag: '🇦🇺' },
+        'CAD': { name: 'Dollar Kanada', locale: 'en-CA', symbol: 'C$', flag: '🇨🇦' },
+        'SGD': { name: 'Dollar Singapura', locale: 'zh-SG', symbol: 'S$', flag: '🇸🇬' },
+        'MYR': { name: 'Ringgit Malaysia', locale: 'ms-MY', symbol: 'RM', flag: '🇲🇾' },
+        'CNY': { name: 'Yuan China', locale: 'zh-CN', symbol: '¥', flag: '🇨🇳' },
+        'KRW': { name: 'Won Korea', locale: 'ko-KR', symbol: '₩', flag: '🇰🇷' },
+        'HKD': { name: 'Dollar Hong Kong', locale: 'zh-HK', symbol: 'HK$', flag: '🇭🇰' }
+      };
+      
+      // Tab switching functionality
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          // Update active tab button
+          tabButtons.forEach(btn => {
+            btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            btn.classList.add('text-gray-500');
+          });
+          button.classList.remove('text-gray-500');
+          button.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+          
+          // Show corresponding tab content
+          const target = button.id.replace('tab-', '');
+          tabContents.forEach(content => {
+            content.classList.add('hidden');
+          });
+          document.getElementById(`${target}-content`).classList.remove('hidden');
+          
+          // Special handling for tabs
+          if (target === 'riwayat') {
+            loadRiwayat();
+          }
+        });
+      });
+      
+      // Switch currencies
+      switchButton.addEventListener('click', function() {
+        const tempValue = dariSelect.value;
+        dariSelect.value = keSelect.value;
+        keSelect.value = tempValue;
+      });
+      
+      // Single conversion
+      konversiButton.addEventListener('click', async function() {
+        await performSingleConversion();
+      });
+      
+      // Multi conversion
+      multiKonversiButton.addEventListener('click', async function() {
+        await performMultiConversion();
+      });
+      
+      // Save multi conversion result
+      multiSimpanButton.addEventListener('click', function() {
+        saveMultiConversionToHistory();
+      });
+      
+      // Clear all history
+      hapusSemuaButton.addEventListener('click', function() {
+        if (confirm('Apakah Anda yakin ingin menghapus semua riwayat konversi?')) {
+          localStorage.removeItem(STORAGE_KEY);
+          loadRiwayat();
+        }
+      });
+      
+      // Grafik interval buttons
+      grafik1MingguBtn.addEventListener('click', () => loadGrafik('7d'));
+      grafik1BulanBtn.addEventListener('click', () => loadGrafik('30d'));
+      grafik3BulanBtn.addEventListener('click', () => loadGrafik('90d'));
+      grafik6BulanBtn.addEventListener('click', () => loadGrafik('180d'));
+      grafik1TahunBtn.addEventListener('click', () => loadGrafik('365d'));
+      
+      // Currency selects in grafik tab
+      grafikDariSelect.addEventListener('change', () => {
+        updateGrafikCurrencyOptions();
+      });
+      grafikKeSelect.addEventListener('change', () => {
+        updateGrafikCurrencyOptions();
+      });
+      
+      // Initialize dynamic multi-currency options
+      function updateMultiCurrencyOptions() {
+        const selectedCurrency = multiDariSelect.value;
+        
+        // Update checkboxes
+        multiCurrencyCheckboxes.forEach(checkbox => {
+          if (checkbox.value === selectedCurrency) {
+            checkbox.disabled = true;
+            checkbox.checked = false;
+          } else {
+            checkbox.disabled = false;
+          }
+        });
+      }
+      
+      // Initialize grafik currency options
+      function updateGrafikCurrencyOptions() {
+        const dariCurrency = grafikDariSelect.value;
+        const keCurrency = grafikKeSelect.value;
+        
+        if (dariCurrency === keCurrency) {
+          showGrafikError("Mata uang dasar dan tujuan tidak boleh sama.");
+          grafikContainer.classList.add('hidden');
+        } else {
+          grafikErrorContainer.classList.add('hidden');
+        }
+      }
+      
+      // Set up event listeners for dynamic updates
+      multiDariSelect.addEventListener('change', updateMultiCurrencyOptions);
+      
+      // Initialize multi currency options
+      updateMultiCurrencyOptions();
+      
+      // Single Conversion Function
+      async function performSingleConversion() {
+        const jumlah = parseFloat(jumlahInput.value);
+        const dari = dariSelect.value;
+        const ke = keSelect.value;
+        
+        // Input validation
+        if (isNaN(jumlah) || jumlah <= 0) {
+          showError("Masukkan jumlah yang valid.");
+          return;
+        }
+        
+        if (dari === ke) {
+          showError("Mata uang asal dan tujuan tidak boleh sama.");
+          return;
+        }
+        
+        // Show loading
+        loading.classList.remove('hidden');
+        hasilContainer.classList.add('hidden');
+        errorContainer.classList.add('hidden');
+        
+        try {
+          const url = `https://api.currencyapi.com/v3/latest?apikey=${API_KEY}&currencies=${ke}&base_currency=${dari}`;
+          
+          const response = await fetch(url);
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.message || 'Gagal mengambil data kurs');
+          }
+          
+          const rate = data.data[ke].value;
+          const hasil = jumlah * rate;
+          
+          // Format values based on currency
+          const formatDari = new Intl.NumberFormat(currencyData[dari].locale, { 
+            style: 'currency', 
+            currency: dari,
+            maximumFractionDigits: 2
+          });
+          
+          const formatKe = new Intl.NumberFormat(currencyData[ke].locale, { 
+            style: 'currency', 
+            currency: ke,
+            maximumFractionDigits: 2
+          });
+          
+          hasilNilai.textContent = `${formatDari.format(jumlah)} = ${formatKe.format(hasil)}`;
+          hasilKurs.textContent = `1 ${dari} = ${rate.toFixed(6)} ${ke}`;
+          
+          hasilContainer.classList.remove('hidden');
+          
+          // Save to history
+          const historyItem = {
+            type: 'single',
+            timestamp: new Date().toISOString(),
+            from: dari,
+            to: ke,
+            amount: jumlah,
+            rate: rate,
+            result: hasil
+          };
+          
+          saveToHistory(historyItem);
+        } catch (error) {
+          console.error(error);
+          showError("Gagal mengambil data kurs. Silakan coba lagi.");
+        } finally {
+          loading.classList.add('hidden');
+        }
+      }
+      
+      // Multi Conversion Function
+      async function performMultiConversion() {
+        const jumlah = parseFloat(multiJumlahInput.value);
+        const dari = multiDariSelect.value;
+        
+        // Get selected currencies
+        const selectedCurrencies = [];
+        multiCurrencyCheckboxes.forEach(checkbox => {
+          if (checkbox.checked) {
+            selectedCurrencies.push(checkbox.value);
+          }
+        });
+        
+        // Input validation
+        if (isNaN(jumlah) || jumlah <= 0) {
+          showMultiError("Masukkan jumlah yang valid.");
+          return;
+        }
+        
+        if (selectedCurrencies.length === 0) {
+          showMultiError("Pilih setidaknya satu mata uang tujuan.");
+          return;
+        }
+        
+        // Show loading
+        multiLoading.classList.remove('hidden');
+        multiHasilContainer.classList.add('hidden');
+        multiErrorContainer.classList.add('hidden');
+        
+        try {
+          const url = `https://api.currencyapi.com/v3/latest?apikey=${API_KEY}&currencies=${selectedCurrencies.join(',')}&base_currency=${dari}`;
+          
+          const response = await fetch(url);
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.message || 'Gagal mengambil data kurs');
+          }
+          
+          // Format source amount
+          const formatDari = new Intl.NumberFormat(currencyData[dari].locale, { 
+            style: 'currency', 
+            currency: dari,
+            maximumFractionDigits: 2
+          });
+          
+          // Display info
+          multiHasilInfo.textContent = `Konversi dari ${formatDari.format(jumlah)} (${currencyData[dari].flag} ${dari})`;
+          
+          // Clear previous results
+          multiHasilList.innerHTML = '';
+          
+          // Store conversion results for saving to history
+          const conversionResults = [];
+          
+          // Add each currency result
+          selectedCurrencies.forEach(currency => {
+            if (data.data[currency]) {
+              const rate = data.data[currency].value;
+              const hasil = jumlah * rate;
+              
+              // Format result
+              const formatKe = new Intl.NumberFormat(currencyData[currency].locale, { 
+                style: 'currency', 
+                currency: currency,
+                maximumFractionDigits: 2
+              });
+              
+              const resultElement = document.createElement('div');
+              resultElement.className = 'p-3 bg-gray-50 rounded-md border border-gray-200 flex items-center';
+              resultElement.innerHTML = `
+                <div class="mr-3 text-2xl">${currencyData[currency].flag}</div>
+                <div class="flex-1">
+                  <div class="font-semibold">${formatKe.format(hasil)}</div>
+                  <div class="text-sm text-gray-500">1 ${dari} = ${rate.toFixed(6)} ${currency}</div>
+                </div>
+              `;
+              
+              multiHasilList.appendChild(resultElement);
+              
+              // Add to results array
+              conversionResults.push({
+                currency: currency,
+                rate: rate,
+                result: hasil
+              });
             }
-
-            function getCountries() {
-                fetch("https://restcountries.com/v3.1/all")
-                    .then((response) => response.json())
-                    .then((data) => {
-                        countries = data;
-                        populateCurrencySelects();
-                        updateCountryList();
-                    })
-                    .catch((error) => {
-                        console.error("Error:", error);
-                        document.getElementById("country-list").innerHTML =
-                            "Gagal memuat daftar negara";
-                    });
-            }
-
-            function getExchangeRates() {
-                fetch("https://api.exchangerate-api.com/v4/latest/USD")
-                    .then((response) => response.json())
-                    .then((data) => {
-                        exchangeRates = data.rates;
-                        document.getElementById("exchange-rate").innerHTML =
-                            `1 USD = ${exchangeRates.IDR.toFixed(2)} IDR`;
-                    })
-                    .catch((error) => {
-                        console.error("Error:", error);
-                        document.getElementById("exchange-rate").innerHTML =
-                            "Gagal memuat data nilai tukar";
-                    });
-            }
-
-            function convert() {
-                const amount = parseFloat(
-                    document.getElementById("amount").value,
-                );
-                const fromCurrency =
-                    document.getElementById("from-currency").value;
-                const toCurrency = document.getElementById("to-currency").value;
-
-                if (isNaN(amount)) {
-                    alert("Masukkan jumlah yang valid");
-                    return;
+          });
+          
+          // Store the results for saving later
+          multiHasilContainer._conversionData = {
+            type: 'multi',
+            timestamp: new Date().toISOString(),
+            from: dari,
+            amount: jumlah,
+            results: conversionResults
+          };
+          
+          multiHasilContainer.classList.remove('hidden');
+        } catch (error) {
+          console.error(error);
+          showMultiError("Gagal mengambil data kurs. Silakan coba lagi.");
+        } finally {
+          multiLoading.classList.add('hidden');
+        }
+      }
+      
+      // Save multi conversion to history
+      function saveMultiConversionToHistory() {
+        if (multiHasilContainer._conversionData) {
+          saveToHistory(multiHasilContainer._conversionData);
+          multiSimpanButton.textContent = "Tersimpan ✓";
+          multiSimpanButton.disabled = true;
+          
+          setTimeout(() => {
+            multiSimpanButton.textContent = "Simpan Hasil";
+            multiSimpanButton.disabled = false;
+          }, 2000);
+        }
+      }
+      
+      // Load Historical Chart
+      async function loadGrafik(period) {
+        const dari = grafikDariSelect.value;
+        const ke = grafikKeSelect.value;
+        
+        if (dari === ke) {
+          showGrafikError("Mata uang dasar dan tujuan tidak boleh sama.");
+          return;
+        }
+        
+        // Show loading
+        grafikLoading.classList.remove('hidden');
+        grafikContainer.classList.add('hidden');
+        grafikErrorContainer.classList.add('hidden');
+        grafikInfo.classList.add('hidden');
+        
+        // For demo purposes, generate historical data
+        // In a real app, you would use historical API data
+        try {
+          // This is just a mock - in a real application you would fetch this data from an API
+          const today = new Date();
+          const endDate = today.toISOString().split('T')[0];
+          
+          let days;
+          switch (period) {
+            case '7d': days = 7; break;
+            case '30d': days = 30; break;
+            case '90d': days = 90; break;
+            case '180d': days = 180; break;
+            case '365d': days = 365; break;
+            default: days = 30;
+          }
+          
+          const startDate = new Date(today);
+          startDate.setDate(today.getDate() - days);
+          
+          // Generate mock data
+          const mockData = generateMockHistoricalData(dari, ke, days);
+          
+          // Draw chart
+          drawChart(mockData, dari, ke);
+          
+          // Show info
+          grafikInfo.textContent = `Menampilkan data kurs ${days} hari terakhir dari ${currencyData[dari].flag} ${dari} ke ${currencyData[ke].flag} ${ke}`;
+          grafikInfo.classList.remove('hidden');
+          
+          grafikContainer.classList.remove('hidden');
+        } catch (error) {
+          console.error(error);
+          showGrafikError("Gagal mengambil data historis. Silakan coba lagi.");
+        } finally {
+          grafikLoading.classList.add('hidden');
+        }
+      }
+      
+      // Draw chart with historical data
+      function drawChart(data, fromCurrency, toCurrency) {
+        const ctx = document.getElementById('kurs-chart').getContext('2d');
+        
+        if (kursChart) {
+          kursChart.destroy();
+        }
+        
+        kursChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            datasets: [{
+              label: `${fromCurrency} to ${toCurrency}`,
+              data: data,
+              borderColor: 'rgb(59, 130, 246)',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              borderWidth: 2,
+              tension: 0.2,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                type: 'time',
+                time: {
+                  unit: 'day',
+                  tooltipFormat: 'PP',
+                  displayFormats: {
+                    day: 'MMM d'
+                  }
+                },
+                title: {
+                  display: true,
+                  text: 'Tanggal'
                 }
-
-                if (
-                    !exchangeRates[fromCurrency] ||
-                    !exchangeRates[toCurrency]
-                ) {
-                    alert(
-                        "Data nilai tukar tidak tersedia untuk mata uang yang dipilih",
-                    );
-                    return;
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: `Nilai dalam ${toCurrency}`
+                },
+                beginAtZero: false
+              }
+            },
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const rate = context.parsed.y;
+                    return `1 ${fromCurrency} = ${rate.toFixed(6)} ${toCurrency}`;
+                  }
                 }
-
-                const result =
-                    (amount / exchangeRates[fromCurrency]) *
-                    exchangeRates[toCurrency];
-                document.getElementById("result").innerHTML =
-                    `${amount} ${fromCurrency} = ${result.toFixed(2)} ${toCurrency}`;
+              }
             }
-
-            function updateCountryList(searchTerm = "") {
-                const listElement = document.getElementById("country-list");
-                listElement.innerHTML = "";
-                countries.forEach((country) => {
-                    if (
-                        country.currencies &&
-                        country.name.common
-                            .toLowerCase()
-                            .includes(searchTerm.toLowerCase())
-                    ) {
-                        const currencyCode = Object.keys(country.currencies)[0];
-                        const currencyName =
-                            country.currencies[currencyCode].name;
-                        listElement.innerHTML += `<div>${country.name.common} - ${currencyCode} (${currencyName})</div>`;
-                    }
+          }
+        });
+      }
+      
+      // Generate mock historical data for demo
+      function generateMockHistoricalData(fromCurrency, toCurrency, days) {
+        const data = [];
+        const today = new Date();
+        
+        // Generate base rate based on currency pair to make it somewhat realistic
+        let baseRate;
+        if (fromCurrency === 'USD' && toCurrency === 'IDR') {
+          baseRate = 15500;
+        } else if (fromCurrency === 'EUR' && toCurrency === 'IDR') {
+          baseRate = 16800;
+        } else if (fromCurrency === 'IDR' && toCurrency === 'USD') {
+          baseRate = 0.000065;
+        } else if (fromCurrency === 'USD' && toCurrency === 'EUR') {
+          baseRate = 0.92;
+        } else if (fromCurrency === 'EUR' && toCurrency === 'USD') {
+          baseRate = 1.08;
+        } else {
+          // Generate a random realistic base rate for other pairs
+          baseRate = Math.random() * 10;
+        }
+        
+        // Add some volatility
+        const volatility = baseRate * 0.03; // 3% volatility
+        
+        for (let i = days; i >= 0; i--) {
+          const date = new Date(today);
+          date.setDate(today.getDate() - i);
+          
+          // Add some random movement to create a realistic chart
+          const randomChange = (Math.random() - 0.5) * volatility;
+          const rate = baseRate + randomChange;
+          
+          data.push({
+            x: date,
+            y: rate
+          });
+          
+          // Slightly adjust the base rate for the next day to create a trend
+          baseRate += (Math.random() - 0.48) * (volatility * 0.2);
+        }
+        
+        return data;
+      }
+      
+      // Helper function to save to history in localStorage
+      function saveToHistory(item) {
+        let history = [];
+        
+        // Try to get existing history
+        const existingHistory = localStorage.getItem(STORAGE_KEY);
+        if (existingHistory) {
+          try {
+            history = JSON.parse(existingHistory);
+            
+            // Make sure history is an array
+            if (!Array.isArray(history)) {
+              history = [];
+            }
+          } catch (e) {
+            console.error('Failed to parse history from localStorage', e);
+            history = [];
+          }
+        }
+        
+        // Add new item at the beginning
+        history.unshift(item);
+        
+        // Keep only the last 20 items
+        if (history.length > 20) {
+          history = history.slice(0, 20);
+        }
+        
+        // Save back to localStorage
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+      }
+      
+      // Load conversion history from localStorage
+      function loadRiwayat() {
+        const history = localStorage.getItem(STORAGE_KEY);
+        
+        if (!history) {
+          riwayatEmpty.classList.remove('hidden');
+          riwayatList.classList.add('hidden');
+          return;
+        }
+        
+        try {
+          const historyItems = JSON.parse(history);
+          
+          if (!Array.isArray(historyItems) || historyItems.length === 0) {
+            riwayatEmpty.classList.remove('hidden');
+            riwayatList.classList.add('hidden');
+            return;
+          }
+          
+          // Hide empty message, show list
+          riwayatEmpty.classList.add('hidden');
+          riwayatList.classList.remove('hidden');
+          
+          // Clear existing items
+          riwayatList.innerHTML = '';
+          
+          // Add each history item
+          historyItems.forEach((item, index) => {
+            const historyElement = document.createElement('div');
+            historyElement.className = 'p-4 bg-white rounded-md border border-gray-200 shadow-sm';
+            
+            const date = new Date(item.timestamp);
+            const formattedDate = date.toLocaleDateString('id-ID', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            
+            if (item.type === 'single') {
+              // Format for single conversion
+              const formatDari = new Intl.NumberFormat(currencyData[item.from].locale, { 
+                style: 'currency', 
+                currency: item.from,
+                maximumFractionDigits: 2
+              });
+              
+              const formatKe = new Intl.NumberFormat(currencyData[item.to].locale, { 
+                style: 'currency', 
+                currency: item.to,
+                maximumFractionDigits: 2
+              });
+              
+              historyElement.innerHTML = `
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <div class="text-sm text-gray-500">${formattedDate}</div>
+                    <div class="mt-1 font-semibold">
+                      ${currencyData[item.from].flag} ${formatDari.format(item.amount)} = ${currencyData[item.to].flag} ${formatKe.format(item.result)}
+                    </div>
+                    <div class="text-sm text-gray-600 mt-1">
+                      Kurs: 1 ${item.from} = ${item.rate.toFixed(6)} ${item.to}
+                    </div>
+                  </div>
+                  <button class="riwayat-delete-btn text-red-500 hover:text-red-700" data-index="${index}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              `;
+            } else if (item.type === 'multi') {
+              // Format for multi conversion
+              const formatDari = new Intl.NumberFormat(currencyData[item.from].locale, { 
+                style: 'currency', 
+                currency: item.from,
+                maximumFractionDigits: 2
+              });
+              
+              // Create results HTML
+              let resultsHtml = '';
+              item.results.forEach(result => {
+                const formatKe = new Intl.NumberFormat(currencyData[result.currency].locale, { 
+                  style: 'currency', 
+                  currency: result.currency,
+                  maximumFractionDigits: 2
                 });
+                
+                resultsHtml += `
+                  <div class="flex items-center mt-1 text-sm">
+                    <span class="mr-2">${currencyData[result.currency].flag}</span>
+                    <span>${formatKe.format(result.result)}</span>
+                    <span class="ml-2 text-gray-500">(1 ${item.from} = ${result.rate.toFixed(6)} ${result.currency})</span>
+                  </div>
+                `;
+              });
+              
+              historyElement.innerHTML = `
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <div class="text-sm text-gray-500">${formattedDate}</div>
+                    <div class="mt-1 font-semibold">
+                      ${currencyData[item.from].flag} ${formatDari.format(item.amount)} ke ${item.results.length} mata uang
+                    </div>
+                    <div class="mt-2 text-sm text-gray-600">
+                      ${resultsHtml}
+                    </div>
+                  </div>
+                  <button class="riwayat-delete-btn text-red-500 hover:text-red-700" data-index="${index}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              `;
             }
-
-            function switchCurrencies() {
-                const fromCurrency = document.getElementById("from-currency");
-                const toCurrency = document.getElementById("to-currency");
-                const temp = fromCurrency.value;
-                fromCurrency.value = toCurrency.value;
-                toCurrency.value = temp;
-            }
-
-            document
-                .getElementById("search-country")
-                .addEventListener("input", (e) => {
-                    updateCountryList(e.target.value);
-                });
-
-            document
-                .getElementById("switch-currencies")
-                .addEventListener("click", switchCurrencies);
-
-            getCountries();
-            getExchangeRates();
-            setInterval(getExchangeRates, 3600000); // Perbarui nilai tukar setiap 1 jam
-        </script>
-    </body>
+            
+            riwayatList.appendChild(historyElement);
+          });
+          
+          // Add event listeners to delete buttons
+          document.querySelectorAll('.riwayat-delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+              const index = parseInt(this.getAttribute('data-index'));
+              deleteHistoryItem(index);
+            });
+          });
+        } catch (e) {
+          console.error('Failed to load history', e);
+          riwayatEmpty.classList.remove('hidden');
+          riwayatList.classList.add('hidden');
+        }
+      }
+      
+      // Delete a specific history item
+      function deleteHistoryItem(index) {
+        try {
+          const historyString = localStorage.getItem(STORAGE_KEY);
+          if (!historyString) return;
+          
+          const history = JSON.parse(historyString);
+          if (!Array.isArray(history)) return;
+          
+          // Remove the item
+          history.splice(index, 1);
+          
+          // Save back to localStorage
+          if (history.length === 0) {
+            localStorage.removeItem(STORAGE_KEY);
+          } else {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+          }
+          
+          // Reload the history display
+          loadRiwayat();
+        } catch (e) {
+          console.error('Failed to delete history item', e);
+        }
+      }
+      
+      // Helper functions for error handling
+      function showError(message) {
+        errorMessage.textContent = message;
+        errorContainer.classList.remove('hidden');
+      }
+      
+      function showMultiError(message) {
+        multiErrorMessage.textContent = message;
+        multiErrorContainer.classList.remove('hidden');
+      }
+      
+      function showGrafikError(message) {
+        grafikErrorMessage.textContent = message;
+        grafikErrorContainer.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
 </html>
