@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Notes App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/php.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        telegram: {
+                            light: '#39a3d5',
+                            DEFAULT: '#0088cc',
+                            dark: '#006da3'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-in': 'slideIn 0.3s ease-in-out'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideIn: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .note-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .note-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.3s ease-in-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #0088cc;
+        }
+        
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #0088cc;
+        }
+        
+        /* Code snippet styling */
+        pre code.hljs {
+            border-radius: 0.5rem;
+            padding: 1rem !important;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+        
+        .code-toolbar {
+            position: relative;
+            margin: 1rem 0;
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 0.5rem 1rem;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .code-header + pre {
+            margin-top: 0 !important;
+            border-top-left-radius: 0 !important;
+            border-top-right-radius: 0 !important;
+        }
+        
+        .code-toolbar pre {
+            margin: 0;
+        }
+        
+        .copy-btn {
+            padding: 0.25rem 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .copy-btn:active {
+            transform: scale(0.98);
+        }
+        
+        /* Tab system for code form */
+        .tab-active {
+            border-bottom: 2px solid #0088cc;
+            color: #0088cc;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 640px) {
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-bar > div {
+                margin-bottom: 0.5rem;
+            }
+        }
+        
+        /* Dark mode fixes for code blocks */
+        .dark .code-header {
+            background-color: #1a1d21;
+        }
+        
+        /* Responsive fixes */
+        @media (max-width: 768px) {
+            .sticky {
+                position: relative !important;
+                top: 0 !important;
+            }
+        }
+        
+        /* Ensure password text is not masked */
+        .password-text {
+            font-family: monospace; /* For better readability of passwords */
+        }
+        
+        /* Bookmark styling */
+        .bookmark-card {
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .bookmark-favicon {
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 136, 204, 0.2);
+            border-radius: 50%;
+            border-top-color: #0088cc;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+    <nav class="bg-telegram py-4 shadow-md sticky top-0 z-30">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <i class="fab fa-telegram text-white text-3xl mr-2"></i>
+                <h1 class="text-xl font-bold text-white">Telegram Notes</h1>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span id="syncStatus" class="text-white text-sm hidden">
+                    <i class="fas fa-sync-alt fa-spin mr-1"></i> Syncing...
+                </span>
+                <button id="darkModeToggle" class="p-2 rounded-full hover:bg-telegram-dark text-white">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Note Form -->
+            <div class="lg:col-span-1">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 lg:sticky lg:top-20 slide-in">
+                    <div class="flex mb-6 border-b dark:border-gray-700 overflow-x-auto whitespace-nowrap">
+                        <button id="standardNoteTab" class="tab-active py-2 px-4 focus:outline-none transition-colors">
+                            <i class="fas fa-sticky-note mr-1"></i> Note
+                        </button>
+                        <button id="codeNoteTab" class="py-2 px-4 focus:outline-none transition-colors">
+                            <i class="fas fa-code mr-1"></i> Code
+                        </button>
+                        <button id="passwordNoteTab" class="py-2 px-4 focus:outline-none transition-colors">
+                            <i class="fas fa-key mr-1"></i> Password
+                        </button>
+                        <button id="bookmarkNoteTab" class="py-2 px-4 focus:outline-none transition-colors">
+                            <i class="fas fa-bookmark mr-1"></i> Bookmark
+                        </button>
+                    </div>
+                    
+                    <!-- Standard Note Form -->
+                    <div id="standardNoteForm">
+                        <div class="mb-6">
+                            <label for="noteTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                            <input type="text" id="noteTitle" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-telegram" placeholder="Enter note title">
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="noteContent" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Content</label>
+                            <textarea id="noteContent" rows="6" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-telegram" placeholder="Write your note here..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Code Note Form -->
+                    <div id="codeNoteForm" class="hidden">
+                        <div class="mb-6">
+                            <label for="codeNoteTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                            <input type="text" id="codeNoteTitle" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-telegram" placeholder="Enter code title">
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="codeLanguage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Language</label>
+                            <select id="codeLanguage" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-telegram">
+                                <option value="javascript">JavaScript</option>
+                                <option value="python">Python</option>
+                                <option value="html">HTML</option>
+                                <option value="css">CSS</option>
+                                <option value="php">PHP</option>
+                                <option value="java">Java</option>
+                                <option value="csharp">C#</option>
+                                <option value="cpp">C++</option>
+                                <option value="typescript">TypeScript</option>
+                                <option value="sql">SQL</option>
+                                <option value="bash">Bash</option>
+                                <option value="json">JSON</option>
+                                <option value="xml">XML</option>
+                                <option value="markdown">Markdown</option>
+                                <option value="plaintext">Plain Text</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="codeContent" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Code</label>
+                            <textarea id="codeContent" rows="10" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-telegram font-mono text-sm" placeholder="Paste your code here..."></textarea>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="codeDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description (optional)</label>
+                            <textarea id="codeDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-telegram" placeholder="Add description or notes about this code..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Password Note Form -->
+                    <div id="passwordNoteForm" class="hidden">
+                        <div class="mb-6">
+                            <label for="passwordNoteTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title/Service Name</label>
+                            <input type="text" id="passwordNoteTitle" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-telegram" placeholder="e.g., Gmail, Netflix, Bank Account">
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="passwordUsername" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username/Email</label>
+                            <input type="text" id="passwordUsername" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-telegram" placeholder="Enter username or email">
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="passwordValue" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                            <div class="relative">
+                                <input type="text" id="passwordValue" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-telegram font-mono" placeholder="Enter password">
+                                <button id="generatePasswordBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-telegram hover:text-telegram-dark" title="Generate strong password">
+                                    <i class="fas fa-random"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Password will be sent as plaintext to Telegram</p>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="passwordNotes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Additional Notes (optional)</label>
+                            <textarea id="passwordNotes" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-telegram" placeholder="Recovery email, security questions, etc."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Bookmark Note Form -->
+                    <div id="bookmarkNoteForm" class="hidden">
+                        <div class="mb-6">
+                            <label for="bookmarkUrl" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL</label>
+                            <div class="relative">
+                                <input type="url" id="bookmarkUrl" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-telegram" placeholder="https://example.com">
+                                <button id="fetchTitleBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-telegram hover:text-telegram-dark" title="Fetch title">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="bookmarkTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                            <input type="text" id="bookmarkTitle" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-telegram" placeholder="Page title (fetched automatically)">
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="bookmarkDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description (optional)</label>
+                            <textarea id="bookmarkDescription" rows="4" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-telegram" placeholder="Add notes about this bookmark..."></textarea>
+                        </div>
+                        
+                        <div id="bookmarkPreview" class="mb-6 hidden">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Preview</label>
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-md p-3 bg-gray-50 dark:bg-gray-900">
+                                <div id="previewFavicon" class="flex items-center mb-2">
+                                    <img id="faviconImg" src="" alt="" class="w-4 h-4 mr-2">
+                                    <span id="previewTitle" class="font-medium text-telegram"></span>
+                                </div>
+                                <div id="previewUrl" class="text-sm text-gray-500 dark:text-gray-400 truncate"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="noteCategory" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                        <select id="noteCategory" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-telegram">
+                            <option value="general">General</option>
+                            <option value="work">Work</option>
+                            <option value="personal">Personal</option>
+                            <option value="ideas">Ideas</option>
+                            <option value="tasks">Tasks</option>
+                            <option value="snippet">Code Snippet</option>
+                            <option value="password">Password</option>
+                            <option value="bookmark">Bookmark</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Send to:</label>
+                        <div class="flex justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
+                            <div class="flex items-center">
+                                <i class="fas fa-users mr-2 text-telegram"></i>
+                                <span class="text-sm text-gray-700 dark:text-gray-300">Group Chat</span>
+                            </div>
+                            <div class="relative inline-block w-12 mr-2 align-middle select-none">
+                                <input type="checkbox" id="sendToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" checked />
+                                <label for="sendToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-telegram cursor-pointer"></label>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-sm text-gray-700 dark:text-gray-300">Private</span>
+                                <i class="fas fa-user ml-2 text-telegram"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="saveButton" class="w-full bg-telegram text-white py-3 px-4 rounded-md hover:bg-telegram-dark focus:outline-none focus:ring-2 focus:ring-telegram focus:ring-offset-2 transition-colors flex items-center justify-center">
+                        <i class="fas fa-paper-plane mr-2"></i> Save Note
+                    </button>
+                    
+                    <div id="statusMessage" class="mt-4 text-center hidden p-2 rounded-md"></div>
+                </div>
+            </div>
+            
+            <!-- Notes List -->
+            <div class="lg:col-span-2">
+                <div class="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-4 slide-in">
+                    <h2 class="text-xl font-bold text-telegram dark:text-telegram-light flex items-center mb-3">
+                        <i class="fas fa-sticky-note mr-2"></i> Your Notes
+                    </h2>
+                    <div class="flex flex-wrap gap-2 filter-bar mt-4">
+                        <div class="relative flex-grow">
+                            <input type="text" id="searchNotes" placeholder="Search notes..." class="pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-1 focus:ring-telegram text-sm w-full">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm"></i>
+                        </div>
+                        <div class="flex space-x-2">
+                            <select id="filterCategory" class="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-1 focus:ring-telegram text-sm py-2 px-3">
+                                <option value="all">All Categories</option>
+                                <option value="general">General</option>
+                                <option value="work">Work</option>
+                                <option value="personal">Personal</option>
+                                <option value="ideas">Ideas</option>
+                                <option value="tasks">Tasks</option>
+                                <option value="snippet">Code Snippet</option>
+                                <option value="password">Password</option>
+                                <option value="bookmark">Bookmark</option>
+                            </select>
+                            <button id="sortToggle" class="p-2 rounded text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600">
+                                <i class="fas fa-sort-amount-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="notesList" class="space-y-4 slide-in">
+                    <!-- Notes will be displayed here -->
+                    <div id="emptyNotesMessage" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+                        <i class="fas fa-sticky-note text-gray-300 dark:text-gray-600 text-5xl mb-4"></i>
+                        <p class="text-gray-500 dark:text-gray-400 text-lg">No notes saved yet.</p>
+                        <p class="text-gray-400 dark:text-gray-500 text-sm mt-2">Create your first note to get started!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4 fade-in">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Delete Note</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-6">Are you sure you want to delete this note? This action cannot be undone.</p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancelDelete" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                <button id="confirmDelete" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Delete</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Note Detail Modal -->
+    <div id="noteDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden overflow-auto">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-2xl w-full mx-4 my-8 fade-in">
+            <div class="flex justify-between items-start mb-4">
+                <h3 id="modalNoteTitle" class="text-xl font-bold text-gray-900 dark:text-white"></h3>
+                <button id="closeDetailModal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modalNoteContent" class="prose dark:prose-invert max-w-none mb-6 text-gray-700 dark:text-gray-300 whitespace-pre-line"></div>
+            <div class="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+                <div class="flex items-center space-x-2">
+                    <span id="modalNoteCategory" class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700"></span>
+                    <span id="modalNoteChatType" class="inline-flex items-center"></span>
+                </div>
+                <time id="modalNoteDate"></time>
+            </div>
+            <div class="flex justify-end mt-6 space-x-3">
+                <button id="modalEditButton" class="px-4 py-2 bg-telegram text-white rounded-md hover:bg-telegram-dark">
+                    <i class="fas fa-edit mr-1"></i> Edit
+                </button>
+                <button id="modalDeleteButton" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                    <i class="fas fa-trash-alt mr-1"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const BOT_TOKEN = '7229466014:AAFAnb8PXJdPtc7wkDe_q-YLt_Z9bJtlh2k';
+        const PRIVATE_CHAT_ID = '7294126603';
+        const GROUP_CHAT_ID = '-1002687657535';
+        
+        // Initialize notes array from localStorage
+        let notes = JSON.parse(localStorage.getItem('telegramNotes')) || [];
+        let darkMode = localStorage.getItem('darkMode') === 'true';
+        let currentSortOrder = localStorage.getItem('sortOrder') || 'newest';
+        let deleteNoteIndex = null;
+        let editingNoteIndex = null;
+        let currentFormMode = 'standard'; // standard, code, password, or bookmark
+        
+        // DOM elements
+        const noteTitleInput = document.getElementById('noteTitle');
+        const noteContentInput = document.getElementById('noteContent');
+        const codeNoteTitleInput = document.getElementById('codeNoteTitle');
+        const codeLanguageSelect = document.getElementById('codeLanguage');
+        const codeContentInput = document.getElementById('codeContent');
+        const codeDescriptionInput = document.getElementById('codeDescription');
+        const passwordNoteTitle = document.getElementById('passwordNoteTitle');
+        const passwordUsername = document.getElementById('passwordUsername');
+        const passwordValue = document.getElementById('passwordValue');
+        const passwordNotes = document.getElementById('passwordNotes');
+        const bookmarkUrl = document.getElementById('bookmarkUrl');
+        const bookmarkTitle = document.getElementById('bookmarkTitle');
+        const bookmarkDescription = document.getElementById('bookmarkDescription');
+        const fetchTitleBtn = document.getElementById('fetchTitleBtn');
+        const bookmarkPreview = document.getElementById('bookmarkPreview');
+        const previewTitle = document.getElementById('previewTitle');
+        const previewUrl = document.getElementById('previewUrl');
+        const faviconImg = document.getElementById('faviconImg');
+        const generatePasswordBtn = document.getElementById('generatePasswordBtn');
+        const noteCategorySelect = document.getElementById('noteCategory');
+        const saveButton = document.getElementById('saveButton');
+        const notesList = document.getElementById('notesList');
+        const statusMessage = document.getElementById('statusMessage');
+        const emptyNotesMessage = document.getElementById('emptyNotesMessage');
+        const sendToggle = document.getElementById('sendToggle');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const syncStatus = document.getElementById('syncStatus');
+        const searchInput = document.getElementById('searchNotes');
+        const filterCategory = document.getElementById('filterCategory');
+        const sortToggle = document.getElementById('sortToggle');
+        const deleteModal = document.getElementById('deleteModal');
+        const cancelDelete = document.getElementById('cancelDelete');
+        const confirmDelete = document.getElementById('confirmDelete');
+        const noteDetailModal = document.getElementById('noteDetailModal');
+        const closeDetailModal = document.getElementById('closeDetailModal');
+        const modalNoteTitle = document.getElementById('modalNoteTitle');
+        const modalNoteContent = document.getElementById('modalNoteContent');
+        const modalNoteCategory = document.getElementById('modalNoteCategory');
+        const modalNoteChatType = document.getElementById('modalNoteChatType');
+        const modalNoteDate = document.getElementById('modalNoteDate');
+        const modalEditButton = document.getElementById('modalEditButton');
+        const modalDeleteButton = document.getElementById('modalDeleteButton');
+        
+        // Tab elements
+        const standardNoteTab = document.getElementById('standardNoteTab');
+        const codeNoteTab = document.getElementById('codeNoteTab');
+        const passwordNoteTab = document.getElementById('passwordNoteTab');
+        const bookmarkNoteTab = document.getElementById('bookmarkNoteTab');
+        const standardNoteForm = document.getElementById('standardNoteForm');
+        const codeNoteForm = document.getElementById('codeNoteForm');
+        const passwordNoteForm = document.getElementById('passwordNoteForm');
+        const bookmarkNoteForm = document.getElementById('bookmarkNoteForm');
+        
+        // Switch between form types
+        function switchToStandardNote() {
+            standardNoteTab.classList.add('tab-active');
+            codeNoteTab.classList.remove('tab-active');
+            passwordNoteTab.classList.remove('tab-active');
+            bookmarkNoteTab.classList.remove('tab-active');
+            standardNoteForm.classList.remove('hidden');
+            codeNoteForm.classList.add('hidden');
+            passwordNoteForm.classList.add('hidden');
+            bookmarkNoteForm.classList.add('hidden');
+            currentFormMode = 'standard';
+        }
+        
+        function switchToCodeNote() {
+            codeNoteTab.classList.add('tab-active');
+            standardNoteTab.classList.remove('tab-active');
+            passwordNoteTab.classList.remove('tab-active');
+            bookmarkNoteTab.classList.remove('tab-active');
+            codeNoteForm.classList.remove('hidden');
+            standardNoteForm.classList.add('hidden');
+            passwordNoteForm.classList.add('hidden');
+            bookmarkNoteForm.classList.add('hidden');
+            currentFormMode = 'code';
+            noteCategorySelect.value = 'snippet';
+        }
+        
+        function switchToPasswordNote() {
+            passwordNoteTab.classList.add('tab-active');
+            standardNoteTab.classList.remove('tab-active');
+            codeNoteTab.classList.remove('tab-active');
+            bookmarkNoteTab.classList.remove('tab-active');
+            passwordNoteForm.classList.remove('hidden');
+            standardNoteForm.classList.add('hidden');
+            codeNoteForm.classList.add('hidden');
+            bookmarkNoteForm.classList.add('hidden');
+            currentFormMode = 'password';
+            noteCategorySelect.value = 'password';
+        }
+        
+        function switchToBookmarkNote() {
+            bookmarkNoteTab.classList.add('tab-active');
+            standardNoteTab.classList.remove('tab-active');
+            codeNoteTab.classList.remove('tab-active');
+            passwordNoteTab.classList.remove('tab-active');
+            bookmarkNoteForm.classList.remove('hidden');
+            standardNoteForm.classList.add('hidden');
+            codeNoteForm.classList.add('hidden');
+            passwordNoteForm.classList.add('hidden');
+            currentFormMode = 'bookmark';
+            noteCategorySelect.value = 'bookmark';
+        }
+        
+        // Generate a random strong password
+        function generateStrongPassword() {
+            const length = 16;
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_-+=<>?";
+            let password = "";
+            
+            // Ensure at least one of each character type
+            password += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)];
+            password += "abcdefghijklmnopqrstuvwxyz"[Math.floor(Math.random() * 26)];
+            password += "0123456789"[Math.floor(Math.random() * 10)];
+            password += "!@#$%^&*()_-+=<>?"[Math.floor(Math.random() * 16)];
+            
+            // Fill the rest randomly
+            for(let i = 4; i < length; i++) {
+                password += charset[Math.floor(Math.random() * charset.length)];
+            }
+            
+            // Shuffle the password
+            password = password.split('').sort(() => 0.5 - Math.random()).join('');
+            
+            return password;
+        }
+        
+        // Fetch title from URL
+        async function fetchTitleFromUrl(url) {
+            // Add loading indicator
+            fetchTitleBtn.innerHTML = '<div class="loading-spinner"></div>';
+            bookmarkTitle.placeholder = "Fetching title...";
+            
+            try {
+                // Create a proxy URL to avoid CORS issues
+                const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+                
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+                
+                if (data && data.contents) {
+                    // Parse the HTML to get the title
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(data.contents, 'text/html');
+                    const title = doc.querySelector('title')?.textContent;
+                    
+                    if (title) {
+                        bookmarkTitle.value = title;
+                        
+                        // Update preview
+                        updateBookmarkPreview(url, title);
+                        
+                        return title;
+                    } else {
+                        showStatus('Could not extract title from the webpage', 'warning');
+                    }
+                } else {
+                    showStatus('Failed to fetch webpage content', 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching title:', error);
+                showStatus('Error fetching title: ' + error.message, 'error');
+            } finally {
+                // Restore button state
+                fetchTitleBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+                bookmarkTitle.placeholder = "Page title (fetched automatically)";
+            }
+            
+            return null;
+        }
+        
+        // Update bookmark preview
+        function updateBookmarkPreview(url, title) {
+            if (!url) return;
+            
+            try {
+                const urlObj = new URL(url);
+                
+                // Generate favicon URL
+                const faviconUrl = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}`;
+                
+                // Update preview elements
+                faviconImg.src = faviconUrl;
+                previewTitle.textContent = title || 'No title';
+                previewUrl.textContent = url;
+                
+                // Show preview
+                bookmarkPreview.classList.remove('hidden');
+            } catch (error) {
+                console.error('Invalid URL:', error);
+                bookmarkPreview.classList.add('hidden');
+            }
+        }
+        
+        // Toggle dark mode
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+            localStorage.setItem('darkMode', darkMode);
+            applyDarkMode();
+        }
+        
+        // Apply dark mode settings
+        function applyDarkMode() {
+            if (darkMode) {
+                document.documentElement.classList.add('dark');
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                document.body.classList.add('bg-gray-900', 'text-white');
+                document.body.classList.remove('bg-gray-100', 'text-gray-900');
+            } else {
+                document.documentElement.classList.remove('dark');
+                darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                document.body.classList.remove('bg-gray-900', 'text-white');
+                document.body.classList.add('bg-gray-100', 'text-gray-900');
+            }
+        }
+        
+        // Toggle sort order
+        function toggleSortOrder() {
+            currentSortOrder = currentSortOrder === 'newest' ? 'oldest' : 'newest';
+            localStorage.setItem('sortOrder', currentSortOrder);
+            
+            // Update icon
+            sortToggle.innerHTML = currentSortOrder === 'newest' 
+                ? '<i class="fas fa-sort-amount-down"></i>' 
+                : '<i class="fas fa-sort-amount-up"></i>';
+                
+            updateNotesList();
+        }
+        
+        // Format code for display with language header and copy button
+        function formatCodeForDisplay(code, language) {
+            return `
+                <div class="code-toolbar">
+                    <div class="code-header">
+                        <span>${language}</span>
+                        <button class="copy-btn" data-clipboard-text="${escapeHtml(code)}">
+                            <i class="far fa-copy mr-1"></i> Copy
+                        </button>
+                    </div>
+                    <pre><code class="language-${language}">${escapeHtml(code)}</code></pre>
+                </div>
+            `;
+        }
+        
+        // Format password for display
+        function formatPasswordForDisplay(username, password, notes) {
+            return `
+                <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
+                    <div class="mb-3">
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Username/Email:</div>
+                        <div class="font-medium">${escapeHtml(username)}</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Password:</div>
+                        <div class="font-mono bg-gray-100 dark:bg-gray-600 p-2 rounded border border-gray-200 dark:border-gray-500">
+                            ${escapeHtml(password)}
+                        </div>
+                        <div class="flex justify-end mt-1">
+                            <button class="copy-btn text-xs text-telegram hover:text-telegram-dark" data-clipboard-text="${escapeHtml(password)}">
+                                <i class="far fa-copy mr-1"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                    ${notes ? `
+                    <div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">Additional Notes:</div>
+                        <div class="text-sm whitespace-pre-line">${escapeHtml(notes)}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        // Format bookmark for display
+        function formatBookmarkForDisplay(url, description) {
+            try {
+                const urlObj = new URL(url);
+                const domain = urlObj.hostname;
+                const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}`;
+                
+                return `
+                    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
+                        <div class="mb-3">
+                            <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="flex items-center text-telegram hover:underline">
+                                <img src="${faviconUrl}" alt="" class="w-4 h-4 mr-2">
+                                <span>${escapeHtml(url)}</span>
+                                <i class="fas fa-external-link-alt ml-2 text-xs"></i>
+                            </a>
+                        </div>
+                        ${description ? `
+                        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Notes:</div>
+                            <div class="text-sm whitespace-pre-line">${escapeHtml(description)}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            } catch (error) {
+                return `
+                    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
+                        <div class="mb-3">
+                            <span class="text-red-500">Invalid URL: ${escapeHtml(url)}</span>
+                        </div>
+                        ${description ? `
+                        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Notes:</div>
+                            <div class="text-sm whitespace-pre-line">${escapeHtml(description)}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+        }
+        
+        // Show note detail modal
+        function showNoteDetail(index) {
+            if (index < 0 || index >= notes.length) return;
+            
+            const note = notes[index];
+            
+            // Fill modal with note data
+            modalNoteTitle.textContent = note.title;
+            
+            // Handle content based on note type
+            if (note.isCode) {
+                // Format code with syntax highlighting
+                modalNoteContent.innerHTML = formatCodeForDisplay(note.code, note.language);
+                
+                // Add description if available
+                if (note.description) {
+                    modalNoteContent.innerHTML += `
+                        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <h4 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-2">Description:</h4>
+                            <div class="text-gray-700 dark:text-gray-300 whitespace-pre-line">${escapeHtml(note.description)}</div>
+                        </div>
+                    `;
+                }
+                
+                // Initialize syntax highlighting
+                document.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+                
+                // Initialize copy buttons
+                setupCopyButtons();
+            } else if (note.isPassword) {
+                // Format password display
+                modalNoteContent.innerHTML = formatPasswordForDisplay(note.username, note.password, note.passwordNotes);
+                
+                // Initialize copy buttons
+                setupCopyButtons();
+            } else if (note.isBookmark) {
+                // Format bookmark display
+                modalNoteContent.innerHTML = formatBookmarkForDisplay(note.url, note.description);
+            } else {
+                // Regular note content
+                modalNoteContent.textContent = note.content;
+            }
+            
+            const categoryIcon = getCategoryIcon(note.category);
+            modalNoteCategory.innerHTML = `<i class="fas ${categoryIcon} mr-1"></i> ${note.category || 'General'}`;
+            
+            const chatIcon = note.chatId === GROUP_CHAT_ID ? 'fa-users' : 'fa-user';
+            const chatType = note.chatId === GROUP_CHAT_ID ? 'Group' : 'Private';
+            modalNoteChatType.innerHTML = `<i class="fas ${chatIcon} mr-1"></i> ${chatType}`;
+            
+            // Format date
+            const noteDate = new Date(note.timestamp);
+            const formattedDate = noteDate.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric'
+            });
+            
+            const formattedTime = noteDate.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            modalNoteDate.textContent = `${formattedDate} at ${formattedTime}`;
+            modalNoteDate.setAttribute('datetime', note.timestamp);
+            
+            // Set up edit and delete buttons
+            modalEditButton.onclick = () => {
+                closeNoteDetailModal();
+                editNote(index);
+            };
+            
+            modalDeleteButton.onclick = () => {
+                closeNoteDetailModal();
+                showDeleteConfirmation(index);
+            };
+            
+            // Show modal
+            noteDetailModal.classList.remove('hidden');
+        }
+        
+        // Initialize copy buttons
+        function setupCopyButtons() {
+            document.querySelectorAll('.copy-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const text = this.getAttribute('data-clipboard-text');
+                    navigator.clipboard.writeText(text).then(() => {
+                        const originalText = this.innerHTML;
+                        this.innerHTML = '<i class="fas fa-check mr-1"></i> Copied!';
+                        setTimeout(() => {
+                            this.innerHTML = originalText;
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Could not copy text: ', err);
+                    });
+                });
+            });
+        }
+        
+        // Close note detail modal
+        function closeNoteDetailModal() {
+            noteDetailModal.classList.add('hidden');
+        }
+        
+        // Get category icon
+        function getCategoryIcon(category) {
+            switch(category) {
+                case 'work': return 'fa-briefcase';
+                case 'personal': return 'fa-user';
+                case 'ideas': return 'fa-lightbulb';
+                case 'tasks': return 'fa-tasks';
+                case 'snippet': return 'fa-code';
+                case 'password': return 'fa-key';
+                case 'bookmark': return 'fa-bookmark';
+                default: return 'fa-sticky-note';
+            }
+        }
+        
+        // Update notes list display
+        function updateNotesList() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const categoryFilter = filterCategory.value;
+            
+            // Filter notes based on search term and category
+            let filteredNotes = notes.filter(note => {
+                const matchesSearch = note.title.toLowerCase().includes(searchTerm) || 
+                                      (note.content ? note.content.toLowerCase().includes(searchTerm) : false) ||
+                                      (note.code ? note.code.toLowerCase().includes(searchTerm) : false) ||
+                                      (note.description ? note.description.toLowerCase().includes(searchTerm) : false) ||
+                                      (note.username ? note.username.toLowerCase().includes(searchTerm) : false) ||
+                                      (note.passwordNotes ? note.passwordNotes.toLowerCase().includes(searchTerm) : false) ||
+                                      (note.url ? note.url.toLowerCase().includes(searchTerm) : false);
+                                      
+                const matchesCategory = categoryFilter === 'all' || note.category === categoryFilter;
+                return matchesSearch && matchesCategory;
+            });
+            
+            // Sort notes
+            filteredNotes = filteredNotes.sort((a, b) => {
+                if (currentSortOrder === 'newest') {
+                    return new Date(b.timestamp) - new Date(a.timestamp);
+                } else {
+                    return new Date(a.timestamp) - new Date(b.timestamp);
+                }
+            });
+            
+            if (filteredNotes.length === 0) {
+                emptyNotesMessage.classList.remove('hidden');
+                notesList.innerHTML = '';
+                
+                // Show different message if we have notes but none match the filter
+                if (notes.length > 0) {
+                    emptyNotesMessage.innerHTML = `
+                        <i class="fas fa-search text-gray-300 dark:text-gray-600 text-5xl mb-4"></i>
+                        <p class="text-gray-500 dark:text-gray-400 text-lg">No notes match your filters.</p>
+                        <p class="text-gray-400 dark:text-gray-500 text-sm mt-2">Try changing your search criteria.</p>
+                    `;
+                } else {
+                    emptyNotesMessage.innerHTML = `
+                        <i class="fas fa-sticky-note text-gray-300 dark:text-gray-600 text-5xl mb-4"></i>
+                        <p class="text-gray-500 dark:text-gray-400 text-lg">No notes saved yet.</p>
+                        <p class="text-gray-400 dark:text-gray-500 text-sm mt-2">Create your first note to get started!</p>
+                    `;
+                }
+                
+                return;
+            }
+            
+            emptyNotesMessage.classList.add('hidden');
+            notesList.innerHTML = '';
+            
+            filteredNotes.forEach((note, index) => {
+                // Find original index in the main notes array
+                const originalIndex = notes.findIndex(n => 
+                    n.timestamp === note.timestamp && n.title === note.title);
+                    
+                const noteElement = document.createElement('div');
+                noteElement.className = 'note-card bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer';
+                noteElement.setAttribute('data-index', originalIndex);
+                
+                // Get category color and icon
+                let categoryColor, categoryIcon;
+                switch(note.category) {
+                    case 'work':
+                        categoryColor = 'bg-blue-500';
+                        categoryIcon = 'fa-briefcase';
+                        break;
+                    case 'personal':
+                        categoryColor = 'bg-green-500';
+                        categoryIcon = 'fa-user';
+                        break;
+                    case 'ideas':
+                        categoryColor = 'bg-purple-500';
+                        categoryIcon = 'fa-lightbulb';
+                        break;
+                    case 'tasks':
+                        categoryColor = 'bg-yellow-500';
+                        categoryIcon = 'fa-tasks';
+                        break;
+                    case 'snippet':
+                        categoryColor = 'bg-indigo-500';
+                        categoryIcon = 'fa-code';
+                        break;
+                    case 'password':
+                        categoryColor = 'bg-red-500';
+                        categoryIcon = 'fa-key';
+                        break;
+                    case 'bookmark':
+                        categoryColor = 'bg-blue-600';
+                        categoryIcon = 'fa-bookmark';
+                        break;
+                    default:
+                        categoryColor = 'bg-gray-500';
+                        categoryIcon = 'fa-sticky-note';
+                }
+                
+                // Determine content to show
+                let contentPreview = '';
+                if (note.isCode) {
+                    contentPreview = `
+                        <div class="flex items-center text-gray-600 dark:text-gray-300 mt-2 mb-3">
+                            <div class="inline-flex items-center bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md text-xs">
+                                <i class="fas fa-code mr-1"></i> ${note.language || 'code'}
+                            </div>
+                            <span class="ml-2 text-sm truncate">${note.description ? escapeHtml(note.description).substring(0, 80) + (note.description.length > 80 ? '...' : '') : 'No description'}</span>
+                        </div>
+                        <div class="bg-gray-100 dark:bg-gray-900 p-2 rounded border-l-4 border-indigo-500 font-mono text-xs overflow-hidden max-h-16">
+                            <div class="truncate">${escapeHtml(note.code.split('\n').slice(0, 3).join('\n'))}</div>
+                            ${note.code.split('\n').length > 3 ? '<div class="text-right text-gray-500 dark:text-gray-400 text-xs mt-1">...</div>' : ''}
+                        </div>
+                    `;
+                } else if (note.isPassword) {
+                    contentPreview = `
+                        <div class="flex items-center text-gray-600 dark:text-gray-300 mt-2 mb-3">
+                            <div class="inline-flex items-center bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md text-xs">
+                                <i class="fas fa-user mr-1"></i> ${escapeHtml(note.username)}
+                            </div>
+                            <div class="ml-2 inline-flex items-center bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md text-xs password-text">
+                                <i class="fas fa-key mr-1"></i> ${escapeHtml(note.password)}
+                            </div>
+                        </div>
+                        ${note.passwordNotes ? `
+                        <div class="text-gray-500 dark:text-gray-400 text-sm italic truncate">
+                            ${escapeHtml(note.passwordNotes.substring(0, 100) + (note.passwordNotes.length > 100 ? '...' : ''))}
+                        </div>
+                        ` : ''}
+                    `;
+                } else if (note.isBookmark) {
+                    try {
+                        const urlObj = new URL(note.url);
+                        const domain = urlObj.hostname;
+                        const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}`;
+                        
+                        contentPreview = `
+                            <div class="flex items-center text-gray-600 dark:text-gray-300 mt-2 mb-3">
+                                <a href="${escapeHtml(note.url)}" target="_blank" rel="noopener noreferrer" class="flex items-center text-telegram hover:underline overflow-hidden">
+                                    <img src="${faviconUrl}" alt="" class="w-4 h-4 mr-2 flex-shrink-0">
+                                    <span class="truncate">${escapeHtml(note.url)}</span>
+                                    <i class="fas fa-external-link-alt ml-2 text-xs flex-shrink-0"></i>
+                                </a>
+                            </div>
+                            ${note.description ? `
+                            <div class="text-gray-500 dark:text-gray-400 text-sm italic truncate">
+                                ${escapeHtml(note.description.substring(0, 100) + (note.description.length > 100 ? '...' : ''))}
+                            </div>
+                            ` : ''}
+                        `;
+                    } catch (error) {
+                        contentPreview = `
+                            <div class="flex items-center text-red-500 mt-2 mb-3">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                <span class="truncate">Invalid URL: ${escapeHtml(note.url)}</span>
+                            </div>
+                            ${note.description ? `
+                            <div class="text-gray-500 dark:text-gray-400 text-sm italic truncate">
+                                ${escapeHtml(note.description.substring(0, 100) + (note.description.length > 100 ? '...' : ''))}
+                            </div>
+                            ` : ''}
+                        `;
+                    }
+                } else {
+                    // Truncate content for preview
+                    const truncatedContent = note.content.length > 150 
+                        ? note.content.substring(0, 150) + '...' 
+                        : note.content;
+                    
+                    contentPreview = `
+                        <div class="prose prose-sm max-w-none dark:prose-invert mb-4">
+                            <p class="text-gray-600 dark:text-gray-300 whitespace-pre-line break-words">${escapeHtml(truncatedContent)}</p>
+                        </div>
+                    `;
+                }
+                
+                // Format date
+                const noteDate = new Date(note.timestamp);
+                const formattedDate = noteDate.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric'
+                });
+                
+                const formattedTime = noteDate.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                noteElement.innerHTML = `
+                    <div class="relative">
+                        <div class="absolute top-0 left-0 w-1 h-full ${categoryColor} rounded-tl-lg rounded-bl-lg"></div>
+                        <div class="p-5 pl-6">
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="font-bold text-gray-800 dark:text-white text-lg break-words pr-8">${escapeHtml(note.title)}</h3>
+                                <div class="flex space-x-2">
+                                    <button class="edit-note-btn text-telegram hover:text-telegram-dark p-1" data-index="${originalIndex}" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="delete-note-btn text-red-500 hover:text-red-700 p-1" data-index="${originalIndex}" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            ${contentPreview}
+                            
+                            <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 mt-4">
+                                <div class="flex items-center">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 mr-2">
+                                        <i class="fas ${categoryIcon} mr-1"></i>
+                                        ${note.category || 'General'}
+                                    </span>
+                                    <span class="inline-flex items-center">
+                                        <i class="fas ${note.chatId === GROUP_CHAT_ID ? 'fa-users' : 'fa-user'} mr-1"></i>
+                                        ${note.chatId === GROUP_CHAT_ID ? 'Group' : 'Private'}
+                                    </span>
+                                </div>
+                                <div>
+                                    <time datetime="${note.timestamp}" title="${formattedDate} at ${formattedTime}">
+                                        <i class="far fa-clock mr-1"></i>${formattedDate}
+                                    </time>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                notesList.appendChild(noteElement);
+                
+                // Add click event for the entire note card to open detail view
+                noteElement.addEventListener('click', function(e) {
+                    // Don't trigger if the edit or delete buttons were clicked
+                    if (!e.target.closest('.edit-note-btn') && !e.target.closest('.delete-note-btn') && 
+                        !e.target.closest('a[target="_blank"]')) { // Don't trigger on bookmark links
+                        showNoteDetail(originalIndex);
+                    }
+                });
+            });
+            
+            // Add event listeners to buttons
+            document.querySelectorAll('.delete-note-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent note card click
+                    const index = parseInt(this.getAttribute('data-index'));
+                    showDeleteConfirmation(index);
+                });
+            });
+            
+            document.querySelectorAll('.edit-note-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent note card click
+                    const index = parseInt(this.getAttribute('data-index'));
+                    editNote(index);
+                });
+            });
+        }
+        
+        // Show delete confirmation modal
+        function showDeleteConfirmation(index) {
+            deleteNoteIndex = index;
+            deleteModal.classList.remove('hidden');
+        }
+        
+        // Close delete confirmation modal
+        function closeDeleteModal() {
+            deleteModal.classList.add('hidden');
+            deleteNoteIndex = null;
+        }
+        
+        // Edit note
+        function editNote(index) {
+            if (index < 0 || index >= notes.length) return;
+            
+            const note = notes[index];
+            
+            // Store the editing index
+            editingNoteIndex = index;
+            
+            // Check note type and switch to appropriate form
+            if (note.isCode) {
+                // Switch to code form
+                switchToCodeNote();
+                
+                // Fill the form with note data
+                codeNoteTitleInput.value = note.title;
+                codeLanguageSelect.value = note.language || 'javascript';
+                codeContentInput.value = note.code;
+                codeDescriptionInput.value = note.description || '';
+            } else if (note.isPassword) {
+                // Switch to password form
+                switchToPasswordNote();
+                
+                // Fill the form with password data
+                passwordNoteTitle.value = note.title;
+                passwordUsername.value = note.username;
+                passwordValue.value = note.password;
+                passwordNotes.value = note.passwordNotes || '';
+            } else if (note.isBookmark) {
+                // Switch to bookmark form
+                switchToBookmarkNote();
+                
+                // Fill the form with bookmark data
+                bookmarkUrl.value = note.url;
+                bookmarkTitle.value = note.title;
+                bookmarkDescription.value = note.description || '';
+                
+                // Update preview
+                updateBookmarkPreview(note.url, note.title);
+            } else {
+                // Switch to standard form
+                switchToStandardNote();
+                
+                // Fill the form with note data
+                noteTitleInput.value = note.title;
+                noteContentInput.value = note.content;
+            }
+            
+            // Set category and toggle
+            noteCategorySelect.value = note.category || 'general';
+            sendToggle.checked = note.chatId === GROUP_CHAT_ID;
+            
+            // Scroll to form and focus title
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => {
+                if (currentFormMode === 'standard') {
+                    noteTitleInput.focus();
+                } else if (currentFormMode === 'code') {
+                    codeNoteTitleInput.focus();
+                } else if (currentFormMode === 'bookmark') {
+                    bookmarkUrl.focus();
+                } else {
+                    passwordNoteTitle.focus();
+                }
+            }, 300);
+            
+            showStatus('Editing note - Save to update', 'info');
+            
+            // Change save button text
+            saveButton.innerHTML = '<i class="fas fa-save mr-2"></i> Update Note';
+        }
+        
+        // Escape HTML to prevent XSS
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+        
+        // Get emoji for category
+        function getCategoryEmoji(category) {
+            switch(category) {
+                case 'work': return '💼';
+                case 'personal': return '👤';
+                case 'ideas': return '💡';
+                case 'tasks': return '📋';
+                case 'snippet': return '💻';
+                case 'password': return '🔑';
+                case 'bookmark': return '🔖';
+                default: return '📝';
+            }
+        }
+        
+        // Save note to Telegram and localStorage
+        function saveNote() {
+            let title, content, category, isCode = false, isPassword = false, isBookmark = false;
+            let language, code, description, username, password, passwordNotes, url;
+            
+            // Get data based on form type
+            if (currentFormMode === 'standard') {
+                title = noteTitleInput.value.trim();
+                content = noteContentInput.value.trim();
+                
+                if (!title || !content) {
+                    showStatus('Please enter both title and content', 'error');
+                    return;
+                }
+            } else if (currentFormMode === 'code') {
+                // Code note
+                title = codeNoteTitleInput.value.trim();
+                code = codeContentInput.value.trim();
+                language = codeLanguageSelect.value;
+                description = codeDescriptionInput.value.trim();
+                isCode = true;
+                
+                if (!title || !code) {
+                    showStatus('Please enter both title and code', 'error');
+                    return;
+                }
+            } else if (currentFormMode === 'password') {
+                // Password note
+                title = passwordNoteTitle.value.trim();
+                username = passwordUsername.value.trim();
+                password = passwordValue.value.trim();
+                passwordNotes = passwordNotes ? passwordNotes.value.trim() : '';
+                isPassword = true;
+                
+                if (!title || !username || !password) {
+                    showStatus('Please enter title, username and password', 'error');
+                    return;
+                }
+            } else if (currentFormMode === 'bookmark') {
+                // Bookmark note
+                url = bookmarkUrl.value.trim();
+                title = bookmarkTitle.value.trim();
+                description = bookmarkDescription.value.trim();
+                isBookmark = true;
+                
+                // Validate URL
+                if (!url) {
+                    showStatus('Please enter a URL', 'error');
+                    return;
+                }
+                
+                // Try to parse URL
+                try {
+                    new URL(url);
+                } catch (e) {
+                    // If not valid, try to add https://
+                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                        url = 'https://' + url;
+                        try {
+                            new URL(url);
+                            bookmarkUrl.value = url; // Update the field value
+                        } catch (e) {
+                            showStatus('Please enter a valid URL', 'error');
+                            return;
+                        }
+                    } else {
+                        showStatus('Please enter a valid URL', 'error');
+                        return;
+                    }
+                }
+                
+                if (!title) {
+                    showStatus('Please enter a title for the bookmark', 'error');
+                    return;
+                }
+            }
+            
+            category = noteCategorySelect.value;
+            
+            // Disable save button and show syncing
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
+            syncStatus.classList.remove('hidden');
+            
+            // Determine chat ID based on toggle
+            const chatId = sendToggle.checked ? GROUP_CHAT_ID : PRIVATE_CHAT_ID;
+            
+            // Format message for Telegram
+            let messageText;
+            
+            if (isCode) {
+                // Format code message with markdown code blocks
+                const categoryEmoji = getCategoryEmoji(category);
+                messageText = `${categoryEmoji} *${title}*\n\n`;
+                
+                // Add description if available
+                if (description) {
+                    messageText += `${description}\n\n`;
+                }
+                
+                // Add code block with language syntax
+                messageText += "```" + language + "\n" + code + "\n```\n\n";
+                messageText += `_Language: ${language}_\n_Category: ${category}_`;
+            } else if (isPassword) {
+                // Format password message - ensure password is plaintext
+                const categoryEmoji = getCategoryEmoji(category);
+                messageText = `${categoryEmoji} *${title}*\n\n`;
+                messageText += `*Username/Email:* ${username}\n`;
+                messageText += `*Password:* \`${password}\`\n\n`; // Using code formatting (backticks) to make it stand out but keeping plaintext
+                
+                if (passwordNotes) {
+                    messageText += `*Additional Notes:*\n${passwordNotes}\n\n`;
+                }
+                
+                messageText += `_Category: ${category}_`;
+            } else if (isBookmark) {
+                // Format bookmark message
+                const categoryEmoji = getCategoryEmoji(category);
+                messageText = `${categoryEmoji} *${title}*\n\n`;
+                messageText += `🔗 ${url}\n\n`;
+                
+                if (description) {
+                    messageText += `${description}\n\n`;
+                }
+                
+                messageText += `_Category: ${category}_\n`;
+                messageText += `_Saved: ${new Date().toLocaleString()}_`;
+            } else {
+                // Standard note
+                const categoryEmoji = getCategoryEmoji(category);
+                messageText = `${categoryEmoji} *${title}*\n\n${content}\n\n_Category: ${category}_`;
+            }
+            
+            // If editing, delete the old note from Telegram first
+            const isEditing = editingNoteIndex !== null;
+            let deletePreviousPromise = Promise.resolve();
+            
+            if (isEditing) {
+                const oldNote = notes[editingNoteIndex];
+                if (oldNote.messageId && oldNote.chatId) {
+                    deletePreviousPromise = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/deleteMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: oldNote.chatId,
+                            message_id: oldNote.messageId
+                        })
+                    })
+                    .then(response => response.json())
+                    .catch(error => {
+                        console.warn('Could not delete previous message:', error);
+                        // Continue anyway
+                        return Promise.resolve();
+                    });
+                }
+                
+                // Remove the old note from the array
+                notes.splice(editingNoteIndex, 1);
+            }
+            
+            // After deleting (if applicable), send the new message
+            deletePreviousPromise.then(() => {
+                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: messageText,
+                        parse_mode: 'Markdown'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        // Prepare note object based on type
+                        let noteObj;
+                        
+                        if (isCode) {
+                            noteObj = {
+                                title: title,
+                                category: category,
+                                chatId: chatId,
+                                messageId: data.result.message_id,
+                                timestamp: new Date().toISOString(),
+                                isCode: true,
+                                isPassword: false,
+                                isBookmark: false,
+                                language: language,
+                                code: code,
+                                description: description
+                            };
+                        } else if (isPassword) {
+                            noteObj = {
+                                title: title,
+                                category: category,
+                                chatId: chatId,
+                                messageId: data.result.message_id,
+                                timestamp: new Date().toISOString(),
+                                isCode: false,
+                                isPassword: true,
+                                isBookmark: false,
+                                username: username,
+                                password: password,
+                                passwordNotes: passwordNotes
+                            };
+                        } else if (isBookmark) {
+                            noteObj = {
+                                title: title,
+                                category: category,
+                                chatId: chatId,
+                                messageId: data.result.message_id,
+                                timestamp: new Date().toISOString(),
+                                isCode: false,
+                                isPassword: false,
+                                isBookmark: true,
+                                url: url,
+                                description: description
+                            };
+                        } else {
+                            noteObj = {
+                                title: title,
+                                content: content,
+                                category: category,
+                                chatId: chatId,
+                                messageId: data.result.message_id,
+                                timestamp: new Date().toISOString(),
+                                isCode: false,
+                                isPassword: false,
+                                isBookmark: false
+                            };
+                        }
+                        
+                        // Save to local array and localStorage
+                        notes.unshift(noteObj);
+                        localStorage.setItem('telegramNotes', JSON.stringify(notes));
+                        
+                        // Update UI
+                        updateNotesList();
+                        clearForm();
+                        
+                        // Reset editing state
+                        editingNoteIndex = null;
+                        saveButton.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Save Note';
+                        
+                        showStatus(isEditing ? 'Note updated successfully!' : 'Note saved successfully!', 'success');
+                    } else {
+                        showStatus(`Error: ${data.description}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showStatus('Failed to send note to Telegram', 'error');
+                })
+                .finally(() => {
+                    // Re-enable save button and hide syncing
+                    saveButton.disabled = false;
+                    syncStatus.classList.add('hidden');
+                });
+            });
+        }
+        
+        // Delete note
+        function deleteNote(index) {
+            if (index < 0 || index >= notes.length) return;
+            
+            const note = notes[index];
+            
+            // Show syncing status
+            syncStatus.classList.remove('hidden');
+            
+            // Try to delete from Telegram if we have messageId
+            if (note.messageId && note.chatId) {
+                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/deleteMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: note.chatId,
+                        message_id: note.messageId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.ok) {
+                        console.warn('Could not delete message from Telegram:', data.description);
+                        showStatus('Note deleted locally, but could not delete from Telegram', 'warning');
+                    } else {
+                        showStatus('Note deleted successfully', 'success');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting from Telegram:', error);
+                    showStatus('Note deleted locally, but could not delete from Telegram', 'warning');
+                })
+                .finally(() => {
+                    // Remove from array and update localStorage
+                    notes.splice(index, 1);
+                    localStorage.setItem('telegramNotes', JSON.stringify(notes));
+                    
+                    // Update UI
+                    updateNotesList();
+                    
+                    // Hide syncing status
+                    syncStatus.classList.add('hidden');
+                    
+                    // Reset editing state if deleting the note being edited
+                    if (editingNoteIndex === index) {
+                        editingNoteIndex = null;
+                        clearForm();
+                        saveButton.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Save Note';
+                    }
+                });
+            } else {
+                // Remove from array
+                notes.splice(index, 1);
+                
+                // Update localStorage
+                localStorage.setItem('telegramNotes', JSON.stringify(notes));
+                
+                // Update UI
+                updateNotesList();
+                
+                // Hide syncing status
+                syncStatus.classList.add('hidden');
+                showStatus('Note deleted successfully', 'success');
+            }
+        }
+        
+        // Clear form after saving
+        function clearForm() {
+            noteTitleInput.value = '';
+            noteContentInput.value = '';
+            codeNoteTitleInput.value = '';
+            codeContentInput.value = '';
+            codeDescriptionInput.value = '';
+            codeLanguageSelect.value = 'javascript';
+            passwordNoteTitle.value = '';
+            passwordUsername.value = '';
+            passwordValue.value = '';
+            passwordNotes.value = '';
+            bookmarkUrl.value = '';
+            bookmarkTitle.value = '';
+            bookmarkDescription.value = '';
+            bookmarkPreview.classList.add('hidden');
+            noteCategorySelect.value = 'general';
+            sendToggle.checked = true; // Set default to group chat
+            
+            // Switch back to standard form by default
+            switchToStandardNote();
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-blue-100', 'text-blue-800', 'bg-yellow-100', 'text-yellow-800');
+            
+            switch(type) {
+                case 'success':
+                    statusMessage.classList.add('bg-green-100', 'text-green-800');
+                    break;
+                case 'error':
+                    statusMessage.classList.add('bg-red-100', 'text-red-800');
+                    break;
+                case 'info':
+                    statusMessage.classList.add('bg-blue-100', 'text-blue-800');
+                    break;
+                case 'warning':
+                    statusMessage.classList.add('bg-yellow-100', 'text-yellow-800');
+                    break;
+            }
+            
+            // Hide status after 3 seconds
+            setTimeout(() => {
+                statusMessage.classList.add('hidden');
+            }, 3000);
+        }
+        
+        // Apply dark mode on initialization
+        applyDarkMode();
+        
+        // Event Listeners
+        saveButton.addEventListener('click', saveNote);
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+        sortToggle.addEventListener('click', toggleSortOrder);
+        searchInput.addEventListener('input', updateNotesList);
+        filterCategory.addEventListener('change', updateNotesList);
+        cancelDelete.addEventListener('click', closeDeleteModal);
+        closeDetailModal.addEventListener('click', closeNoteDetailModal);
+        standardNoteTab.addEventListener('click', switchToStandardNote);
+        codeNoteTab.addEventListener('click', switchToCodeNote);
+        passwordNoteTab.addEventListener('click', switchToPasswordNote);
+        bookmarkNoteTab.addEventListener('click', switchToBookmarkNote);
+        
+        // Password generator button
+        generatePasswordBtn.addEventListener('click', function() {
+            passwordValue.value = generateStrongPassword();
+            passwordValue.focus();
+            passwordValue.select();
+        });
+        
+        // Bookmark URL title fetcher
+        fetchTitleBtn.addEventListener('click', function() {
+            const url = bookmarkUrl.value.trim();
+            if (url) {
+                fetchTitleFromUrl(url);
+            } else {
+                showStatus('Please enter a URL first', 'warning');
+            }
+        });
+        
+        // Auto-fetch title when URL is pasted or entered
+        bookmarkUrl.addEventListener('blur', function() {
+            const url = this.value.trim();
+            if (url && !bookmarkTitle.value.trim()) {
+                fetchTitleFromUrl(url);
+            }
+            
+            // Update preview anyways
+            updateBookmarkPreview(url, bookmarkTitle.value);
+        });
+        
+        // Update preview when title changes
+        bookmarkTitle.addEventListener('input', function() {
+            updateBookmarkPreview(bookmarkUrl.value, this.value);
+        });
+        
+        confirmDelete.addEventListener('click', function() {
+            if (deleteNoteIndex !== null) {
+                deleteNote(deleteNoteIndex);
+                closeDeleteModal();
+            }
+        });
+        
+        // Close modals if clicking outside
+        deleteModal.addEventListener('click', function(e) {
+            if (e.target === deleteModal) {
+                closeDeleteModal();
+            }
+        });
+        
+        noteDetailModal.addEventListener('click', function(e) {
+            if (e.target === noteDetailModal) {
+                closeNoteDetailModal();
+            }
+        });
+        
+        // Allow using keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Escape key to close modals
+            if (e.key === 'Escape') {
+                if (!deleteModal.classList.contains('hidden')) {
+                    closeDeleteModal();
+                }
+                if (!noteDetailModal.classList.contains('hidden')) {
+                    closeNoteDetailModal();
+                }
+            }
+            
+            // Ctrl+Enter to save note
+            if (e.ctrlKey && e.key === 'Enter') {
+                if ((document.activeElement === noteContentInput) || 
+                    (document.activeElement === codeContentInput) ||
+                    (document.activeElement === codeDescriptionInput) ||
+                    (document.activeElement === passwordNotes) ||
+                    (document.activeElement === bookmarkDescription)) {
+                    saveNote();
+                }
+            }
+            
+            // Tab key handling in code textarea
+            if (e.key === 'Tab' && document.activeElement === codeContentInput) {
+                e.preventDefault();
+                
+                // Insert a tab character at the cursor position
+                const start = codeContentInput.selectionStart;
+                const end = codeContentInput.selectionEnd;
+                
+                // Insert 4 spaces for a tab
+                codeContentInput.value = codeContentInput.value.substring(0, start) + "    " + codeContentInput.value.substring(end);
+                
+                // Put the cursor after the tab
+                codeContentInput.selectionStart = codeContentInput.selectionEnd = start + 4;
+            }
+        });
+        
+        // Initialize notes list on page load
+        updateNotesList();
+        
+        // Set initial sort icon
+        sortToggle.innerHTML = currentSortOrder === 'newest' 
+            ? '<i class="fas fa-sort-amount-down"></i>' 
+            : '<i class="fas fa-sort-amount-up"></i>';
+    </script>
+</body>
+</html>
