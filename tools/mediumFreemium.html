@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freedium Link Converter</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
+    <div class="container mx-auto px-4 py-6 max-w-3xl">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 md:p-8 transition-colors duration-300">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6">
+                <div class="text-center flex-1">
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">Medium to Freedium Converter</h1>
+                    <p class="text-gray-600 dark:text-gray-300 mt-2">Read Medium articles without subscription limits</p>
+                </div>
+                <!-- Dark Mode Toggle -->
+                <button 
+                    id="darkModeToggle" 
+                    class="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none transition-colors duration-300"
+                    aria-label="Toggle dark mode"
+                >
+                    <!-- Sun icon (shown in dark mode) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden dark:block" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                    </svg>
+                    <!-- Moon icon (shown in light mode) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 block dark:hidden" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Input Form -->
+            <div class="space-y-4">
+                <div>
+                    <label for="mediumLink" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Medium Article URL</label>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="mediumLink" 
+                            placeholder="https://medium.com/..." 
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white transition-colors duration-300"
+                        >
+                        <button 
+                            onclick="clearInput()" 
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            title="Clear input"
+                            aria-label="Clear input"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button 
+                        onclick="convertAndOpen()" 
+                        class="flex items-center justify-center px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors duration-300"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        Convert & Open
+                    </button>
+                    <button 
+                        onclick="convertOnly()" 
+                        class="flex items-center justify-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors duration-300"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        Convert Only
+                    </button>
+                    <button 
+                        onclick="createCustomLink()" 
+                        class="flex items-center justify-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors duration-300"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd" />
+                        </svg>
+                        Custom Link
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loader" class="hidden">
+                <div class="flex items-center justify-center py-6">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600 dark:border-primary-400"></div>
+                </div>
+                <p class="text-center text-gray-600 dark:text-gray-300">Redirecting to Freedium...</p>
+            </div>
+
+            <!-- Result Section -->
+            <div id="result" class="hidden mt-6 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4 transition-colors duration-300">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-medium text-gray-800 dark:text-white">Freedium Link:</h3>
+                    <button 
+                        onclick="closeResult()" 
+                        class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors duration-300"
+                        title="Close"
+                        aria-label="Close result"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center gap-2">
+                    <input 
+                        type="text" 
+                        id="freediumLinkInput" 
+                        readonly 
+                        class="w-full bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg py-2 px-3 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-300"
+                    >
+                    <div class="flex sm:flex-shrink-0 space-x-1 w-full sm:w-auto mt-2 sm:mt-0">
+                        <button 
+                            onclick="copyToClipboard()" 
+                            class="flex-1 sm:flex-none p-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none transition-colors duration-300"
+                            title="Copy to clipboard"
+                            aria-label="Copy to clipboard"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                                <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                            </svg>
+                        </button>
+                        <button 
+                            onclick="openFreediumLink()" 
+                            class="flex-1 sm:flex-none p-2 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-800 focus:outline-none transition-colors duration-300"
+                            title="Open link"
+                            aria-label="Open link"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                            </svg>
+                        </button>
+                        <button 
+                            onclick="showPreview()" 
+                            class="flex-1 sm:flex-none p-2 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-800 focus:outline-none transition-colors duration-300"
+                            title="Preview"
+                            aria-label="Preview"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="copyMessage" class="hidden mt-2 text-sm text-green-600 dark:text-green-400">
+                    Link copied to clipboard!
+                </div>
+            </div>
+
+            <!-- Create Custom Link Form -->
+            <div id="customLinkForm" class="hidden mt-6 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4 transition-colors duration-300">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-medium text-gray-800 dark:text-white">Create Custom Freedium Link</h3>
+                    <button 
+                        onclick="closeCustomForm()" 
+                        class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors duration-300"
+                        title="Close"
+                        aria-label="Close custom form"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+                <textarea 
+                    id="customUrl" 
+                    placeholder="Enter any URL to convert to Freedium format..." 
+                    class="w-full h-28 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg py-2 px-3 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 mb-3 transition-colors duration-300"
+                ></textarea>
+                <div class="flex space-x-2">
+                    <button 
+                        onclick="generateCustomLink()" 
+                        class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors duration-300"
+                    >
+                        Generate Link
+                    </button>
+                    <button 
+                        onclick="clearCustomForm()" 
+                        class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none transition-colors duration-300"
+                    >
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div id="historySection" class="hidden mt-8">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white transition-colors duration-300">History</h3>
+                    <button 
+                        onclick="clearAllHistory()" 
+                        class="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 focus:outline-none transition-colors duration-300"
+                    >
+                        Clear All
+                    </button>
+                </div>
+                <div class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg divide-y divide-gray-200 dark:divide-gray-600 transition-colors duration-300">
+                    <ul id="historyList" class="max-h-96 overflow-y-auto"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-6 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">
+            <p>Made with ❤️ for easy reading of Medium articles</p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 left-4 sm:left-auto bg-gray-800 dark:bg-gray-700 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-10 opacity-0 transition-all duration-300 hidden z-50 max-w-sm">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Floating Preview -->
+    <div id="previewContainer" class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-50 flex items-center justify-center hidden transition-opacity duration-300 opacity-0">
+        <div id="previewPanel" class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-11/12 md:w-3/4 lg:w-2/3 h-4/5 max-h-[90vh] flex flex-col transform scale-95 transition-transform duration-300 mx-2 transition-colors duration-300">
+            <!-- Preview Header -->
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-600 transition-colors duration-300">
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary-600 dark:text-primary-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                    </svg>
+                    <h3 class="font-medium text-gray-800 dark:text-white">Article Preview</h3>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button 
+                        onclick="openInNewTab()" 
+                        class="p-1.5 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-800 focus:outline-none transition-colors duration-300"
+                        title="Open in new tab"
+                        aria-label="Open in new tab"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                            <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                        </svg>
+                    </button>
+                    <button 
+                        onclick="closePreview()" 
+                        class="p-1.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none transition-colors duration-300"
+                        title="Close preview"
+                        aria-label="Close preview"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Preview Content -->
+            <div class="flex-1 overflow-auto p-4" id="previewContent">
+                <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg transition-colors duration-300">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2 transition-colors duration-300">Link Preview Information</h3>
+                        <div class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 px-3 py-1 rounded-full text-sm inline-block mb-2 sm:mb-0 transition-colors duration-300">Freedium Link</div>
+                    </div>
+                    
+                    <div class="border-t border-gray-200 dark:border-gray-600 mt-4 pt-4 transition-colors duration-300">
+                        <p class="text-gray-600 dark:text-gray-300 mb-4 transition-colors duration-300">
+                            Freedium lets you read Medium articles without paywall limitations and subscription requirements.
+                        </p>
+                        
+                        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 mb-4 transition-colors duration-300">
+                            <p class="text-gray-800 dark:text-gray-200 font-medium mb-2 transition-colors duration-300">Converted link:</p>
+                            <div id="previewLinkDisplay" class="text-blue-600 dark:text-blue-400 break-all transition-colors duration-300"></div>
+                        </div>
+                        
+                        <div class="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800/50 mb-6 transition-colors duration-300">
+                            <div class="flex items-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500 dark:text-yellow-400 mr-2 mt-0.5 flex-shrink-0 transition-colors duration-300" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                                <div>
+                                    <p class="text-gray-700 dark:text-gray-200 font-medium transition-colors duration-300">Note:</p>
+                                    <p class="text-gray-600 dark:text-gray-300 text-sm transition-colors duration-300">
+                                        To view the complete article, click the "Open in new tab" button above 
+                                        or the "Open" button on the conversion result. You'll be directed to the full article on Freedium.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <button 
+                                onclick="openInNewTab()" 
+                                class="flex-1 flex items-center justify-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg focus:outline-none transition-colors duration-300"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                                    <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                                </svg>
+                                Open Article in New Tab
+                            </button>
+                            <button 
+                                onclick="closePreview()" 
+                                class="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none transition-colors duration-300"
+                            >
+                                Close Preview
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Preview Loading Indicator -->
+            <div id="previewLoader" class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-800 bg-opacity-90 dark:bg-opacity-90 rounded-lg transition-colors duration-300">
+                <div class="flex flex-col items-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400 transition-colors duration-300"></div>
+                    <p class="mt-4 text-gray-600 dark:text-gray-300 transition-colors duration-300">Loading preview info...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode toggle handler
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check for saved theme preference or use preferred color scheme
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+
+            // Initialize dark mode toggle button
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            darkModeToggle.addEventListener('click', toggleDarkMode);
+            
+            // Load history
+            loadHistory();
+        });
+
+        // Toggle dark mode
+        function toggleDarkMode() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Check if a user is on a mobile device
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+        }
+
+        // Function to convert Medium links to Freedium links
+        function convertLink(url) {
+            // Simple validation for URL
+            if (!url || url.trim() === '') {
+                showToast('Please enter a valid URL');
+                return null;
+            }
+            
+            try {
+                // If the URL doesn't start with http:// or https://, add https://
+                let processedUrl = url.trim();
+                if (!processedUrl.startsWith('http://') && !processedUrl.startsWith('https://')) {
+                    processedUrl = 'https://' + processedUrl;
+                }
+                
+                // Create Freedium link
+                return 'https://freedium.cfd/' + processedUrl;
+            } catch (error) {
+                showToast('Error processing URL. Please check the format.');
+                return null;
+            }
+        }
+
+        // Convert and open in new tab
+        function convertAndOpen() {
+            const mediumLink = document.getElementById('mediumLink').value.trim();
+            const freediumLink = convertLink(mediumLink);
+            
+            if (freediumLink) {
+                document.getElementById('loader').classList.remove('hidden');
+                
+                // Save to history
+                saveToHistory(mediumLink, freediumLink);
+                
+                // Redirect to the Freedium link
+                setTimeout(() => {
+                    window.open(freediumLink, '_blank');
+                    document.getElementById('loader').classList.add('hidden');
+                }, 800);
+            }
+        }
+
+        // Convert only and show result
+        function convertOnly() {
+            const mediumLink = document.getElementById('mediumLink').value.trim();
+            const freediumLink = convertLink(mediumLink);
+            
+            if (freediumLink) {
+                // Update result section
+                document.getElementById('freediumLinkInput').value = freediumLink;
+                document.getElementById('result').classList.remove('hidden');
+                document.getElementById('customLinkForm').classList.add('hidden');
+                
+                // Save to history
+                saveToHistory(mediumLink, freediumLink);
+            }
+        }
+
+        // Create custom link form
+        function createCustomLink() {
+            document.getElementById('customLinkForm').classList.remove('hidden');
+            document.getElementById('result').classList.add('hidden');
+            
+            // Copy the content from the main input if it's available
+            const mediumLink = document.getElementById('mediumLink').value.trim();
+            if (mediumLink) {
+                document.getElementById('customUrl').value = mediumLink;
+            }
+            
+            // Focus on the custom URL textarea
+            setTimeout(() => {
+                document.getElementById('customUrl').focus();
+            }, 100);
+        }
+
+        // Generate custom Freedium link
+        function generateCustomLink() {
+            const customUrl = document.getElementById('customUrl').value.trim();
+            const freediumLink = convertLink(customUrl);
+            
+            if (freediumLink) {
+                // Update result section
+                document.getElementById('freediumLinkInput').value = freediumLink;
+                document.getElementById('result').classList.remove('hidden');
+                
+                // Save to history
+                saveToHistory(customUrl, freediumLink);
+                
+                // Close the custom form
+                document.getElementById('customLinkForm').classList.add('hidden');
+            }
+        }
+
+        // Clear input
+        function clearInput() {
+            document.getElementById('mediumLink').value = '';
+            document.getElementById('mediumLink').focus();
+        }
+
+        // Close result section
+        function closeResult() {
+            document.getElementById('result').classList.add('hidden');
+        }
+
+        // Close custom form
+        function closeCustomForm() {
+            document.getElementById('customLinkForm').classList.add('hidden');
+        }
+
+        // Clear custom form
+        function clearCustomForm() {
+            document.getElementById('customUrl').value = '';
+            document.getElementById('customUrl').focus();
+        }
+
+        // Copy to clipboard
+        function copyToClipboard() {
+            const freediumLinkInput = document.getElementById('freediumLinkInput');
+            
+            // Modern clipboard API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(freediumLinkInput.value)
+                    .then(() => {
+                        // Show success message
+                        const copyMessage = document.getElementById('copyMessage');
+                        copyMessage.classList.remove('hidden');
+                        
+                        // Hide message after 2 seconds
+                        setTimeout(() => {
+                            copyMessage.classList.add('hidden');
+                        }, 2000);
+                        
+                        showToast('Link copied to clipboard');
+                    })
+                    .catch(err => {
+                        // Fallback for older browsers
+                        fallbackCopyTextToClipboard(freediumLinkInput);
+                    });
+            } else {
+                // Fallback for older browsers
+                fallbackCopyTextToClipboard(freediumLinkInput);
+            }
+        }
+        
+        // Fallback copy method for older browsers
+        function fallbackCopyTextToClipboard(inputElement) {
+            inputElement.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    // Show copy message
+                    const copyMessage = document.getElementById('copyMessage');
+                    copyMessage.classList.remove('hidden');
+                    
+                    // Hide message after 2 seconds
+                    setTimeout(() => {
+                        copyMessage.classList.add('hidden');
+                    }, 2000);
+                    
+                    showToast('Link copied to clipboard');
+                } else {
+                    showToast('Unable to copy. Please try manually.');
+                }
+            } catch (err) {
+                showToast('Unable to copy. Please try manually.');
+            }
+        }
+
+        // Open Freedium link
+        function openFreediumLink() {
+            const freediumLink = document.getElementById('freediumLinkInput').value;
+            if (freediumLink) {
+                window.open(freediumLink, '_blank');
+            }
+        }
+
+        // Show preview in floating window
+        function showPreview() {
+            const freediumLink = document.getElementById('freediumLinkInput').value;
+            if (freediumLink) {
+                // Show preview container
+                const previewContainer = document.getElementById('previewContainer');
+                const previewPanel = document.getElementById('previewPanel');
+                const previewLoader = document.getElementById('previewLoader');
+                const previewLinkDisplay = document.getElementById('previewLinkDisplay');
+                
+                // Display the container
+                previewContainer.classList.remove('hidden');
+                setTimeout(() => {
+                    previewContainer.classList.remove('opacity-0');
+                    previewPanel.classList.remove('scale-95');
+                }, 10);
+                
+                // Show loading indicator
+                previewLoader.classList.remove('hidden');
+                
+                // Display the freedium link
+                previewLinkDisplay.textContent = freediumLink;
+                
+                // Simulate loading delay for better UX
+                setTimeout(() => {
+                    previewLoader.classList.add('hidden');
+                }, 800);
+            }
+        }
+
+        // Close preview
+        function closePreview() {
+            const previewContainer = document.getElementById('previewContainer');
+            const previewPanel = document.getElementById('previewPanel');
+            
+            // Hide with animation
+            previewContainer.classList.add('opacity-0');
+            previewPanel.classList.add('scale-95');
+            
+            // Remove from DOM after animation
+            setTimeout(() => {
+                previewContainer.classList.add('hidden');
+            }, 300);
+        }
+
+        // Open in new tab from preview
+        function openInNewTab() {
+            const freediumLink = document.getElementById('freediumLinkInput').value;
+            if (freediumLink) {
+                window.open(freediumLink, '_blank');
+                if (isMobile()) {
+                    // On mobile, close the preview after opening
+                    closePreview();
+                }
+            }
+        }
+
+        // Save to history
+        function saveToHistory(originalLink, freediumLink) {
+            let history = JSON.parse(localStorage.getItem('freediumHistory')) || [];
+            
+            // Check if link already exists to avoid duplicates
+            const exists = history.some(item => item.original === originalLink);
+            
+            if (!exists) {
+                // Add new link to history
+                history.unshift({
+                    original: originalLink,
+                    freedium: freediumLink,
+                    timestamp: new Date().getTime()
+                });
+                
+                // Keep only the last 20 items
+                if (history.length > 20) {
+                    history = history.slice(0, 20);
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('freediumHistory', JSON.stringify(history));
+                
+                // Update history display
+                loadHistory();
+            }
+        }
+
+        // Format date for display
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffSec = Math.floor(diffMs / 1000);
+            const diffMin = Math.floor(diffSec / 60);
+            const diffHour = Math.floor(diffMin / 60);
+            const diffDay = Math.floor(diffHour / 24);
+            
+            if (diffSec < 60) {
+                return 'just now';
+            } else if (diffMin < 60) {
+                return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`;
+            } else if (diffHour < 24) {
+                return `${diffHour} hour${diffHour === 1 ? '' : 's'} ago`;
+            } else if (diffDay < 7) {
+                return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
+            } else {
+                return date.toLocaleDateString();
+            }
+        }
+
+        // Load history
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('freediumHistory')) || [];
+            const historyList = document.getElementById('historyList');
+            const historySection = document.getElementById('historySection');
+            
+            // Clear current list
+            historyList.innerHTML = '';
+            
+            if (history.length > 0) {
+                historySection.classList.remove('hidden');
+                
+                // Add history items
+                history.forEach((item, index) => {
+                    // Format the timestamp
+                    const formattedDate = formatDate(item.timestamp);
+                    
+                    // Truncate long URLs for display
+                    const displayUrl = item.original.length > 40 ? 
+                        item.original.substring(0, 37) + '...' : 
+                        item.original;
+                    
+                    const li = document.createElement('li');
+                    li.className = 'p-3 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-300';
+                    
+                    // Create a more responsive layout for history items
+                    if (isMobile()) {
+                        li.innerHTML = `
+                            <div class="mb-2">
+                                <div class="font-medium text-gray-800 dark:text-white break-all" title="${item.original}">${displayUrl}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">${formattedDate}</div>
+                            </div>
+                            <div class="grid grid-cols-4 gap-1">
+                                <button onclick="useHistoryItem(${index})" class="p-1.5 text-xs bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none transition-colors duration-300">
+                                    Use
+                                </button>
+                                <button onclick="openHistoryItem(${index})" class="p-1.5 text-xs bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded hover:bg-primary-200 dark:hover:bg-primary-800 focus:outline-none transition-colors duration-300">
+                                    Open
+                                </button>
+                                <button onclick="previewHistoryItem(${index})" class="p-1.5 text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-800 focus:outline-none transition-colors duration-300">
+                                    Preview
+                                </button>
+                                <button onclick="removeHistoryItem(${index})" class="p-1.5 text-xs bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800 focus:outline-none transition-colors duration-300">
+                                    Delete
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        li.innerHTML = `
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between">
+                                <div class="mb-2 sm:mb-0 sm:mr-4">
+                                    <div class="font-medium text-gray-800 dark:text-white" title="${item.original}">${displayUrl}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">${formattedDate}</div>
+                                </div>
+                                <div class="flex space-x-1">
+                                    <button onclick="useHistoryItem(${index})" class="p-1.5 text-xs bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none transition-colors duration-300">
+                                        Use
+                                    </button>
+                                    <button onclick="openHistoryItem(${index})" class="p-1.5 text-xs bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded hover:bg-primary-200 dark:hover:bg-primary-800 focus:outline-none transition-colors duration-300">
+                                        Open
+                                    </button>
+                                    <button onclick="previewHistoryItem(${index})" class="p-1.5 text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-800 focus:outline-none transition-colors duration-300">
+                                        Preview
+                                    </button>
+                                    <button onclick="removeHistoryItem(${index})" class="p-1.5 text-xs bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800 focus:outline-none transition-colors duration-300">
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    historyList.appendChild(li);
+                });
+            } else {
+                historySection.classList.add('hidden');
+            }
+        }
+
+        // Use history item
+        function useHistoryItem(index) {
+            const history = JSON.parse(localStorage.getItem('freediumHistory')) || [];
+            if (history[index]) {
+                document.getElementById('mediumLink').value = history[index].original;
+                showToast('URL loaded from history');
+            }
+        }
+
+        // Open history item
+        function openHistoryItem(index) {
+            const history = JSON.parse(localStorage.getItem('freediumHistory')) || [];
+            if (history[index]) {
+                window.open(history[index].freedium, '_blank');
+            }
+        }
+
+        // Preview history item
+        function previewHistoryItem(index) {
+            const history = JSON.parse(localStorage.getItem('freediumHistory')) || [];
+            if (history[index]) {
+                document.getElementById('freediumLinkInput').value = history[index].freedium;
+                showPreview();
+            }
+        }
+
+        // Remove history item
+        function removeHistoryItem(index) {
+            let history = JSON.parse(localStorage.getItem('freediumHistory')) || [];
+            history.splice(index, 1);
+            localStorage.setItem('freediumHistory', JSON.stringify(history));
+            loadHistory();
+            showToast('Item removed from history');
+        }
+
+        // Clear all history
+        function clearAllHistory() {
+            if (confirm('Are you sure you want to clear all history?')) {
+                localStorage.removeItem('freediumHistory');
+                loadHistory();
+                showToast('History cleared');
+            }
+        }
+
+        // Show toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toast.classList.remove('hidden');
+            
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 300);
+            }, 3000);
+        }
+
+        // Close preview when clicking outside
+        document.getElementById('previewContainer').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePreview();
+            }
+        });
+
+        // Add keyboard event to close preview when Escape key is pressed
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const previewContainer = document.getElementById('previewContainer');
+                if (!previewContainer.classList.contains('hidden')) {
+                    closePreview();
+                }
+            }
+        });
+
+        // Handle Enter key in input fields
+        document.getElementById('mediumLink').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                convertAndOpen();
+            }
+        });
+
+        document.getElementById('customUrl').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                generateCustomLink();
+            }
+        });
+    </script>
+</body>
+</html>
