@@ -1,0 +1,2164 @@
+<!doctype html>
+<html lang="id" class="light">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <title>Unggah, Tampilkan, dan Kelola File</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            dark: {
+                                100: '#1E1E1E',
+                                200: '#2D2D30',
+                                300: '#3E3E42',
+                                400: '#6A6A6A',
+                                500: '#8E8E8E'
+                            }
+                        }
+                    }
+                }
+            }
+        </script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js" defer></script>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/atom-one-dark.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <style>
+            html, body {
+                height: 100%;
+                width: 100%;
+                overflow-x: hidden;
+                position: relative;
+                overscroll-behavior: none;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            body {
+                transition: background-color 0.3s ease, color 0.3s ease;
+            }
+            
+            /* Light mode */
+            html.light body {
+                background-color: #F3F4F6;
+                color: #1F2937;
+            }
+            
+            /* Dark mode */
+            html.dark body {
+                background-color: #1E1E1E;
+                color: #E5E7EB;
+            }
+            
+            html.dark .bg-white {
+                background-color: #2D2D30;
+            }
+            
+            html.dark .text-gray-800 {
+                color: #E5E7EB;
+            }
+            
+            html.dark .text-gray-700 {
+                color: #D1D5DB;
+            }
+            
+            html.dark .text-gray-600 {
+                color: #9CA3AF;
+            }
+            
+            html.dark .text-gray-500 {
+                color: #6B7280;
+            }
+            
+            html.dark .bg-gray-100 {
+                background-color: #3E3E42;
+            }
+            
+            html.dark .bg-gray-200 {
+                background-color: #454545;
+            }
+            
+            html.dark .border-gray-200 {
+                border-color: #454545;
+            }
+            
+            html.dark .border-gray-300 {
+                border-color: #6A6A6A;
+            }
+            
+            html.dark .shadow {
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.24);
+            }
+            
+            html.dark pre {
+                background-color: #252526 !important;
+            }
+            
+            html.dark .file-container {
+                background-color: #2D2D30;
+                border-color: #3E3E42;
+            }
+            
+            /* Improved scrollbar for better mobile experience */
+            .scrollbar-custom {
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                overflow-y: auto;
+                max-height: 100%;
+            }
+            
+            .scrollbar-custom::-webkit-scrollbar {
+                width: 5px;
+                height: 5px;
+            }
+            
+            .scrollbar-custom::-webkit-scrollbar-track {
+                background: transparent;
+                border-radius: 10px;
+            }
+            
+            html.light .scrollbar-custom::-webkit-scrollbar-thumb {
+                background: #888;
+                border-radius: 10px;
+            }
+            
+            html.dark .scrollbar-custom::-webkit-scrollbar-thumb {
+                background: #555;
+                border-radius: 10px;
+            }
+            
+            .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+                background: #666;
+            }
+            
+            /* Virtual scroller - only render visible items */
+            .virtual-scroll {
+                position: relative;
+                overflow: auto;
+                contain: content;
+            }
+            
+            .drag-handle {
+                cursor: move;
+                touch-action: none;
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                user-select: none;
+            }
+            
+            .file-container.dragging {
+                opacity: 0.5;
+            }
+            
+            .file-container {
+                transition: transform 0.2s ease, background-color 0.3s ease, border-color 0.3s ease;
+                word-break: break-word;
+                overflow: hidden;
+                contain: content;
+            }
+            
+            .file-container:hover {
+                transform: translateY(-2px);
+            }
+            
+            html.light .file-container:hover {
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            }
+            
+            html.dark .file-container:hover {
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
+            }
+            
+            .btn-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .btn-icon i {
+                margin-right: 0.5rem;
+            }
+            
+            .textarea-editor {
+                min-height: 200px;
+                max-height: 50vh;
+                font-family: monospace;
+                resize: vertical;
+                transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+            }
+            
+            pre {
+                white-space: pre-wrap !important;
+                word-break: break-all !important;
+                transition: background-color 0.3s ease;
+            }
+            
+            .max-h-40 {
+                max-height: 160px;
+            }
+            
+            .max-h-96 {
+                max-height: 40vh;
+            }
+            
+            /* Loading indicator */
+            .loading-spinner {
+                display: inline-block;
+                width: 40px;
+                height: 40px;
+                border: 4px solid rgba(0, 0, 0, 0.1);
+                border-radius: 50%;
+                border-top-color: #3b82f6;
+                animation: spin 1s ease-in-out infinite;
+            }
+            
+            html.dark .loading-spinner {
+                border: 4px solid rgba(255, 255, 255, 0.1);
+                border-top-color: #3b82f6;
+            }
+            
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+            
+            /* File content collapsed by default on mobile */
+            .file-content-collapse {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+            }
+            
+            .file-content-expanded {
+                max-height: 160px;
+            }
+            
+            @media (max-width: 640px) {
+                .btn-group {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 0.5rem;
+                }
+                
+                .file-header {
+                    flex-direction: column;
+                    align-items: flex-start !important;
+                }
+                
+                .file-actions {
+                    margin-top: 0.5rem;
+                    width: 100%;
+                    display: flex;
+                    justify-content: space-between;
+                }
+                
+                .textarea-editor {
+                    min-height: 150px;
+                }
+                
+                .file-container {
+                    margin-bottom: 10px;
+                }
+                
+                /* Make buttons larger on mobile for easier touch */
+                button {
+                    min-height: 44px;
+                    min-width: 44px;
+                }
+                
+                /* File toggle button visible only on mobile */
+                .file-toggle-btn {
+                    display: block;
+                }
+            }
+            
+            @media (min-width: 641px) {
+                .file-content-collapse {
+                    max-height: none;
+                }
+                
+                .file-toggle-btn {
+                    display: none;
+                }
+            }
+            
+            .tab-active {
+                border-bottom: 2px solid #3b82f6;
+                color: #3b82f6;
+            }
+            
+            html.dark .tab-active {
+                border-bottom: 2px solid #60a5fa;
+                color: #60a5fa;
+            }
+            
+            input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+            }
+            
+            html.dark input[type="checkbox"] {
+                background-color: #3E3E42;
+                border-color: #6A6A6A;
+            }
+            
+            .main-container {
+                max-height: 100vh;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .app-content {
+                overflow-y: auto;
+                flex-grow: 1;
+                flex-shrink: 1;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .app-header {
+                flex-shrink: 0;
+                transition: background-color 0.3s ease;
+            }
+            
+            .collapsed-indicator {
+                font-size: 12px;
+                color: #666;
+                margin-top: 4px;
+                text-align: center;
+                transition: color 0.3s ease;
+            }
+            
+            html.dark .collapsed-indicator {
+                color: #9CA3AF;
+            }
+            
+            /* Theme switch */
+            .theme-switch {
+                position: relative;
+                display: inline-block;
+                width: 50px;
+                height: 24px;
+            }
+            
+            .theme-switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+            
+            .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #ccc;
+                transition: .4s;
+                border-radius: 24px;
+            }
+            
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                transition: .4s;
+                border-radius: 50%;
+            }
+            
+            input:checked + .slider {
+                background-color: #3b82f6;
+            }
+            
+            input:checked + .slider:before {
+                transform: translateX(26px);
+            }
+            
+            .moon, .sun {
+                position: absolute;
+                top: 3px;
+                font-size: 14px;
+                transition: opacity 0.3s ease;
+            }
+            
+            .moon {
+                right: 5px;
+                color: #f1c40f;
+                opacity: 0;
+            }
+            
+            .sun {
+                left: 5px;
+                color: #f39c12;
+                opacity: 1;
+            }
+            
+            input:checked + .slider .sun {
+                opacity: 0;
+            }
+            
+            input:checked + .slider .moon {
+                opacity: 1;
+            }
+            
+            /* Transitions for dark/light mode */
+            .transition-theme {
+                transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+            }
+            
+            /* Code editor dark mode */
+            html.dark textarea {
+                background-color: #1E1E1E;
+                color: #E5E7EB;
+                border-color: #3E3E42;
+            }
+            
+            /* Improve toast visuals */
+            .toast-notification {
+                z-index: 9999;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                transition: transform 0.3s ease, opacity 0.3s ease;
+            }
+            
+            html.dark .toast-notification {
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="main-container h-screen">
+            <div class="app-header p-4 sm:p-6 bg-white shadow transition-theme">
+                <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 transition-theme">
+                        <i class="fas fa-file-upload mr-2"></i>Unggah, Tampilkan, dan Kelola File
+                    </h1>
+                    
+                    <label class="theme-switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider">
+                            <i class="fas fa-sun sun"></i>
+                            <i class="fas fa-moon moon"></i>
+                        </span>
+                    </label>
+                </div>
+                
+                <!-- Tab Navigation -->
+                <div class="flex justify-center mb-4 border-b overflow-x-auto scrollbar-custom">
+                    <button id="tabUpload" class="tab-btn px-4 py-2 tab-active whitespace-nowrap transition-theme" onclick="switchTab('upload')">
+                        <i class="fas fa-upload mr-1"></i>Unggah File
+                    </button>
+                    <button id="tabCreate" class="tab-btn px-4 py-2 whitespace-nowrap transition-theme" onclick="switchTab('create')">
+                        <i class="fas fa-edit mr-1"></i>Buat Baru
+                    </button>
+                    <button id="tabManage" class="tab-btn px-4 py-2 whitespace-nowrap transition-theme" onclick="switchTab('manage')">
+                        <i class="fas fa-tasks mr-1"></i>Kelola File
+                    </button>
+                </div>
+            </div>
+            
+            <div class="app-content p-4 scrollbar-custom">
+                <!-- Upload Tab -->
+                <div id="uploadTab" class="tab-content">
+                    <div
+                        id="dropZone"
+                        class="border-4 border-dashed border-gray-300 rounded-lg p-4 sm:p-8 mb-6 text-center transition duration-300 hover:bg-gray-50 transition-theme"
+                    >
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-600 mb-2 transition-theme">
+                            Seret dan lepas file di sini atau
+                        </p>
+                        <input
+                            type="file"
+                            id="fileInput"
+                            multiple
+                            class="hidden"
+                            onchange="handleFiles(this.files)"
+                        />
+                        <label
+                            for="fileInput"
+                            class="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300 inline-block"
+                        >
+                            <i class="fas fa-folder-open mr-2"></i>Pilih File
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Create Tab -->
+                <div id="createTab" class="tab-content hidden">
+                    <div class="mb-4">
+                        <label for="fileName" class="block text-gray-700 font-medium mb-2 transition-theme">Nama File:</label>
+                        <input
+                            type="text"
+                            id="fileName"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-theme"
+                            placeholder="nama-file.html"
+                        />
+                    </div>
+                    <div class="mb-4">
+                        <label for="fileContent" class="block text-gray-700 font-medium mb-2 transition-theme">Konten:</label>
+                        <div class="flex mb-2">
+                            <button onclick="setEditorMode('code')" class="px-3 py-1 bg-gray-200 rounded-l-md hover:bg-gray-300 transition-theme">
+                                <i class="fas fa-code"></i> Kode
+                            </button>
+                            <button onclick="setEditorMode('visual')" class="px-3 py-1 bg-gray-200 rounded-r-md hover:bg-gray-300 transition-theme">
+                                <i class="fas fa-eye"></i> Visual
+                            </button>
+                        </div>
+                        <textarea
+                            id="fileContent"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md textarea-editor scrollbar-custom focus:outline-none focus:ring-2 focus:ring-blue-500 transition-theme"
+                            placeholder="Masukkan kode HTML atau teks lainnya di sini..."
+                        ></textarea>
+                        <div id="visualPreview" class="border border-gray-300 rounded-md p-4 mt-2 hidden transition-theme">
+                            <div id="htmlPreviewContent" class="w-full min-h-[200px] overflow-auto scrollbar-custom"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <button
+                            onclick="saveNewFile()"
+                            class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300"
+                        >
+                            <i class="fas fa-save mr-2"></i>Simpan File
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Manage Tab (always visible for file management) -->
+                <div id="manageTab" class="tab-content hidden">
+                    <div class="flex flex-wrap gap-2 mb-6 btn-group">
+                        <button
+                            id="mergeButton"
+                            onclick="mergeAndCopy()"
+                            class="flex-1 btn-icon bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition duration-300"
+                        >
+                            <i class="fas fa-object-group"></i>
+                            <span class="hidden sm:inline">Gabung & Salin</span>
+                        </button>
+                        <button
+                            id="deleteSelectedButton"
+                            onclick="deleteSelected()"
+                            class="flex-1 btn-icon bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 transition duration-300"
+                        >
+                            <i class="fas fa-trash-alt"></i>
+                            <span class="hidden sm:inline">Hapus Terpilih</span>
+                        </button>
+                        <button
+                            id="toggleDragModeButton"
+                            onclick="toggleDragMode()"
+                            class="flex-1 btn-icon bg-yellow-500 text-white px-3 py-2 rounded hover:bg-yellow-600 transition duration-300"
+                        >
+                            <i class="fas fa-grip-lines"></i>
+                            <span class="hidden sm:inline">Mode Seret</span>
+                        </button>
+                        <button
+                            id="clearStorageButton"
+                            onclick="clearLocalStorage()"
+                            class="flex-1 btn-icon bg-purple-500 text-white px-3 py-2 rounded hover:bg-purple-600 transition duration-300"
+                        >
+                            <i class="fas fa-eraser"></i>
+                            <span class="hidden sm:inline">Hapus Semua</span>
+                        </button>
+                    </div>
+                    
+                    <div id="fileList" class="mb-4 overflow-x-auto scrollbar-custom"></div>
+                    <div id="previewContainer" class="hidden mb-6">
+                        <div class="flex justify-between items-center mb-3 flex-wrap">
+                            <h2 class="text-xl font-semibold text-gray-700 transition-theme">
+                                <i class="fas fa-eye mr-2"></i>Preview Gabungan
+                            </h2>
+                            <div class="flex gap-2">
+                                <button
+                                    onclick="togglePreviewMode()"
+                                    id="previewModeButton"
+                                    class="text-sm bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition duration-300 mt-2 sm:mt-0"
+                                >
+                                    <i class="fas fa-code"></i> Mode Kode
+                                </button>
+                                <button
+                                    onclick="copyMergedContent()"
+                                    class="text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 transition duration-300 mt-2 sm:mt-0"
+                                >
+                                    <i class="fas fa-copy"></i> Salin
+                                </button>
+                            </div>
+                        </div>
+                        <pre
+                            id="mergePreview"
+                            class="bg-gray-100 p-4 rounded-lg max-h-96 overflow-y-auto scrollbar-custom text-sm transition-theme"
+                        ></pre>
+                        <div 
+                            id="htmlMergePreview" 
+                            class="bg-white border border-gray-200 p-4 rounded-lg max-h-96 overflow-y-auto scrollbar-custom hidden transition-theme"
+                        ></div>
+                        <p id="charCount" class="mt-2 text-gray-600 text-sm transition-theme"></p>
+                    </div>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="loadingIndicator" class="hidden fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
+                    <div class="bg-white dark:bg-dark-200 p-5 rounded-lg flex flex-col items-center transition-theme">
+                        <div class="loading-spinner mb-3"></div>
+                        <p id="loadingText" class="transition-theme">Memproses...</p>
+                    </div>
+                </div>
+
+                <div id="filesContent" class="mt-6 space-y-4 virtual-scroll"></div>
+            </div>
+            
+            <!-- Toast Notification -->
+            <div id="toastNotification" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-500 z-50 toast-notification">
+                <span id="toastMessage">File disalin!</span>
+            </div>
+        </div>
+
+        <script>
+            let allFiles = [];
+            let dragMode = false;
+            let currentEditorMode = 'code';
+            let currentTab = 'upload';
+            let previewMode = 'code';
+            let sortableInstance = null;
+            let batchSize = 20; // Number of files to render at once
+            let currentlyRenderedFiles = 0;
+            let isMobile = window.innerWidth <= 640;
+            let isDarkMode = false;
+            let mergedContent = ''; // Cache for merged content
+            let isFileListChanged = true; // Track if file list has changed
+            let intersectionObserver = null; // For lazy loading
+            let fileElementCache = new Map(); // Cache file elements for better performance
+            let highlightWorker = null; // Web worker for syntax highlighting
+            let pendingHighlightTasks = []; // Queue for syntax highlighting
+            
+            // Check preferred color scheme
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                isDarkMode = true;
+                document.documentElement.classList.remove('light');
+                document.documentElement.classList.add('dark');
+            }
+            
+            // Load files from local storage on page load
+            document.addEventListener("DOMContentLoaded", () => {
+                checkMobileDevice();
+                initApp();
+                loadFromLocalStorage();
+                setupEventListeners();
+                initIntersectionObserver();
+                initSyntaxHighlightingWorker();
+                
+                // Set theme toggle based on current mode
+                document.getElementById('themeToggle').checked = isDarkMode;
+            });
+            
+            // Initialize the app with proper settings
+            function initApp() {
+                // Load theme from localStorage if available
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    isDarkMode = savedTheme === 'dark';
+                    document.documentElement.classList.remove('light', 'dark');
+                    document.documentElement.classList.add(isDarkMode ? 'dark' : 'light');
+                    document.getElementById('themeToggle').checked = isDarkMode;
+                }
+            }
+            
+            // Initialize Web Worker for syntax highlighting
+            function initSyntaxHighlightingWorker() {
+                try {
+                    // Check if web workers are supported
+                    if (window.Worker) {
+                        // Create a worker blob URL
+                        const workerCode = `
+                            self.importScripts('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js');
+                            
+                            self.onmessage = function(e) {
+                                const { code, language, id } = e.data;
+                                try {
+                                    const result = self.hljs.highlight(code, { language: language || 'plaintext' }).value;
+                                    self.postMessage({ id, result });
+                                } catch (error) {
+                                    self.postMessage({ id, error: error.message });
+                                }
+                            };
+                        `;
+                        
+                        const blob = new Blob([workerCode], { type: 'application/javascript' });
+                        const workerUrl = URL.createObjectURL(blob);
+                        
+                        highlightWorker = new Worker(workerUrl);
+                        
+                        highlightWorker.onmessage = function(e) {
+                            const { id, result, error } = e.data;
+                            if (error) {
+                                console.warn('Worker error:', error);
+                                return;
+                            }
+                            
+                            const element = document.getElementById(id);
+                            if (element) {
+                                element.innerHTML = result;
+                                element.classList.add('hljs'); // Add highlight.js class
+                            }
+                        };
+                    }
+                } catch (e) {
+                    console.warn('Web Worker initialization failed:', e);
+                    // Fall back to regular highlighting
+                }
+            }
+            
+            // Check if mobile device
+            function checkMobileDevice() {
+                isMobile = window.innerWidth <= 640;
+                // Apply specific mobile optimizations
+                if (isMobile) {
+                    // Reduce batch size for mobile
+                    batchSize = 10;
+                } else {
+                    batchSize = 20;
+                }
+            }
+            
+            // Initialize intersection observer for lazy loading
+            function initIntersectionObserver() {
+                if ('IntersectionObserver' in window) {
+                    intersectionObserver = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                const loadMoreBtn = entry.target;
+                                if (loadMoreBtn.id === 'loadMoreBtn') {
+                                    loadMoreFiles();
+                                }
+                                
+                                // Stop observing this element
+                                intersectionObserver.unobserve(loadMoreBtn);
+                            }
+                        });
+                    }, {
+                        rootMargin: '100px',
+                        threshold: 0.1
+                    });
+                }
+            }
+            
+            // Setup all event listeners in one place
+            function setupEventListeners() {
+                // Theme toggle
+                document.getElementById('themeToggle').addEventListener('change', function() {
+                    toggleDarkMode(this.checked);
+                });
+                
+                // Mobile scrolling optimization
+                document.addEventListener('touchmove', function(e) {
+                    // Prevent default zooming behavior
+                    if (e.touches.length > 1) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+                
+                // Auto resize textarea when content changes
+                document.getElementById('fileContent').addEventListener('input', function() {
+                    if (currentEditorMode === 'visual') {
+                        const htmlContent = this.value;
+                        document.getElementById('htmlPreviewContent').innerHTML = sanitizeHTML(htmlContent);
+                    }
+                });
+                
+                // Handle window resize events
+                window.addEventListener('resize', throttle(function() {
+                    checkMobileDevice();
+                    refreshUI();
+                }, 250));
+                
+                // Setup drop zone
+                setupDropZone();
+                
+                // Listen for storage events from other tabs
+                window.addEventListener('storage', function(e) {
+                    if (e.key === 'allFiles') {
+                        loadFromLocalStorage(true);
+                    } else if (e.key === 'theme') {
+                        const newTheme = e.newValue;
+                        isDarkMode = newTheme === 'dark';
+                        document.documentElement.classList.remove('light', 'dark');
+                        document.documentElement.classList.add(isDarkMode ? 'dark' : 'light');
+                        document.getElementById('themeToggle').checked = isDarkMode;
+                    }
+                });
+                
+                // Add custom focus styles for a11y
+                document.querySelectorAll('button, input, textarea, select').forEach(el => {
+                    el.addEventListener('focus', function() {
+                        this.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50', 'outline-none');
+                    });
+                    el.addEventListener('blur', function() {
+                        this.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50', 'outline-none');
+                    });
+                });
+            }
+            
+            // Setup drop zone with all necessary event listeners
+            function setupDropZone() {
+                const dropZone = document.getElementById("dropZone");
+                
+                ["dragenter", "dragover", "dragleave", "drop"].forEach(
+                    (eventName) => {
+                        dropZone.addEventListener(
+                            eventName,
+                            preventDefaults,
+                            false
+                        );
+                    }
+                );
+                
+                ["dragenter", "dragover"].forEach((eventName) => {
+                    dropZone.addEventListener(eventName, highlight, false);
+                });
+                
+                ["dragleave", "drop"].forEach((eventName) => {
+                    dropZone.addEventListener(eventName, unhighlight, false);
+                });
+                
+                dropZone.addEventListener("drop", handleDrop, false);
+            }
+            
+            // Toggle dark mode
+            function toggleDarkMode(enable) {
+                isDarkMode = enable;
+                
+                if (isDarkMode) {
+                    document.documentElement.classList.remove('light');
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.classList.add('light');
+                }
+                
+                // Save preference to localStorage
+                localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+                
+                // Update highlight.js theme for code blocks
+                refreshSyntaxHighlighting();
+            }
+            
+            // Refresh syntax highlighting when theme changes
+            function refreshSyntaxHighlighting() {
+                // Mark file list as changed to force refresh
+                isFileListChanged = true;
+                
+                // Refresh the UI with new highlighting
+                if (currentTab === 'manage') {
+                    updateMergePreview();
+                }
+                
+                // Reapply highlighting to visible file elements
+                document.querySelectorAll('.file-container pre').forEach(pre => {
+                    const fileIndex = pre.closest('.file-container').getAttribute('data-index');
+                    const fileName = pre.closest('.file-container').getAttribute('data-filename');
+                    
+                    if (fileIndex && fileName && allFiles[fileIndex]) {
+                        applySyntaxHighlighting(pre, fileName);
+                    }
+                });
+            }
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            function highlight() {
+                const dropZone = document.getElementById("dropZone");
+                dropZone.classList.add(isDarkMode ? "bg-dark-300" : "bg-blue-100");
+                dropZone.classList.add(isDarkMode ? "border-dark-400" : "border-blue-300");
+            }
+            
+            function unhighlight() {
+                const dropZone = document.getElementById("dropZone");
+                dropZone.classList.remove(isDarkMode ? "bg-dark-300" : "bg-blue-100");
+                dropZone.classList.remove(isDarkMode ? "border-dark-400" : "border-blue-300");
+            }
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }
+            
+            // Switch tabs with proper UI update
+            function switchTab(tab) {
+                showLoading('Mengubah tab...');
+                
+                setTimeout(() => {
+                    // Hide all tab contents
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.tab-btn').forEach(btn => {
+                        btn.classList.remove('tab-active');
+                    });
+                    
+                    // Show selected tab
+                    document.getElementById(tab + 'Tab').classList.remove('hidden');
+                    document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('tab-active');
+                    
+                    currentTab = tab;
+                    
+                    // Always show filesContent
+                    document.getElementById('filesContent').classList.remove('hidden');
+                    
+                    // Reset scroll position
+                    document.querySelector('.app-content').scrollTop = 0;
+                    
+                    // Update merge preview if needed
+                    if (tab === 'manage' && isFileListChanged) {
+                        updateMergePreview();
+                        isFileListChanged = false;
+                    }
+                    
+                    hideLoading();
+                }, 10);
+            }
+            
+            // Set editor mode (code or visual)
+            function setEditorMode(mode) {
+                currentEditorMode = mode;
+                
+                if (mode === 'visual') {
+                    document.getElementById('fileContent').classList.add('hidden');
+                    document.getElementById('visualPreview').classList.remove('hidden');
+                    
+                    // Update the visual preview
+                    const htmlContent = document.getElementById('fileContent').value;
+                    document.getElementById('htmlPreviewContent').innerHTML = sanitizeHTML(htmlContent);
+                } else {
+                    document.getElementById('fileContent').classList.remove('hidden');
+                    document.getElementById('visualPreview').classList.add('hidden');
+                }
+            }
+            
+            // Sanitize HTML to prevent XSS
+            function sanitizeHTML(html) {
+                // Simple sanitization - for production, use a proper sanitizer library
+                return html
+                    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                    .replace(/on\w+="[^"]*"/g, '');
+            }
+            
+            // Save new file with validation
+            function saveNewFile() {
+                const fileName = document.getElementById('fileName').value.trim();
+                const fileContent = document.getElementById('fileContent').value;
+                
+                if (!fileName) {
+                    showToast('Masukkan nama file terlebih dahulu!', 'error');
+                    return;
+                }
+                
+                if (!fileContent) {
+                    showToast('Konten file tidak boleh kosong!', 'error');
+                    return;
+                }
+                
+                showLoading('Menyimpan file...');
+                
+                setTimeout(() => {
+                    // Check if file already exists
+                    const existingFileIndex = allFiles.findIndex(file => file.name === fileName);
+                    if (existingFileIndex >= 0) {
+                        if (confirm(`File "${fileName}" sudah ada. Apakah Anda ingin menimpanya?`)) {
+                            allFiles[existingFileIndex].content = fileContent;
+                        } else {
+                            hideLoading();
+                            return;
+                        }
+                    } else {
+                        // Add new file
+                        allFiles.push({ name: fileName, content: fileContent });
+                    }
+                    
+                    saveToLocalStorage();
+                    
+                    // Mark file list as changed
+                    isFileListChanged = true;
+                    
+                    // Clear form
+                    document.getElementById('fileName').value = '';
+                    document.getElementById('fileContent').value = '';
+                    document.getElementById('htmlPreviewContent').innerHTML = '';
+                    
+                    // Switch to manage tab
+                    switchTab('manage');
+                    
+                    hideLoading();
+                    showToast('File berhasil disimpan!', 'success');
+                }, 10);
+            }
+            
+            // Handle file uploads with efficient processing
+            function handleFiles(files) {
+                if (files.length === 0) return;
+                
+                showLoading(`Memproses ${files.length} file...`);
+                
+                const filesContent = document.getElementById("filesContent");
+                const fileList = document.getElementById("fileList");
+                
+                if (files.length > 0) {
+                    fileList.innerHTML = `<p class="text-gray-600 mb-2 transition-theme">File terpilih:</p>
+                    <div class="flex flex-wrap gap-1">`;
+                    
+                    // Limit the number of file names displayed to prevent UI lag
+                    const displayLimit = Math.min(files.length, 20);
+                    for (let i = 0; i < displayLimit; i++) {
+                        fileList.innerHTML += `
+                        <span class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mb-1 transition-theme">
+                            <i class="fas fa-file-alt mr-1"></i>${files[i].name}
+                        </span>`;
+                    }
+                    
+                    if (files.length > displayLimit) {
+                        fileList.innerHTML += `
+                        <span class="inline-block bg-blue-200 rounded-full px-3 py-1 text-sm font-semibold text-blue-700 mb-1">
+                            <i class="fas fa-ellipsis-h mr-1"></i>dan ${files.length - displayLimit} file lainnya
+                        </span>`;
+                    }
+                    
+                    fileList.innerHTML += `</div>`;
+                }
+                
+                // Process files with a more efficient approach
+                processFilesEfficiently(Array.from(files));
+            }
+            
+            // More efficient file processing with Promises
+            function processFilesEfficiently(files) {
+                const totalFiles = files.length;
+                let processedCount = 0;
+                
+                // Create an array to store all file processing promises
+                const filePromises = files.map((file, index) => {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        
+                        reader.onload = (e) => {
+                            const content = e.target.result;
+                            processedCount++;
+                            
+                            // Update loading message periodically
+                            if (processedCount % 5 === 0 || processedCount === totalFiles) {
+                                document.getElementById('loadingText').textContent = 
+                                    `Memproses file ${processedCount} dari ${totalFiles}...`;
+                            }
+                            
+                            resolve({ name: file.name, content });
+                        };
+                        
+                        reader.onerror = () => {
+                            processedCount++;
+                            reject(new Error(`Gagal membaca file: ${file.name}`));
+                        };
+                        
+                        // Stagger file reads to prevent browser from freezing
+                        setTimeout(() => {
+                            reader.readAsText(file);
+                        }, Math.floor(index / 10) * 10); // Process in batches of 10
+                    });
+                });
+                
+                // Process all files and handle conflicts after all are read
+                Promise.allSettled(filePromises).then(results => {
+                    let successCount = 0;
+                    let conflictCount = 0;
+                    let errorCount = 0;
+                    
+                    // Process successful reads
+                    const successfulReads = results
+                        .filter(result => result.status === 'fulfilled')
+                        .map(result => result.value);
+                    
+                    // Process conflicts
+                    successfulReads.forEach(fileData => {
+                        const existingFileIndex = allFiles.findIndex(f => f.name === fileData.name);
+                        
+                        if (existingFileIndex >= 0) {
+                            conflictCount++;
+                            // Append a number to the filename to avoid conflict
+                            const nameParts = fileData.name.split('.');
+                            const ext = nameParts.pop();
+                            const baseName = nameParts.join('.');
+                            fileData.name = `${baseName}_${Date.now()}.${ext}`;
+                            allFiles.push(fileData);
+                            successCount++;
+                        } else {
+                            allFiles.push(fileData);
+                            successCount++;
+                        }
+                    });
+                    
+                    // Count errors
+                    errorCount = results.filter(result => result.status === 'rejected').length;
+                    
+                    // Save to localStorage and update UI
+                    saveToLocalStorage();
+                    isFileListChanged = true;
+                    displaySavedFiles();
+                    switchTab('manage');
+                    
+                    hideLoading();
+                    
+                    // Show appropriate message
+                    if (errorCount > 0) {
+                        showToast(`${successCount} file berhasil diunggah, ${errorCount} file gagal.`, errorCount > successCount ? 'error' : 'warning');
+                    } else {
+                        showToast(`${successCount} file berhasil diunggah${conflictCount > 0 ? `, ${conflictCount} file nama diubah karena duplikat` : ''}`, 'success');
+                    }
+                });
+            }
+            
+            // Display saved files with virtualization for performance
+            function displaySavedFiles() {
+                const filesContent = document.getElementById("filesContent");
+                
+                // Destroy previous sortable instance to prevent memory leaks
+                if (sortableInstance) {
+                    sortableInstance.destroy();
+                    sortableInstance = null;
+                }
+                
+                // Reset the container
+                filesContent.innerHTML = "";
+                currentlyRenderedFiles = 0;
+                
+                // Clear element cache
+                fileElementCache.clear();
+                
+                if (allFiles.length === 0) {
+                    filesContent.innerHTML = `
+                    <div class="text-center py-8 text-gray-500 transition-theme">
+                        <i class="fas fa-folder-open text-4xl mb-3"></i>
+                        <p>Belum ada file. Unggah file atau buat file baru.</p>
+                    </div>`;
+                    return;
+                }
+                
+                // For large file sets, render only the first batch and set up lazy loading
+                showLoading('Menampilkan file...');
+                
+                setTimeout(() => {
+                    renderFileBatch();
+                    
+                    if (currentTab === 'manage' && isFileListChanged) {
+                        updateMergePreview();
+                        isFileListChanged = false;
+                    }
+                    
+                    initSortable();
+                    hideLoading();
+                }, 10);
+            }
+            
+            // Render a batch of files
+            function renderFileBatch() {
+                const filesContent = document.getElementById("filesContent");
+                const start = currentlyRenderedFiles;
+                const end = Math.min(start + batchSize, allFiles.length);
+                
+                const fragment = document.createDocumentFragment();
+                
+                for (let i = start; i < end; i++) {
+                    const file = allFiles[i];
+                    
+                    // Check if we have a cached element
+                    let fileContainer;
+                    if (fileElementCache.has(file.name)) {
+                        fileContainer = fileElementCache.get(file.name).cloneNode(true);
+                        
+                        // Update index attribute
+                        fileContainer.setAttribute('data-index', i);
+                        
+                        // Update checkbox event listener
+                        const checkbox = fileContainer.querySelector('.file-checkbox');
+                        if (checkbox) {
+                            checkbox.checked = false;
+                        }
+                        
+                        // Update buttons event listeners
+                        updateFileElementEventListeners(fileContainer, file, i);
+                    } else {
+                        fileContainer = createFileElement(file, i);
+                        
+                        // Cache the element for future use
+                        fileElementCache.set(file.name, fileContainer.cloneNode(true));
+                    }
+                    
+                    fragment.appendChild(fileContainer);
+                }
+                
+                filesContent.appendChild(fragment);
+                
+                // Update counter
+                currentlyRenderedFiles = end;
+                
+                // Add "load more" button if there are more files
+                if (currentlyRenderedFiles < allFiles.length) {
+                    const loadMoreBtn = document.createElement("div");
+                    loadMoreBtn.id = "loadMoreBtn";
+                    loadMoreBtn.className = "text-center my-4";
+                    loadMoreBtn.innerHTML = `
+                        <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">
+                            <i class="fas fa-sync-alt mr-2"></i>Muat ${Math.min(batchSize, allFiles.length - currentlyRenderedFiles)} File Lainnya
+                            (${currentlyRenderedFiles}/${allFiles.length})
+                        </button>
+                    `;
+                    loadMoreBtn.querySelector("button").addEventListener("click", function() {
+                        loadMoreFiles();
+                    });
+                    filesContent.appendChild(loadMoreBtn);
+                    
+                    // Observe the load more button with IntersectionObserver
+                    if (intersectionObserver) {
+                        intersectionObserver.observe(loadMoreBtn);
+                    }
+                }
+            }
+            
+            // Load more files on demand (when button clicked or scrolled to bottom)
+            function loadMoreFiles() {
+                // Remove the "load more" button
+                const loadMoreBtn = document.getElementById("loadMoreBtn");
+                if (loadMoreBtn) {
+                    if (intersectionObserver) {
+                        intersectionObserver.unobserve(loadMoreBtn);
+                    }
+                    loadMoreBtn.remove();
+                }
+                
+                // Render next batch
+                renderFileBatch();
+            }
+            
+            // Update event listeners for a file element
+            function updateFileElementEventListeners(fileContainer, file, index) {
+                // Update edit button
+                const editBtn = fileContainer.querySelector('button[title="Edit"]');
+                if (editBtn) {
+                    editBtn.onclick = function() {
+                        editFile(file.name);
+                    };
+                }
+                
+                // Update copy button
+                const copyBtn = fileContainer.querySelector('button[title="Salin"]');
+                if (copyBtn) {
+                    copyBtn.onclick = function() {
+                        copyToClipboard(file);
+                    };
+                }
+                
+                // Update delete button
+                const deleteBtn = fileContainer.querySelector('button[title="Hapus"]');
+                if (deleteBtn) {
+                    deleteBtn.onclick = function() {
+                        if (confirm(`Apakah Anda yakin ingin menghapus file "${file.name}"?`)) {
+                            deleteFile(file.name);
+                        }
+                    };
+                }
+                
+                // Update preview button
+                const previewBtn = fileContainer.querySelector('button[title="Preview HTML"]');
+                if (previewBtn) {
+                    previewBtn.onclick = function() {
+                        toggleFilePreview(file.name);
+                    };
+                }
+                
+                // Update toggle view button
+                const toggleBtn = fileContainer.querySelector('.file-toggle-btn');
+                if (toggleBtn) {
+                    toggleBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        toggleFileContent(this, index);
+                    };
+                }
+                
+                // Update file header click
+                const fileHeader = fileContainer.querySelector('.file-header');
+                if (fileHeader) {
+                    fileHeader.onclick = function(e) {
+                        // Only handle file name clicks, not button clicks
+                        if (e.target.closest('.file-actions') || e.target.matches('input[type="checkbox"]')) {
+                            return;
+                        }
+                        
+                        if (isMobile) {
+                            toggleFileContent(toggleBtn, index);
+                        }
+                    };
+                }
+                
+                // Update code elements
+                updateFileContentElements(fileContainer, file, index);
+            }
+            
+            // Update file content elements
+            function updateFileContentElements(fileContainer, file, index) {
+                // Update code content
+                const fileContentElem = fileContainer.querySelector(`#content-code-${index}`);
+                if (fileContentElem) {
+                    fileContentElem.textContent = file.content;
+                    fileContentElem.id = `content-code-${index}`;
+                    
+                    // Schedule syntax highlighting
+                    requestAnimationFrame(() => {
+                        applySyntaxHighlighting(fileContentElem, file.name);
+                    });
+                }
+                
+                // Update HTML preview content
+                const htmlPreviewElem = fileContainer.querySelector(`#content-preview-${index}`);
+                if (htmlPreviewElem) {
+                    htmlPreviewElem.innerHTML = sanitizeHTML(file.content);
+                    htmlPreviewElem.id = `content-preview-${index}`;
+                }
+            }
+            
+            // Create a file element with all necessary event handlers
+            function createFileElement(file, index) {
+                const fileContainer = document.createElement("div");
+                fileContainer.className = "bg-white shadow rounded-lg p-4 file-container transition-theme";
+                fileContainer.setAttribute("data-filename", file.name);
+                fileContainer.setAttribute("data-index", index);
+                
+                const fileExtension = file.name.split('.').pop().toLowerCase();
+                let fileIcon = 'fa-file-alt';
+                
+                // Set file icon based on extension
+                if (['html', 'htm'].includes(fileExtension)) fileIcon = 'fa-file-code';
+                else if (['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(fileExtension)) fileIcon = 'fa-file-image';
+                else if (['doc', 'docx', 'txt'].includes(fileExtension)) fileIcon = 'fa-file-word';
+                else if (['xls', 'xlsx', 'csv'].includes(fileExtension)) fileIcon = 'fa-file-excel';
+                else if (['js'].includes(fileExtension)) fileIcon = 'fa-file-code';
+                else if (['css'].includes(fileExtension)) fileIcon = 'fa-file-code';
+                
+                const fileHeader = document.createElement("div");
+                fileHeader.className = "flex justify-between items-center mb-2 file-header";
+                
+                const nameContainer = document.createElement("div");
+                nameContainer.className = "flex items-center";
+                nameContainer.innerHTML = `
+                    <span class="drag-handle mr-2 hidden text-gray-400"><i class="fas fa-grip-vertical"></i></span>
+                    <input type="checkbox" class="mr-2 file-checkbox transition-theme" data-filename="${file.name}">
+                    <i class="fas ${fileIcon} mr-2 text-gray-500 transition-theme"></i>
+                    <strong class="text-lg text-gray-800 break-all transition-theme">${file.name}</strong>
+                `;
+                
+                fileHeader.appendChild(nameContainer);
+                
+                const buttonContainer = document.createElement("div");
+                buttonContainer.className = "space-x-1 sm:space-x-2 file-actions";
+                
+                // Preview button for HTML files
+                if (['html', 'htm'].includes(fileExtension)) {
+                    const previewBtn = document.createElement("button");
+                    previewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+                    previewBtn.title = "Preview HTML";
+                    previewBtn.className = "bg-teal-500 text-white p-1 sm:px-2 sm:py-1 rounded text-sm hover:bg-teal-600 transition duration-300";
+                    previewBtn.onclick = function() {
+                        toggleFilePreview(file.name);
+                    };
+                    buttonContainer.appendChild(previewBtn);
+                }
+                
+                // Edit button
+                const editBtn = document.createElement("button");
+                editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                editBtn.title = "Edit";
+                editBtn.className = "bg-blue-500 text-white p-1 sm:px-2 sm:py-1 rounded text-sm hover:bg-blue-600 transition duration-300";
+                editBtn.onclick = function() {
+                    editFile(file.name);
+                };
+                
+                // Copy button
+                const copyBtn = document.createElement("button");
+                copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+                copyBtn.title = "Salin";
+                copyBtn.className = "bg-green-500 text-white p-1 sm:px-2 sm:py-1 rounded text-sm hover:bg-green-600 transition duration-300";
+                copyBtn.onclick = function() {
+                    copyToClipboard(file);
+                };
+                
+                // Delete button
+                const deleteBtn = document.createElement("button");
+                deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                deleteBtn.title = "Hapus";
+                deleteBtn.className = "bg-red-500 text-white p-1 sm:px-2 sm:py-1 rounded text-sm hover:bg-red-600 transition duration-300";
+                deleteBtn.onclick = function() {
+                    if (confirm(`Apakah Anda yakin ingin menghapus file "${file.name}"?`)) {
+                        deleteFile(file.name);
+                    }
+                };
+                
+                // Toggle view button for mobile
+                const toggleBtn = document.createElement("button");
+                toggleBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+                toggleBtn.title = "Tampilkan/Sembunyikan";
+                toggleBtn.className = "file-toggle-btn bg-gray-200 text-gray-700 p-1 rounded text-sm hover:bg-gray-300 transition-theme";
+                toggleBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    toggleFileContent(this, index);
+                };
+                
+                buttonContainer.appendChild(editBtn);
+                buttonContainer.appendChild(copyBtn);
+                buttonContainer.appendChild(deleteBtn);
+                buttonContainer.appendChild(toggleBtn);
+                fileHeader.appendChild(buttonContainer);
+                
+                // Create file content container with preview toggle
+                const contentWrapper = document.createElement("div");
+                contentWrapper.className = "relative file-content-collapse";
+                
+                // Add collapsed indicator for mobile
+                if (isMobile) {
+                    const collapsedIndicator = document.createElement("div");
+                    collapsedIndicator.className = "collapsed-indicator transition-theme";
+                    collapsedIndicator.innerHTML = "<i class='fas fa-ellipsis-h'></i> Klik tombol <i class='fas fa-chevron-down'></i> untuk melihat konten";
+                    fileContainer.appendChild(collapsedIndicator);
+                }
+                
+                // Code view container
+                const fileContentElem = document.createElement("pre");
+                fileContentElem.className =
+                    "whitespace-pre-wrap break-all mt-2 p-2 bg-gray-100 rounded max-h-40 overflow-y-auto scrollbar-custom text-sm transition-theme";
+                fileContentElem.textContent = file.content;
+                fileContentElem.id = `content-code-${index}`;
+                
+                // HTML preview container (initially hidden)
+                const htmlPreviewElem = document.createElement("div");
+                htmlPreviewElem.className = 
+                    "mt-2 p-2 bg-white border border-gray-200 rounded max-h-40 overflow-y-auto scrollbar-custom hidden transition-theme";
+                htmlPreviewElem.innerHTML = sanitizeHTML(file.content);
+                htmlPreviewElem.id = `content-preview-${index}`;
+                
+                contentWrapper.appendChild(fileContentElem);
+                contentWrapper.appendChild(htmlPreviewElem);
+                
+                fileContainer.appendChild(fileHeader);
+                fileContainer.appendChild(contentWrapper);
+                
+                // On desktop, expand by default
+                if (!isMobile) {
+                    contentWrapper.classList.add('file-content-expanded');
+                }
+                
+                // Make file name clickable to toggle content on mobile
+                fileHeader.addEventListener('click', function(e) {
+                    // Only handle file name clicks, not button clicks
+                    if (e.target.closest('.file-actions') || e.target.matches('input[type="checkbox"]')) {
+                        return;
+                    }
+                    
+                    if (isMobile) {
+                        toggleFileContent(toggleBtn, index);
+                    }
+                });
+                
+                // Defer syntax highlighting to avoid blocking UI
+                requestAnimationFrame(() => {
+                    applySyntaxHighlighting(fileContentElem, file.name);
+                });
+                
+                return fileContainer;
+            }
+            
+            // Toggle file content visibility on mobile
+            function toggleFileContent(toggleBtn, index) {
+                const contentWrapper = toggleBtn.closest('.file-container').querySelector('.file-content-collapse');
+                const indicator = toggleBtn.closest('.file-container').querySelector('.collapsed-indicator');
+                
+                if (contentWrapper.classList.contains('file-content-expanded')) {
+                    contentWrapper.classList.remove('file-content-expanded');
+                    toggleBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+                    if (indicator) indicator.style.display = 'block';
+                } else {
+                    contentWrapper.classList.add('file-content-expanded');
+                    toggleBtn.innerHTML = '<i class="fas fa-chevron-up"></i>';
+                    if (indicator) indicator.style.display = 'none';
+                }
+            }
+            
+            // Copy file content to clipboard
+            function copyToClipboard(file) {
+                const fullContent = `${file.name}\n${file.content}`;
+                
+                showLoading('Menyalin ke clipboard...');
+                
+                setTimeout(() => {
+                    try {
+                        // Try modern approach first
+                        if (navigator.clipboard && window.isSecureContext) {
+                            navigator.clipboard.writeText(fullContent)
+                                .then(() => {
+                                    hideLoading();
+                                    showToast(`File "${file.name}" disalin!`);
+                                })
+                                .catch(err => {
+                                    // Fallback for older browsers
+                                    fallbackCopyTextToClipboard(fullContent, file.name);
+                                    hideLoading();
+                                });
+                        } else {
+                            // Fallback for older browsers or non-secure contexts
+                            fallbackCopyTextToClipboard(fullContent, file.name);
+                            hideLoading();
+                        }
+                    } catch (err) {
+                        hideLoading();
+                        showToast('Gagal menyalin: ' + err.message, 'error');
+                    }
+                }, 10);
+            }
+            
+            // Fallback method to copy text to clipboard
+            function fallbackCopyTextToClipboard(text, fileName) {
+                // Create temporary element
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                
+                // Make it invisible
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                textArea.style.top = "-999999px";
+                document.body.appendChild(textArea);
+                
+                // Focus and select content
+                textArea.focus();
+                textArea.select();
+                
+                let successful = false;
+                try {
+                    successful = document.execCommand('copy');
+                    showToast(successful ? `File "${fileName}" disalin!` : 'Gagal menyalin file', successful ? 'success' : 'error');
+                } catch (err) {
+                    showToast('Gagal menyalin: ' + err.message, 'error');
+                }
+                
+                document.body.removeChild(textArea);
+            }
+            
+            // Toggle between code/preview mode for a file
+            function toggleFilePreview(fileName) {
+                const fileIndex = allFiles.findIndex(file => file.name === fileName);
+                if (fileIndex === -1) return;
+                
+                const codeElem = document.getElementById(`content-code-${fileIndex}`);
+                const previewElem = document.getElementById(`content-preview-${fileIndex}`);
+                
+                if (!codeElem || !previewElem) return;
+                
+                if (codeElem.classList.contains('hidden')) {
+                    // Switch to code view
+                    codeElem.classList.remove('hidden');
+                    previewElem.classList.add('hidden');
+                } else {
+                    // Switch to preview
+                    codeElem.classList.add('hidden');
+                    previewElem.classList.remove('hidden');
+                }
+            }
+            
+            // Open editor with file content
+            function editFile(fileName) {
+                showLoading('Membuka editor...');
+                
+                setTimeout(() => {
+                    const file = allFiles.find(f => f.name === fileName);
+                    if (!file) {
+                        hideLoading();
+                        return;
+                    }
+                    
+                    // Switch to create tab
+                    switchTab('create');
+                    
+                    // Fill the form with file data
+                    document.getElementById('fileName').value = file.name;
+                    document.getElementById('fileContent').value = file.content;
+                    
+                    // Update preview if in visual mode
+                    if (currentEditorMode === 'visual') {
+                        document.getElementById('htmlPreviewContent').innerHTML = sanitizeHTML(file.content);
+                    }
+                    
+                    hideLoading();
+                }, 10);
+            }
+            
+            // Update the merged preview of all files
+            function updateMergePreview() {
+                const previewContainer = document.getElementById("previewContainer");
+                const mergePreview = document.getElementById("mergePreview");
+                const htmlMergePreview = document.getElementById("htmlMergePreview");
+                const charCount = document.getElementById("charCount");
+                
+                if (allFiles.length > 0) {
+                    showLoading('Memperbarui preview...');
+                    
+                    setTimeout(() => {
+                        // Cache merged content for later use
+                        mergedContent = allFiles
+                            .map((file) => `/* ${file.name} */\n${file.content}`)
+                            .join("\n\n");
+                        
+                        mergePreview.textContent = mergedContent;
+                        htmlMergePreview.innerHTML = sanitizeHTML(mergedContent);
+                        
+                        previewContainer.classList.remove("hidden");
+                        charCount.innerHTML = `<i class="fas fa-text-width mr-1"></i> Total karakter: <strong>${mergedContent.length.toLocaleString()}</strong> | <i class="fas fa-file mr-1"></i> Total file: <strong>${allFiles.length.toLocaleString()}</strong>`;
+                        
+                        // Apply syntax highlighting to merged content
+                        try {
+                            if (highlightWorker) {
+                                highlightWorker.postMessage({
+                                    code: mergedContent,
+                                    language: 'plaintext',
+                                    id: 'mergePreview'
+                                });
+                            } else {
+                                hljs.highlightElement(mergePreview);
+                            }
+                        } catch (e) {
+                            console.warn("Error highlighting:", e);
+                        }
+                        
+                        togglePreviewDisplay();
+                        hideLoading();
+                    }, 10);
+                } else {
+                    previewContainer.classList.add("hidden");
+                    mergedContent = '';
+                }
+            }
+            
+            // Copy merged content directly
+            function copyMergedContent() {
+                if (!mergedContent) {
+                    showToast("Tidak ada konten untuk disalin", "error");
+                    return;
+                }
+                
+                showLoading('Menyalin gabungan file...');
+                
+                setTimeout(() => {
+                    try {
+                        // Try modern approach first
+                        if (navigator.clipboard && window.isSecureContext) {
+                            navigator.clipboard.writeText(mergedContent)
+                                .then(() => {
+                                    hideLoading();
+                                    showToast("Konten gabungan telah disalin!");
+                                })
+                                .catch(err => {
+                                    // Fallback
+                                    fallbackCopyTextToClipboard(mergedContent, "gabungan-file");
+                                    hideLoading();
+                                });
+                        } else {
+                            fallbackCopyTextToClipboard(mergedContent, "gabungan-file");
+                            hideLoading();
+                        }
+                    } catch (e) {
+                        hideLoading();
+                        showToast('Gagal menyalin: ' + e.message, 'error');
+                    }
+                }, 10);
+            }
+            
+            // Toggle between code and HTML preview modes
+            function togglePreviewMode() {
+                const button = document.getElementById('previewModeButton');
+                
+                if (previewMode === 'code') {
+                    previewMode = 'html';
+                    button.innerHTML = '<i class="fas fa-code"></i> Mode Kode';
+                } else {
+                    previewMode = 'code';
+                    button.innerHTML = '<i class="fas fa-eye"></i> Mode Preview';
+                }
+                
+                togglePreviewDisplay();
+            }
+            
+            // Show/hide appropriate preview display
+            function togglePreviewDisplay() {
+                const codePreview = document.getElementById('mergePreview');
+                const htmlPreview = document.getElementById('htmlMergePreview');
+                
+                if (previewMode === 'code') {
+                    codePreview.classList.remove('hidden');
+                    htmlPreview.classList.add('hidden');
+                } else {
+                    codePreview.classList.add('hidden');
+                    htmlPreview.classList.remove('hidden');
+                }
+            }
+            
+            // Merge and copy all files
+            function mergeAndCopy() {
+                if (allFiles.length === 0) {
+                    showToast("Silakan unggah file terlebih dahulu.", "error");
+                    return;
+                }
+                
+                // Use cached merged content if available
+                if (!mergedContent || isFileListChanged) {
+                    showLoading('Menggabung dan menyalin file...');
+                    
+                    setTimeout(() => {
+                        try {
+                            mergedContent = allFiles
+                                .map((file) => `/* ${file.name} */\n${file.content}`)
+                                .join("\n\n");
+                            
+                            copyMergedContent();
+                        } catch (e) {
+                            hideLoading();
+                            showToast('Gagal menggabung file: ' + e.message, 'error');
+                        }
+                    }, 10);
+                } else {
+                    copyMergedContent();
+                }
+            }
+            
+            // Delete a file and update UI
+            function deleteFile(fileName) {
+                showLoading('Menghapus file...');
+                
+                setTimeout(() => {
+                    allFiles = allFiles.filter((file) => file.name !== fileName);
+                    
+                    // Remove from element cache
+                    fileElementCache.delete(fileName);
+                    
+                    saveToLocalStorage();
+                    isFileListChanged = true;
+                    displaySavedFiles();
+                    hideLoading();
+                    showToast(`File "${fileName}" telah dihapus`, "info");
+                }, 10);
+            }
+            
+            // Delete all selected files
+            function deleteSelected() {
+                const selectedCheckboxes = document.querySelectorAll(
+                    ".file-checkbox:checked"
+                );
+                if (selectedCheckboxes.length === 0) {
+                    showToast("Pilih file yang ingin dihapus terlebih dahulu.", "error");
+                    return;
+                }
+                
+                if (confirm(`Apakah Anda yakin ingin menghapus ${selectedCheckboxes.length} file terpilih?`)) {
+                    showLoading(`Menghapus ${selectedCheckboxes.length} file...`);
+                    
+                    setTimeout(() => {
+                        let deletedFiles = 0;
+                        const filesToDelete = Array.from(selectedCheckboxes).map(
+                            checkbox => checkbox.getAttribute("data-filename")
+                        );
+                        
+                        // Remove from element cache
+                        filesToDelete.forEach(fileName => {
+                            fileElementCache.delete(fileName);
+                        });
+                        
+                        allFiles = allFiles.filter(file => !filesToDelete.includes(file.name));
+                        deletedFiles = filesToDelete.length;
+                        
+                        saveToLocalStorage();
+                        isFileListChanged = true;
+                        displaySavedFiles();
+                        hideLoading();
+                        showToast(`${deletedFiles} file telah dihapus`, "info");
+                    }, 10);
+                }
+            }
+            
+            // Local Storage functions with error handling and compression
+            function saveToLocalStorage() {
+                try {
+                    const serializedData = JSON.stringify(allFiles);
+                    localStorage.setItem("allFiles", serializedData);
+                    
+                    // Check storage usage
+                    const usedSpace = new Blob([serializedData]).size;
+                    const storageLimit = 5 * 1024 * 1024; // ~5MB
+                    
+                    if (usedSpace > storageLimit * 0.8) {
+                        showToast("Peringatan: Penyimpanan lokal hampir penuh!", "warning");
+                    }
+                } catch (e) {
+                    console.error("Error saving to localStorage:", e);
+                    
+                    // If quota exceeded, try to save only essential data
+                    if (e.name === 'QuotaExceededError') {
+                        try {
+                            // Try to save only file names and smaller content
+                            const essentialData = allFiles.map(file => ({
+                                name: file.name,
+                                content: file.content.substring(0, 1000) + 
+                                    (file.content.length > 1000 ? '...[content truncated]' : '')
+                            }));
+                            localStorage.setItem("allFiles", JSON.stringify(essentialData));
+                            showToast("Peringatan: Konten file dipotong karena penyimpanan penuh", "warning");
+                        } catch (innerE) {
+                            showToast("Penyimpanan lokal penuh! Beberapa file mungkin hilang", "error");
+                        }
+                    } else {
+                        showToast("Gagal menyimpan ke penyimpanan lokal: " + e.message, "error");
+                    }
+                }
+            }
+            
+            // Load files from localStorage with error handling
+            function loadFromLocalStorage(skipLoading = false) {
+                if (!skipLoading) {
+                    showLoading('Memuat file...');
+                }
+                
+                setTimeout(() => {
+                    try {
+                        const savedFiles = localStorage.getItem("allFiles");
+                        if (savedFiles) {
+                            allFiles = JSON.parse(savedFiles);
+                            displaySavedFiles();
+                        }
+                        if (!skipLoading) {
+                            hideLoading();
+                        }
+                    } catch (e) {
+                        console.error("Error loading from localStorage:", e);
+                        showToast("Gagal memuat dari penyimpanan lokal: " + e.message, "error");
+                        allFiles = [];
+                        if (!skipLoading) {
+                            hideLoading();
+                        }
+                    }
+                }, skipLoading ? 0 : 10);
+            }
+            
+            // Clear all files from localStorage
+            function clearLocalStorage() {
+                if (!confirm("Apakah Anda yakin ingin menghapus semua file dari penyimpanan lokal?")) {
+                    return;
+                }
+                
+                showLoading('Menghapus semua file...');
+                
+                setTimeout(() => {
+                    try {
+                        localStorage.removeItem("allFiles");
+                        allFiles = [];
+                        
+                        // Clear element cache
+                        fileElementCache.clear();
+                        
+                        displaySavedFiles();
+                        
+                        document.getElementById("fileList").innerHTML = "";
+                        updateMergePreview();
+                        
+                        hideLoading();
+                        showToast("Semua file telah dihapus dari penyimpanan lokal.", "info");
+                    } catch (e) {
+                        hideLoading();
+                        showToast("Gagal menghapus dari penyimpanan lokal: " + e.message, "error");
+                    }
+                }, 10);
+            }
+            
+            // Toggle drag mode for reordering files
+            function toggleDragMode() {
+                dragMode = !dragMode;
+                const dragHandles = document.querySelectorAll(".drag-handle");
+                const toggleButton = document.getElementById("toggleDragModeButton");
+                
+                if (dragMode) {
+                    dragHandles.forEach((handle) =>
+                        handle.classList.remove("hidden")
+                    );
+                    toggleButton.innerHTML = '<i class="fas fa-times"></i><span class="hidden sm:inline"> Matikan Seret</span>';
+                    toggleButton.classList.remove(
+                        "bg-yellow-500",
+                        "hover:bg-yellow-600"
+                    );
+                    toggleButton.classList.add(
+                        "bg-blue-500",
+                        "hover:bg-blue-600"
+                    );
+                    showToast("Mode pengurutan aktif. Gunakan ikon grip untuk mengatur ulang file.");
+                } else {
+                    dragHandles.forEach((handle) =>
+                        handle.classList.add("hidden")
+                    );
+                    toggleButton.innerHTML = '<i class="fas fa-grip-lines"></i><span class="hidden sm:inline"> Mode Seret</span>';
+                    toggleButton.classList.remove(
+                        "bg-blue-500",
+                        "hover:bg-blue-600"
+                    );
+                    toggleButton.classList.add(
+                        "bg-yellow-500",
+                        "hover:bg-yellow-600"
+                    );
+                }
+            }
+            
+            // Initialize SortableJS for drag and drop reordering
+            function initSortable() {
+                const filesContent = document.getElementById("filesContent");
+                
+                if (sortableInstance) {
+                    sortableInstance.destroy();
+                }
+                
+                // Don't initialize if there are too many files (performance)
+                if (allFiles.length > 200) {
+                    return;
+                }
+                
+                try {
+                    sortableInstance = new Sortable(filesContent, {
+                        animation: 150,
+                        handle: ".drag-handle",
+                        ghostClass: isDarkMode ? "bg-dark-300" : "bg-gray-100",
+                        chosenClass: isDarkMode ? "bg-dark-200" : "bg-gray-200",
+                        fallbackTolerance: 3,
+                        touchStartThreshold: 3,
+                        delay: 150,
+                        delayOnTouchOnly: true,
+                        forceFallback: isMobile, // Better performance on mobile
+                        onStart: function() {
+                            // Disable scroll while dragging on mobile
+                            if (isMobile) {
+                                document.body.classList.add('overflow-hidden');
+                            }
+                        },
+                        onEnd: function () {
+                            // Re-enable scroll
+                            if (isMobile) {
+                                document.body.classList.remove('overflow-hidden');
+                            }
+                            
+                            // Update allFiles array based on new order
+                            const fileContainers = 
+                                filesContent.querySelectorAll(".file-container");
+                            const newFiles = [];
+                            
+                            Array.from(fileContainers).forEach((container) => {
+                                const fileName = container.getAttribute("data-filename");
+                                const file = allFiles.find((f) => f.name === fileName);
+                                if (file) newFiles.push(file);
+                            });
+                            
+                            // Remove the load more button from calculation
+                            if (newFiles.length < allFiles.length) {
+                                // Add the files that haven't been rendered yet
+                                const renderedFileNames = newFiles.map(f => f.name);
+                                const remainingFiles = allFiles.filter(
+                                    f => !renderedFileNames.includes(f.name)
+                                );
+                                newFiles.push(...remainingFiles);
+                            }
+                            
+                            allFiles = newFiles;
+                            isFileListChanged = true;
+                            saveToLocalStorage();
+                            
+                            if (currentTab === 'manage') {
+                                updateMergePreview();
+                                isFileListChanged = false;
+                            }
+                        },
+                    });
+                } catch (e) {
+                    console.error("Error initializing Sortable:", e);
+                }
+            }
+            
+            // Apply syntax highlighting to code elements - optimized version
+            function applySyntaxHighlighting(element, fileName) {
+                if (!element) return;
+                
+                const extension = fileName.split(".").pop().toLowerCase();
+                let language;
+                
+                switch (extension) {
+                    case "js":
+                    case "ts":
+                        language = "javascript";
+                        break;
+                    case "html":
+                    case "htm":
+                        language = "html";
+                        break;
+                    case "css":
+                        language = "css";
+                        break;
+                    case "py":
+                        language = "python";
+                        break;
+                    case "json":
+                        language = "json";
+                        break;
+                    case "php":
+                        language = "php";
+                        break;
+                    case "java":
+                        language = "java";
+                        break;
+                    case "xml":
+                    case "svg":
+                        language = "xml";
+                        break;
+                    case "md":
+                        language = "markdown";
+                        break;
+                    default:
+                        language = "plaintext";
+                }
+                
+                element.classList.add(`language-${language}`);
+                
+                try {
+                    // If web worker is available, use it for non-blocking highlighting
+                    if (highlightWorker) {
+                        highlightWorker.postMessage({
+                            code: element.textContent,
+                            language: language,
+                            id: element.id
+                        });
+                    } else {
+                        // Fallback to synchronous highlighting
+                        hljs.highlightElement(element);
+                    }
+                } catch (e) {
+                    console.warn("Error highlighting:", e);
+                }
+            }
+            
+            // Display a toast notification
+            function showToast(message, type = 'success') {
+                const toast = document.getElementById('toastNotification');
+                const toastMessage = document.getElementById('toastMessage');
+                
+                // Set message and style based on type
+                toastMessage.textContent = message;
+                
+                toast.className = 'fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg transform transition-all duration-500 z-50 toast-notification';
+                
+                switch(type) {
+                    case 'error':
+                        toast.classList.add('bg-red-500', 'text-white');
+                        break;
+                    case 'warning':
+                        toast.classList.add('bg-yellow-500', 'text-white');
+                        break;
+                    case 'info':
+                        toast.classList.add('bg-blue-500', 'text-white');
+                        break;
+                    case 'success':
+                    default:
+                        toast.classList.add('bg-green-500', 'text-white');
+                }
+                
+                // Show toast
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+                
+                // Hide toast after 3 seconds
+                clearTimeout(window.toastTimeout);
+                window.toastTimeout = setTimeout(() => {
+                    if (toast) {
+                        toast.classList.remove('translate-y-0', 'opacity-100');
+                        toast.classList.add('translate-y-20', 'opacity-0');
+                    }
+                }, 3000);
+            }
+            
+            // Show loading indicator
+            function showLoading(message = 'Memproses...') {
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                const loadingText = document.getElementById('loadingText');
+                
+                loadingText.textContent = message;
+                loadingIndicator.classList.remove('hidden');
+            }
+            
+            // Hide loading indicator
+            function hideLoading() {
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                loadingIndicator.classList.add('hidden');
+            }
+            
+            // Throttle function to limit how often a function can be called
+            function throttle(func, limit) {
+                let inThrottle;
+                return function() {
+                    const args = arguments;
+                    const context = this;
+                    if (!inThrottle) {
+                        func.apply(context, args);
+                        inThrottle = true;
+                        setTimeout(() => inThrottle = false, limit);
+                    }
+                };
+            }
+            
+            // Refresh UI elements after changes
+            function refreshUI() {
+                // Force browser to recalculate layout in less destructive way
+                requestAnimationFrame(() => {
+                    // Ensure all scrollable areas are properly sized
+                    document.querySelectorAll('.scrollbar-custom').forEach(element => {
+                        element.style.maxHeight = element.getAttribute('data-max-height') || '';
+                    });
+                });
+            }
+            
+            // Clean up resources when page unloads
+            window.addEventListener('beforeunload', function() {
+                // Terminate web worker if it exists
+                if (highlightWorker) {
+                    highlightWorker.terminate();
+                }
+                
+                // Destroy sortable instance
+                if (sortableInstance) {
+                    sortableInstance.destroy();
+                }
+                
+                // Disconnect intersection observer
+                if (intersectionObserver) {
+                    intersectionObserver.disconnect();
+                }
+            });
+        </script>
+    </body>
+</html>
