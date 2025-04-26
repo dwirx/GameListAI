@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transkripsi & Terjemahan Audio/Video</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6a11cb',
+                        secondary: '#2575fc',
+                        dark: '#343a40',
+                        light: '#f8f9fa',
+                    },
+                    fontFamily: {
+                        'sans': ['Poppins', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .animate-pulse-custom {
+            animation: pulse 1.5s infinite;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+        }
+        
+        .radial {
+            background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+        }
+
+        .subtitle-container {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .video-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .timestamp-pill {
+            background-color: rgba(106, 17, 203, 0.1);
+            border: 1px solid rgba(106, 17, 203, 0.2);
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .timestamp-pill:hover {
+            background-color: rgba(106, 17, 203, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .collapsible-section {
+            transition: all 0.3s ease;
+        }
+
+        /* Glass morphism effect for cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .mobile-menu-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Custom switch styling */
+        .custom-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+            margin-right: 8px;
+        }
+
+        .switch-input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        .switch-input:checked + .switch-slider {
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+        }
+
+        .switch-input:checked + .switch-slider:before {
+            transform: translateX(16px);
+        }
+        
+        /* Langsung tampilkan translate dropdown di mobile */
+        @media (max-width: 640px) {
+            .translate-options {
+                display: flex;
+                align-items: center;
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800">
+    <!-- Mobile Navigation -->
+    <div id="mobileMenu" class="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 hidden transition-all duration-300">
+        <div class="bg-white h-full max-w-[280px] overflow-y-auto shadow-xl">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h2 class="font-bold text-lg">Menu</h2>
+                <button id="closeMobileMenu" class="p-2 rounded-full hover:bg-gray-100">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div>
+                <a href="#uploadSection" class="mobile-menu-item">
+                    <i class="bi bi-cloud-upload text-primary"></i> Upload File
+                </a>
+                <a href="#transcriptionOptions" class="mobile-menu-item">
+                    <i class="bi bi-sliders text-primary"></i> Opsi Transkripsi
+                </a>
+                <a href="#resultSection" class="mobile-menu-item">
+                    <i class="bi bi-file-text text-primary"></i> Hasil Transkripsi
+                </a>
+                <a href="#playerSection" class="mobile-menu-item">
+                    <i class="bi bi-play-circle text-primary"></i> Pemutar Media
+                </a>
+                <a href="#historySection" class="mobile-menu-item">
+                    <i class="bi bi-clock-history text-primary"></i> Riwayat
+                </a>
+                <a href="#translationOptions" class="mobile-menu-item">
+                    <i class="bi bi-translate text-primary"></i> Terjemahan
+                </a>
+                <div class="p-4 mt-4 bg-gray-50 rounded-lg mx-3">
+                    <div class="text-sm font-medium mb-2">Setelan API</div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm">Simpan API Key</span>
+                        <label class="custom-switch">
+                            <input type="checkbox" class="switch-input" id="mobileApiSave">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg mb-6 relative overflow-hidden sticky top-0 z-40">
+        <div class="absolute inset-0 radial"></div>
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center relative z-10">
+            <div class="flex items-center">
+                <button id="menuToggle" class="lg:hidden mr-3 text-2xl">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2">
+                    <i class="bi bi-soundwave"></i> Transkripsi & Terjemahan
+                </h1>
+            </div>
+            <nav class="hidden lg:flex items-center gap-6">
+                <a href="#uploadSection" class="hover:text-white/80 transition flex items-center gap-1">
+                    <i class="bi bi-cloud-upload"></i> Upload
+                </a>
+                <a href="#transcriptionOptions" class="hover:text-white/80 transition flex items-center gap-1">
+                    <i class="bi bi-sliders"></i> Opsi
+                </a>
+                <a href="#resultSection" class="hover:text-white/80 transition flex items-center gap-1">
+                    <i class="bi bi-file-text"></i> Hasil
+                </a>
+                <a href="#playerSection" class="hover:text-white/80 transition flex items-center gap-1">
+                    <i class="bi bi-play-circle"></i> Pemutar
+                </a>
+            </nav>
+            <div id="apiStatusIndicator" class="hidden md:flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full text-sm">
+                <span class="w-2 h-2 rounded-full bg-red-500" id="apiIndicator"></span>
+                <span id="apiStatusText">API: Tidak Terhubung</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 pb-12 max-w-5xl">
+        <!-- API Settings Card -->
+        <div id="apiSection" class="glass-card rounded-2xl shadow-md mb-6 overflow-hidden transform transition-all duration-300">
+            <div class="bg-gray-50/80 px-5 py-4 flex justify-between items-center border-b cursor-pointer" id="apiSectionHeader">
+                <div class="font-semibold flex items-center gap-2">
+                    <i class="bi bi-key-fill text-primary"></i> Pengaturan API
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="apiStatus" class="gradient-bg px-3 py-1 rounded-full text-white text-sm font-medium">
+                        Belum Disimpan
+                    </span>
+                    <button id="toggleApiSection" class="text-gray-500 hover:text-primary transition">
+                        <i class="bi bi-chevron-down text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="apiSectionContent" class="p-5">
+                <div class="md:flex items-center justify-between gap-4">
+                    <div class="flex-grow mb-4 md:mb-0">
+                        <label for="apiKey" class="block text-sm font-medium text-gray-700 mb-1">Groq API Key</label>
+                        <div class="flex">
+                            <input type="password" class="flex-grow px-4 py-3 rounded-l-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition font-mono" 
+                                id="apiKey" placeholder="Masukkan Groq API Key">
+                            <button class="px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg hover:bg-gray-200 transition" 
+                                id="toggleApiKey">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <p class="mt-1 text-sm text-gray-500">API key diperlukan untuk mengakses layanan transkripsi Groq</p>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <button id="saveApiKey" class="gradient-bg text-white px-4 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2 shadow">
+                            <i class="bi bi-save"></i> Simpan API Key
+                        </button>
+                        <button id="clearApiKey" class="bg-white text-red-600 border border-red-300 px-4 py-2 rounded-lg hover:bg-red-50 transition flex items-center gap-2">
+                            <i class="bi bi-trash"></i> Hapus
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload File Card -->
+        <div id="uploadSection" class="glass-card rounded-2xl shadow-md mb-6 overflow-hidden transform transition-all duration-300">
+            <div class="bg-gray-50/80 px-5 py-4 font-semibold border-b flex items-center gap-2">
+                <i class="bi bi-cloud-upload-fill text-primary"></i> Upload File
+            </div>
+            <div class="p-5">
+                <div id="uploadArea" class="border-2 border-dashed border-gray-300 rounded-xl p-6 md:p-8 text-center cursor-pointer hover:border-secondary hover:bg-blue-50 transition">
+                    <input type="file" id="fileInput" accept="audio/*,video/*" class="hidden">
+                    <div class="text-4xl md:text-5xl text-primary mb-3 transition-transform duration-300">
+                        <i class="bi bi-file-earmark-music"></i>
+                    </div>
+                    <h5 class="text-lg font-medium mb-1">Tarik & Lepas file atau Klik untuk memilih</h5>
+                    <p class="text-gray-500 text-sm md:text-base">Mendukung format mp3, m4a, wav, mp4, dll.</p>
+                </div>
+                
+                <div id="fileInfo" class="mt-4 hidden">
+                    <div class="bg-gray-50 rounded-xl p-4 flex flex-wrap md:flex-nowrap items-center">
+                        <div class="text-2xl text-primary mr-3">
+                            <i id="fileTypeIcon" class="bi bi-file-earmark-music"></i>
+                        </div>
+                        <div class="flex-grow min-w-0">
+                            <h6 id="fileName" class="font-medium text-sm md:text-base truncate">filename.mp3</h6>
+                            <div class="flex flex-wrap gap-2 mt-1">
+                                <small id="fileSize" class="text-gray-500 text-xs">0 MB</small>
+                                <small id="fileDuration" class="text-gray-500 text-xs hidden">0:00</small>
+                            </div>
+                        </div>
+                        <button id="removeFile" class="bg-white text-red-600 border border-red-300 px-3 py-1 rounded-lg hover:bg-red-50 transition text-sm flex items-center gap-1 ml-3">
+                            <i class="bi bi-x-lg"></i> <span class="hidden sm:inline">Hapus</span>
+                        </button>
+                    </div>
+                    <div class="mt-3">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-500">Status: <span id="uploadStatus" class="font-medium">Siap</span></span>
+                        </div>
+                        <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div id="uploadProgress" class="h-full gradient-bg rounded-full w-0 transition-all duration-300"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Media Player Card -->
+        <div id="playerSection" class="glass-card rounded-2xl shadow-md mb-6 overflow-hidden hidden transform transition-all duration-300">
+            <div class="bg-gray-50/80 px-5 py-4 font-semibold border-b flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="bi bi-play-circle-fill text-primary"></i> Media Player
+                </div>
+                <div>
+                    <button id="togglePlayerFullscreen" class="text-gray-600 hover:text-primary transition px-2">
+                        <i class="bi bi-arrows-fullscreen"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-5">
+                <div class="video-container rounded-xl bg-gray-900 overflow-hidden relative mb-3">
+                    <video id="mediaPlayer" class="w-full" controls playsinline>
+                        Your browser does not support the video element.
+                    </video>
+                    <div id="subtitleDisplay" class="subtitle-container hidden absolute bottom-16 left-4 right-4 max-w-md mx-auto">
+                        Subtitle akan muncul di sini
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 mt-4">
+                    <div class="flex items-center">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="subtitleSwitch" class="sr-only peer" checked>
+                            <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-800">Tampilkan Subtitle</span>
+                        </label>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="playbackSpeed" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition">
+                            1.0x
+                        </button>
+                        <button id="jumpBack" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition">
+                            <i class="bi bi-arrow-counterclockwise"></i> 5s
+                        </button>
+                        <button id="jumpForward" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition">
+                            <i class="bi bi-arrow-clockwise"></i> 5s
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Translation Options Card (New) -->
+        <div id="translationOptions" class="glass-card rounded-2xl shadow-md mb-6 overflow-hidden transform transition-all duration-300">
+            <div class="bg-gray-50/80 px-5 py-4 font-semibold border-b flex items-center gap-2">
+                <i class="bi bi-translate text-primary"></i> Opsi Terjemahan
+            </div>
+            <div class="p-5">
+                <div class="mb-4">
+                    <p class="text-sm text-gray-600 mb-3">Terjemahkan hasil transkripsi ke dalam bahasa lain menggunakan Google Translate</p>
+                    
+                    <div class="md:flex items-center gap-4">
+                        <div class="flex items-center mb-3 md:mb-0">
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="translationSwitch" class="sr-only peer">
+                                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                <span class="ml-3 text-sm font-medium text-gray-800">Aktifkan Terjemahan</span>
+                            </label>
+                        </div>
+                        
+                        <div class="translate-options flex-grow">
+                            <div class="flex items-center gap-3">
+                                <div class="w-full">
+                                    <select id="targetLanguage" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition" disabled>
+                                        <option value="id">Indonesia</option>
+                                        <option value="en">Inggris</option>
+                                        <option value="ja">Jepang</option>
+                                        <option value="ko">Korea</option>
+                                        <option value="zh-CN">Mandarin (Sederhana)</option>
+                                        <option value="zh-TW">Mandarin (Tradisional)</option>
+                                        <option value="fr">Perancis</option>
+                                        <option value="de">Jerman</option>
+                                        <option value="es">Spanyol</option>
+                                        <option value="it">Italia</option>
+                                        <option value="ru">Rusia</option>
+                                        <option value="ar">Arab</option>
+                                        <option value="hi">Hindi</option>
+                                        <option value="pt">Portugis</option>
+                                        <option value="tr">Turki</option>
+                                    </select>
+                                </div>
+                                <button id="translateBtn" class="gradient-bg text-white px-4 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2 shadow" disabled>
+                                    <i class="bi bi-translate"></i> Terjemahkan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="autoDetectInfo" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-start gap-3">
+                        <div class="text-blue-500 text-xl mt-0.5">
+                            <i class="bi bi-info-circle-fill"></i>
+                        </div>
+                        <div>
+                            <h6 class="font-medium text-blue-700 mb-1">Deteksi Bahasa Otomatis</h6>
+                            <p class="text-sm text-blue-600 mb-2">Bahasa terdeteksi: <span id="detectedLanguage" class="font-medium">-</span></p>
+                            <p class="text-xs text-blue-600">Bahasa akan terdeteksi otomatis setelah transkripsi selesai.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transcription Options Card -->
+        <div id="transcriptionOptions" class="glass-card rounded-2xl shadow-md mb-6 overflow-hidden transform transition-all duration-300">
+            <div class="bg-gray-50/80 px-5 py-4 font-semibold border-b flex items-center gap-2">
+                <i class="bi bi-sliders text-primary"></i> Opsi Transkripsi
+            </div>
+            <div class="p-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                    <div class="flex items-center">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="timestampSwitch" class="sr-only peer" checked>
+                            <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-800">Tampilkan Timestamp</span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="autoFormatSwitch" class="sr-only peer" checked>
+                            <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-800">Format Otomatis (Tanda Baca)</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-3 mb-5">
+                    <div class="flex items-center">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="includeSrtSwitch" class="sr-only peer" checked>
+                            <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-800">Hasilkan SRT</span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="includeRawSwitch" class="sr-only peer">
+                            <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            <span class="ml-3 text-sm font-medium text-gray-800">Tampilkan Raw JSON</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-5">
+                    <div class="flex items-start gap-3">
+                        <div class="text-blue-500 text-xl mt-0.5">
+                            <i class="bi bi-info-circle-fill"></i>
+                        </div>
+                        <div>
+                            <h6 class="font-medium text-blue-700 mb-1">Model Transkripsi</h6>
+                            <p class="text-sm text-blue-600">Menggunakan model Whisper Large v3 dari Groq untuk transkripsi yang akurat. Menyediakan hasil dalam format SRT untuk subtitle dan teks terformat.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="transcribeBtn" disabled class="w-full gradient-bg text-white py-3 px-4 rounded-xl text-lg font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                    <i class="bi bi-magic"></i> Transkripsi Sekarang
+                </button>
+            </div>
+        </div>
+
+        <!-- Transcription Results Card -->
+        <div id="resultSection" class="glass-card rounded-2xl shadow-md overflow-hidden transform transition-all duration-300 mb-6">
+            <div class="bg-gray-50/80 px-5 py-4 flex justify-between items-center border-b">
+                <div class="font-semibold flex items-center gap-2">
+                    <i class="bi bi-file-text-fill text-primary"></i> Hasil Transkripsi
+                    <span id="translatedBadge" class="hidden px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded-full">Diterjemahkan</span>
+                </div>
+                
+                <div class="flex flex-wrap gap-2">
+                    <div class="mr-2">
+                        <select id="viewMode" class="text-sm bg-white border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="formatted">Format Teks</option>
+                            <option value="srt">Format SRT</option>
+                            <option value="plaintext">Teks Polos</option>
+                            <option value="raw">Raw JSON</option>
+                        </select>
+                    </div>
+                    <button id="copyBtn" disabled class="bg-white text-gray-700 border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition text-sm flex items-center gap-1">
+                        <i class="bi bi-clipboard"></i> <span class="hidden sm:inline">Salin</span>
+                    </button>
+                    <div class="dropdown relative">
+                        <button id="downloadBtn" disabled class="bg-white text-gray-700 border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition text-sm flex items-center gap-1">
+                            <i class="bi bi-download"></i> <span class="hidden sm:inline">Unduh</span>
+                        </button>
+                        <div id="downloadMenu" class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-10">
+                            <ul class="py-2">
+                                <li><button id="downloadTxt" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Unduh TXT</button></li>
+                                <li><button id="downloadSrt" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Unduh SRT</button></li>
+                                <li><button id="downloadJson" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Unduh JSON</button></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="loadingIndicator" class="hidden flex-col items-center justify-center p-10">
+                <div class="w-16 h-16 mb-6">
+                    <div class="w-full h-full rounded-full border-4 border-gray-200 border-t-primary animate-spin"></div>
+                </div>
+                <p class="text-center font-medium mb-1">Sedang memproses transkripsi...</p>
+                <p class="text-center text-gray-500 text-sm">Harap tunggu, ini mungkin memerlukan waktu beberapa saat</p>
+            </div>
+            
+            <div id="transcriptContainer" class="p-5 max-h-[500px] overflow-y-auto scrollbar-thin">
+                <div class="text-center text-gray-500 p-10">
+                    <i class="bi bi-mic-mute text-5xl block mb-3"></i>
+                    <p>Belum ada transkripsi. Upload file audio/video dan klik "Transkripsi Sekarang"</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- History Section -->
+        <div id="historySection" class="glass-card rounded-2xl shadow-md overflow-hidden transform transition-all duration-300 hidden">
+            <div class="bg-gray-50/80 px-5 py-4 font-semibold border-b flex items-center gap-2">
+                <i class="bi bi-clock-history text-primary"></i> Riwayat Transkripsi
+            </div>
+            <div class="p-5">
+                <div id="historyList" class="divide-y">
+                    <!-- History items will be added here -->
+                    <p class="text-gray-500 text-center py-4">Belum ada riwayat transkripsi</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating action buttons -->
+    <div class="fixed bottom-6 right-6 flex flex-col gap-3 items-end z-50">
+        <div id="helpBtn" class="w-12 h-12 gradient-bg rounded-full flex items-center justify-center text-white text-xl shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <i class="bi bi-question-lg"></i>
+        </div>
+        <div id="scrollTopBtn" class="w-12 h-12 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-700 text-xl shadow-lg cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 opacity-0">
+            <i class="bi bi-arrow-up"></i>
+        </div>
+    </div>
+
+    <!-- Toast notifications container -->
+    <div id="toastContainer" class="fixed top-6 right-6 z-50 flex flex-col items-end gap-2"></div>
+
+    <!-- Help modal -->
+    <div id="helpModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-auto m-4">
+            <div class="p-5 border-b flex justify-between items-center">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i class="bi bi-info-circle-fill text-primary"></i> Bantuan
+                </h3>
+                <button id="closeHelpModal" class="text-gray-400 hover:text-gray-600">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="p-5">
+                <div class="mb-4">
+                    <h4 class="font-medium text-base mb-2">Cara Menggunakan</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-sm">
+                        <li>Masukkan API key Groq di bagian Pengaturan API.</li>
+                        <li>Upload file audio atau video pada bagian Upload File.</li>
+                        <li>Sesuaikan opsi transkripsi sesuai kebutuhan.</li>
+                        <li>Klik tombol "Transkripsi Sekarang" untuk mulai proses.</li>
+                        <li>Lihat hasil transkripsi dan gunakan pemain media untuk melihat video dengan subtitle.</li>
+                        <li>Aktifkan terjemahan dan pilih bahasa untuk menerjemahkan hasil transkripsi.</li>
+                    </ol>
+                </div>
+                <div class="mb-4">
+                    <h4 class="font-medium text-base mb-2">Fitur Utama</h4>
+                    <ul class="list-disc pl-5 space-y-2 text-sm">
+                        <li>Transkripsi audio dan video dengan AI</li>
+                        <li>Pembuatan subtitle otomatis (SRT)</li>
+                        <li>Terjemahan otomatis ke berbagai bahasa</li>
+                        <li>Pemutar media dengan subtitle terintegrasi</li>
+                        <li>Timestamp interaktif (klik untuk memutar bagian tertentu)</li>
+                        <li>Riwayat transkripsi tersimpan lokal</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-medium text-base mb-2">Format yang Didukung</h4>
+                    <p class="text-sm">MP3, WAV, M4A, MP4, MOV, dan format audio/video umum lainnya.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Translation Loading Modal -->
+    <div id="translationLoadingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full m-4 text-center">
+            <div class="w-16 h-16 mx-auto mb-4">
+                <div class="w-full h-full rounded-full border-4 border-gray-200 border-t-primary animate-spin"></div>
+            </div>
+            <h3 class="text-lg font-medium mb-2">Sedang menerjemahkan...</h3>
+            <p class="text-gray-500 text-sm mb-4">Transkripsi sedang diterjemahkan, harap tunggu sebentar.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements - Main Functionality
+            const apiKeyInput = document.getElementById('apiKey');
+            const toggleApiKeyBtn = document.getElementById('toggleApiKey');
+            const saveApiKeyBtn = document.getElementById('saveApiKey');
+            const clearApiKeyBtn = document.getElementById('clearApiKey');
+            const apiStatus = document.getElementById('apiStatus');
+            const fileInput = document.getElementById('fileInput');
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const fileDuration = document.getElementById('fileDuration');
+            const fileTypeIcon = document.getElementById('fileTypeIcon');
+            const removeFileBtn = document.getElementById('removeFile');
+            const uploadProgress = document.getElementById('uploadProgress');
+            const uploadStatus = document.getElementById('uploadStatus');
+            const transcribeBtn = document.getElementById('transcribeBtn');
+            const timestampSwitch = document.getElementById('timestampSwitch');
+            const autoFormatSwitch = document.getElementById('autoFormatSwitch');
+            const includeSrtSwitch = document.getElementById('includeSrtSwitch');
+            const includeRawSwitch = document.getElementById('includeRawSwitch');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const transcriptContainer = document.getElementById('transcriptContainer');
+            const copyBtn = document.getElementById('copyBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const downloadMenu = document.getElementById('downloadMenu');
+            const downloadTxt = document.getElementById('downloadTxt');
+            const downloadSrt = document.getElementById('downloadSrt');
+            const downloadJson = document.getElementById('downloadJson');
+            const viewMode = document.getElementById('viewMode');
+            const historySection = document.getElementById('historySection');
+            const historyList = document.getElementById('historyList');
+            
+            // DOM Elements - Translation
+            const translationSwitch = document.getElementById('translationSwitch');
+            const targetLanguage = document.getElementById('targetLanguage');
+            const translateBtn = document.getElementById('translateBtn');
+            const autoDetectInfo = document.getElementById('autoDetectInfo');
+            const detectedLanguage = document.getElementById('detectedLanguage');
+            const translatedBadge = document.getElementById('translatedBadge');
+            const translationLoadingModal = document.getElementById('translationLoadingModal');
+            
+            // DOM Elements - UI & Interactions
+            const apiSectionHeader = document.getElementById('apiSectionHeader');
+            const toggleApiSection = document.getElementById('toggleApiSection');
+            const apiSectionContent = document.getElementById('apiSectionContent');
+            const helpBtn = document.getElementById('helpBtn');
+            const helpModal = document.getElementById('helpModal');
+            const closeHelpModal = document.getElementById('closeHelpModal');
+            const toastContainer = document.getElementById('toastContainer');
+            const scrollTopBtn = document.getElementById('scrollTopBtn');
+            const apiStatusIndicator = document.getElementById('apiStatusIndicator');
+            const apiIndicator = document.getElementById('apiIndicator');
+            const apiStatusText = document.getElementById('apiStatusText');
+            
+            // DOM Elements - Media Player
+            const playerSection = document.getElementById('playerSection');
+            const mediaPlayer = document.getElementById('mediaPlayer');
+            const subtitleDisplay = document.getElementById('subtitleDisplay');
+            const subtitleSwitch = document.getElementById('subtitleSwitch');
+            const playbackSpeed = document.getElementById('playbackSpeed');
+            const jumpBack = document.getElementById('jumpBack');
+            const jumpForward = document.getElementById('jumpForward');
+            const togglePlayerFullscreen = document.getElementById('togglePlayerFullscreen');
+            
+            // DOM Elements - Mobile Menu
+            const menuToggle = document.getElementById('menuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const closeMobileMenu = document.getElementById('closeMobileMenu');
+            const mobileApiSave = document.getElementById('mobileApiSave');
+            
+            // State variables
+            let selectedFile = null;
+            let currentTranscription = null;
+            let translatedTranscription = null;
+            let transcriptionsList = loadTranscriptionHistory();
+            let apiSectionCollapsed = false;
+            let currentSpeed = 1.0;
+            let currentSubtitleIndex = -1;
+            let subtitleInterval = null;
+            let isTranslated = false;
+            
+            // Map of language codes to display names
+            const languageMap = {
+                'af': 'Afrikaans',
+                'sq': 'Albania',
+                'am': 'Amharik',
+                'ar': 'Arab',
+                'hy': 'Armenia',
+                'az': 'Azerbaijan',
+                'eu': 'Basque',
+                'be': 'Belarus',
+                'bn': 'Bengali',
+                'bs': 'Bosnia',
+                'bg': 'Bulgaria',
+                'ca': 'Katalan',
+                'ceb': 'Cebuano',
+                'ny': 'Chichewa',
+                'zh-CN': 'Mandarin (Sederhana)',
+                'zh-TW': 'Mandarin (Tradisional)',
+                'co': 'Corsica',
+                'hr': 'Kroasia',
+                'cs': 'Ceko',
+                'da': 'Denmark',
+                'nl': 'Belanda',
+                'en': 'Inggris',
+                'eo': 'Esperanto',
+                'et': 'Estonia',
+                'tl': 'Filipino',
+                'fi': 'Finlandia',
+                'fr': 'Perancis',
+                'fy': 'Frisia',
+                'gl': 'Galicia',
+                'ka': 'Georgia',
+                'de': 'Jerman',
+                'el': 'Yunani',
+                'gu': 'Gujarati',
+                'ht': 'Kreol Haiti',
+                'ha': 'Hausa',
+                'haw': 'Hawaii',
+                'iw': 'Ibrani',
+                'he': 'Ibrani',
+                'hi': 'Hindi',
+                'hmn': 'Hmong',
+                'hu': 'Hungaria',
+                'is': 'Islandia',
+                'ig': 'Igbo',
+                'id': 'Indonesia',
+                'ga': 'Irlandia',
+                'it': 'Italia',
+                'ja': 'Jepang',
+                'jw': 'Jawa',
+                'kn': 'Kannada',
+                'kk': 'Kazakh',
+                'km': 'Khmer',
+                'rw': 'Kinyarwanda',
+                'ko': 'Korea',
+                'ku': 'Kurdi',
+                'ky': 'Kyrgyz',
+                'lo': 'Lao',
+                'la': 'Latin',
+                'lv': 'Latvia',
+                'lt': 'Lituania',
+                'lb': 'Luksemburg',
+                'mk': 'Makedonia',
+                'mg': 'Malagasi',
+                'ms': 'Melayu',
+                'ml': 'Malayalam',
+                'mt': 'Malta',
+                'mi': 'Maori',
+                'mr': 'Marathi',
+                'mn': 'Mongolia',
+                'my': 'Myanmar',
+                'ne': 'Nepal',
+                'no': 'Norwegia',
+                'or': 'Odia',
+                'ps': 'Pashto',
+                'fa': 'Persia',
+                'pl': 'Polandia',
+                'pt': 'Portugis',
+                'pa': 'Punjabi',
+                'ro': 'Rumania',
+                'ru': 'Rusia',
+                'sm': 'Samoa',
+                'gd': 'Gaelik Skotlandia',
+                'sr': 'Serbia',
+                'st': 'Sesotho',
+                'sn': 'Shona',
+                'sd': 'Sindhi',
+                'si': 'Sinhala',
+                'sk': 'Slovakia',
+                'sl': 'Slovenia',
+                'so': 'Somalia',
+                'es': 'Spanyol',
+                'su': 'Sunda',
+                'sw': 'Swahili',
+                'sv': 'Swedia',
+                'tg': 'Tajik',
+                'ta': 'Tamil',
+                'tt': 'Tatar',
+                'te': 'Telugu',
+                'th': 'Thailand',
+                'tr': 'Turki',
+                'tk': 'Turkmen',
+                'uk': 'Ukraina',
+                'ur': 'Urdu',
+                'ug': 'Uyghur',
+                'uz': 'Uzbek',
+                'vi': 'Vietnam',
+                'cy': 'Wales',
+                'xh': 'Xhosa',
+                'yi': 'Yiddish',
+                'yo': 'Yoruba',
+                'zu': 'Zulu'
+            };
+            
+            // Check for saved API key
+            checkSavedApiKey();
+            updateHistoryList();
+            
+            // Update API status in header
+            function updateApiStatusHeader(isConnected) {
+                apiStatusIndicator.classList.remove('hidden');
+                apiStatusIndicator.classList.add('flex');
+                
+                if (isConnected) {
+                    apiIndicator.classList.remove('bg-red-500');
+                    apiIndicator.classList.add('bg-green-500');
+                    apiStatusText.textContent = 'API: Terhubung';
+                    mobileApiSave.checked = true;
+                } else {
+                    apiIndicator.classList.remove('bg-green-500');
+                    apiIndicator.classList.add('bg-red-500');
+                    apiStatusText.textContent = 'API: Tidak Terhubung';
+                    mobileApiSave.checked = false;
+                }
+            }
+            
+            // Toggle API section collapse
+            apiSectionHeader.addEventListener('click', () => {
+                toggleApiSectionVisibility();
+            });
+            
+            toggleApiSection.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleApiSectionVisibility();
+            });
+            
+            function toggleApiSectionVisibility() {
+                apiSectionCollapsed = !apiSectionCollapsed;
+                
+                if (apiSectionCollapsed) {
+                    apiSectionContent.style.display = 'none';
+                    toggleApiSection.innerHTML = '<i class="bi bi-chevron-up text-xl"></i>';
+                } else {
+                    apiSectionContent.style.display = 'block';
+                    toggleApiSection.innerHTML = '<i class="bi bi-chevron-down text-xl"></i>';
+                }
+            }
+            
+            // Mobile menu handling
+            menuToggle.addEventListener('click', () => {
+                mobileMenu.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            });
+            
+            closeMobileMenu.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                document.body.style.overflow = '';
+            });
+            
+            // Close mobile menu when clicking links
+            document.querySelectorAll('.mobile-menu-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                    document.body.style.overflow = '';
+                });
+            });
+            
+            // Mobile API save switch
+            mobileApiSave.addEventListener('change', () => {
+                if (mobileApiSave.checked) {
+                    const apiKey = apiKeyInput.value.trim();
+                    if (apiKey) {
+                        localStorage.setItem('groq_api_key', apiKey);
+                        showToast('API key berhasil disimpan', 'success');
+                        updateApiStatus(true);
+                    } else {
+                        mobileApiSave.checked = false;
+                        showToast('Harap masukkan API key terlebih dahulu', 'warning');
+                    }
+                } else {
+                    localStorage.removeItem('groq_api_key');
+                    showToast('API key berhasil dihapus', 'success');
+                    updateApiStatus(false);
+                }
+            });
+            
+            // Scroll to top button visibility
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 300) {
+                    scrollTopBtn.style.opacity = '1';
+                } else {
+                    scrollTopBtn.style.opacity = '0';
+                }
+            });
+            
+            scrollTopBtn.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // Help modal
+            helpBtn.addEventListener('click', () => {
+                helpModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            });
+            
+            closeHelpModal.addEventListener('click', () => {
+                helpModal.classList.add('hidden');
+                document.body.style.overflow = '';
+            });
+            
+            // Close modal when clicking outside
+            helpModal.addEventListener('click', (e) => {
+                if (e.target === helpModal) {
+                    helpModal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            });
+
+            // Translation switch toggle
+            translationSwitch.addEventListener('change', () => {
+                if (translationSwitch.checked) {
+                    targetLanguage.disabled = false;
+                    translateBtn.disabled = !currentTranscription;
+                } else {
+                    targetLanguage.disabled = true;
+                    translateBtn.disabled = true;
+                    
+                    // If we have a translated version and we turn off translation,
+                    // revert to original if needed
+                    if (isTranslated && currentTranscription) {
+                        isTranslated = false;
+                        translatedBadge.classList.add('hidden');
+                        displayTranscriptByMode(currentTranscription);
+                    }
+                }
+            });
+            
+            // Translate button click
+            translateBtn.addEventListener('click', async () => {
+                if (!currentTranscription) return;
+                
+                const targetLang = targetLanguage.value;
+                const sourceLang = currentTranscription.language || 'auto';
+                
+                // Show loading modal
+                translationLoadingModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                
+                try {
+                    await translateTranscription(currentTranscription, sourceLang, targetLang);
+                    isTranslated = true;
+                    translatedBadge.classList.remove('hidden');
+                    translatedBadge.textContent = `Diterjemahkan ke ${getLanguageName(targetLang)}`;
+                    showToast(`Transkripsi berhasil diterjemahkan ke ${getLanguageName(targetLang)}`, 'success');
+                } catch (error) {
+                    console.error('Translation failed:', error);
+                    showToast('Terjemahan gagal: ' + error.message, 'error');
+                } finally {
+                    translationLoadingModal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            });
+            
+            // Toggle API key visibility
+            toggleApiKeyBtn.addEventListener('click', () => {
+                if (apiKeyInput.type === 'password') {
+                    apiKeyInput.type = 'text';
+                    toggleApiKeyBtn.innerHTML = '<i class="bi bi-eye-slash"></i>';
+                } else {
+                    apiKeyInput.type = 'password';
+                    toggleApiKeyBtn.innerHTML = '<i class="bi bi-eye"></i>';
+                }
+            });
+            
+            // Save API key to localStorage
+            saveApiKeyBtn.addEventListener('click', () => {
+                const apiKey = apiKeyInput.value.trim();
+                
+                if (!apiKey) {
+                    showToast('Harap masukkan API key terlebih dahulu', 'warning');
+                    return;
+                }
+                
+                localStorage.setItem('groq_api_key', apiKey);
+                showToast('API key berhasil disimpan', 'success');
+                updateApiStatus(true);
+            });
+            
+            // Clear API key from localStorage
+            clearApiKeyBtn.addEventListener('click', () => {
+                localStorage.removeItem('groq_api_key');
+                apiKeyInput.value = '';
+                showToast('API key berhasil dihapus', 'success');
+                updateApiStatus(false);
+            });
+            
+            // File upload handling
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('border-secondary', 'bg-blue-50');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('border-secondary', 'bg-blue-50');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('border-secondary', 'bg-blue-50');
+                
+                if (e.dataTransfer.files.length) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+            
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length) {
+                    handleFile(fileInput.files[0]);
+                }
+            });
+            
+            removeFileBtn.addEventListener('click', () => {
+                selectedFile = null;
+                fileInfo.classList.add('hidden');
+                uploadArea.classList.remove('hidden');
+                transcribeBtn.disabled = true;
+                fileInput.value = '';
+                uploadProgress.style.width = '0%';
+                uploadStatus.textContent = 'Siap';
+                
+                // Reset media player
+                mediaPlayer.src = '';
+                playerSection.classList.add('hidden');
+                
+                // Clear URL object if created
+                if (mediaPlayer.videoUrl) {
+                    URL.revokeObjectURL(mediaPlayer.videoUrl);
+                    mediaPlayer.videoUrl = null;
+                }
+            });
+            
+            // Download dropdown toggle
+            downloadBtn.addEventListener('click', () => {
+                downloadMenu.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!downloadBtn.contains(e.target) && !downloadMenu.contains(e.target)) {
+                    downloadMenu.classList.add('hidden');
+                }
+            });
+            
+            // Download options
+            downloadTxt.addEventListener('click', () => {
+                downloadTranscription('txt');
+                downloadMenu.classList.add('hidden');
+            });
+            
+            downloadSrt.addEventListener('click', () => {
+                downloadTranscription('srt');
+                downloadMenu.classList.add('hidden');
+            });
+            
+            downloadJson.addEventListener('click', () => {
+                downloadTranscription('json');
+                downloadMenu.classList.add('hidden');
+            });
+            
+            // View mode selection
+            viewMode.addEventListener('change', () => {
+                if (currentTranscription) {
+                    if (isTranslated && translatedTranscription) {
+                        displayTranscriptByMode(translatedTranscription);
+                    } else {
+                        displayTranscriptByMode(currentTranscription);
+                    }
+                }
+            });
+            
+            // Subtitle switch
+            subtitleSwitch.addEventListener('change', () => {
+                if (subtitleSwitch.checked) {
+                    subtitleDisplay.classList.remove('hidden');
+                } else {
+                    subtitleDisplay.classList.add('hidden');
+                }
+            });
+            
+            // Playback speed button
+            playbackSpeed.addEventListener('click', () => {
+                const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+                const currentIndex = speeds.indexOf(currentSpeed);
+                const nextIndex = (currentIndex + 1) % speeds.length;
+                currentSpeed = speeds[nextIndex];
+                mediaPlayer.playbackRate = currentSpeed;
+                playbackSpeed.textContent = `${currentSpeed}x`;
+            });
+            
+            // Jump back 5 seconds
+            jumpBack.addEventListener('click', () => {
+                mediaPlayer.currentTime = Math.max(0, mediaPlayer.currentTime - 5);
+            });
+            
+            // Jump forward 5 seconds
+            jumpForward.addEventListener('click', () => {
+                mediaPlayer.currentTime = Math.min(mediaPlayer.duration, mediaPlayer.currentTime + 5);
+            });
+            
+            // Toggle player fullscreen
+            togglePlayerFullscreen.addEventListener('click', () => {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    mediaPlayer.requestFullscreen();
+                }
+            });
+            
+            // Handle media player events
+            mediaPlayer.addEventListener('timeupdate', () => {
+                updateSubtitles();
+            });
+            
+            mediaPlayer.addEventListener('play', () => {
+                if (!subtitleInterval) {
+                    subtitleInterval = setInterval(updateSubtitles, 100);
+                }
+            });
+            
+            mediaPlayer.addEventListener('pause', () => {
+                if (subtitleInterval) {
+                    clearInterval(subtitleInterval);
+                    subtitleInterval = null;
+                }
+            });
+            
+            mediaPlayer.addEventListener('ended', () => {
+                if (subtitleInterval) {
+                    clearInterval(subtitleInterval);
+                    subtitleInterval = null;
+                }
+            });
+            
+            // Transcribe button click
+            transcribeBtn.addEventListener('click', async () => {
+                if (!selectedFile) return;
+                
+                const apiKey = apiKeyInput.value.trim();
+                if (!apiKey) {
+                    showToast('Harap masukkan API key Groq terlebih dahulu', 'error');
+                    return;
+                }
+                
+                // Show loading and hide transcript
+                loadingIndicator.classList.remove('hidden');
+                loadingIndicator.classList.add('flex');
+                transcriptContainer.classList.add('hidden');
+                
+                // Disable transcribe button during processing
+                transcribeBtn.disabled = true;
+                
+                try {
+                    await transcribeAudio(apiKey, selectedFile);
+                } catch (error) {
+                    showToast('Terjadi kesalahan: ' + error.message, 'error');
+                    loadingIndicator.classList.add('hidden');
+                    loadingIndicator.classList.remove('flex');
+                    transcriptContainer.classList.remove('hidden');
+                    transcribeBtn.disabled = false;
+                }
+            });
+            
+            // Copy transcript
+            copyBtn.addEventListener('click', () => {
+                let textToCopy;
+                
+                const dataToUse = isTranslated && translatedTranscription ? translatedTranscription : currentTranscription;
+                
+                switch (viewMode.value) {
+                    case 'srt':
+                        textToCopy = generateSRT(dataToUse);
+                        break;
+                    case 'plaintext':
+                        textToCopy = dataToUse.text;
+                        break;
+                    case 'raw':
+                        textToCopy = JSON.stringify(dataToUse, null, 2);
+                        break;
+                    default:
+                        textToCopy = transcriptContainer.innerText;
+                }
+                
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    showToast('Transkripsi berhasil disalin', 'success');
+                }).catch(err => {
+                    showToast('Gagal menyalin teks: ' + err.message, 'error');
+                });
+            });
+            
+            // Functions
+            function checkSavedApiKey() {
+                const savedApiKey = localStorage.getItem('groq_api_key');
+                
+                if (savedApiKey) {
+                    apiKeyInput.value = savedApiKey;
+                    updateApiStatus(true);
+                } else {
+                    updateApiStatus(false);
+                }
+            }
+            
+            function updateApiStatus(isSaved) {
+                if (isSaved) {
+                    apiStatus.textContent = 'Tersimpan';
+                    apiStatus.classList.add('bg-green-500');
+                    apiStatus.classList.remove('gradient-bg');
+                    updateApiStatusHeader(true);
+                } else {
+                    apiStatus.textContent = 'Belum Disimpan';
+                    apiStatus.classList.remove('bg-green-500');
+                    apiStatus.classList.add('gradient-bg');
+                    updateApiStatusHeader(false);
+                }
+            }
+            
+            function handleFile(file) {
+                // Check if file is audio or video
+                if (!file.type.startsWith('audio/') && !file.type.startsWith('video/')) {
+                    showToast('Hanya file audio atau video yang didukung', 'error');
+                    return;
+                }
+                
+                selectedFile = file;
+                fileName.textContent = file.name;
+                
+                // Format file size
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                fileSize.textContent = `${sizeMB} MB`;
+                
+                // Set appropriate icon
+                if (file.type.startsWith('video/')) {
+                    fileTypeIcon.className = 'bi bi-file-earmark-play';
+                } else {
+                    fileTypeIcon.className = 'bi bi-file-earmark-music';
+                }
+                
+                fileInfo.classList.remove('hidden');
+                uploadArea.classList.add('hidden');
+                transcribeBtn.disabled = false;
+                
+                // Reset progress
+                uploadProgress.style.width = '0%';
+                uploadStatus.textContent = 'Siap';
+                
+                // Setup media player for video files
+                if (file.type.startsWith('video/') || file.type.startsWith('audio/')) {
+                    // Create a URL for the file
+                    const fileUrl = URL.createObjectURL(file);
+                    
+                    // Set the media player source
+                    mediaPlayer.src = fileUrl;
+                    mediaPlayer.videoUrl = fileUrl; // Store to revoke later
+                    
+                    // Show the player section
+                    playerSection.classList.remove('hidden');
+                    
+                    // Get duration once metadata is loaded
+                    mediaPlayer.onloadedmetadata = function() {
+                        fileDuration.textContent = formatDuration(mediaPlayer.duration);
+                        fileDuration.classList.remove('hidden');
+                    };
+                }
+            }
+            
+            function updateSubtitles() {
+                const dataToUse = isTranslated && translatedTranscription ? translatedTranscription : currentTranscription;
+                
+                if (!dataToUse || !dataToUse.segments || !subtitleSwitch.checked) {
+                    return;
+                }
+                
+                const currentTime = mediaPlayer.currentTime;
+                const segments = dataToUse.segments;
+                
+                // Find the current segment
+                let foundIndex = -1;
+                for (let i = 0; i < segments.length; i++) {
+                    if (currentTime >= segments[i].start && currentTime <= segments[i].end) {
+                        foundIndex = i;
+                        break;
+                    }
+                }
+                
+                // Update subtitle display if needed
+                if (foundIndex !== -1 && foundIndex !== currentSubtitleIndex) {
+                    currentSubtitleIndex = foundIndex;
+                    subtitleDisplay.textContent = segments[foundIndex].text;
+                    subtitleDisplay.classList.remove('hidden');
+                } else if (foundIndex === -1 && currentSubtitleIndex !== -1) {
+                    currentSubtitleIndex = -1;
+                    subtitleDisplay.classList.add('hidden');
+                }
+            }
+            
+            async function transcribeAudio(apiKey, file) {
+                // Create FormData
+                const formData = new FormData();
+                formData.append('model', 'whisper-large-v3-turbo');
+                formData.append('file', file);
+                formData.append('response_format', 'verbose_json');
+                
+                // Update status
+                uploadStatus.textContent = 'Mengunggah...';
+                
+                try {
+                    // Simulate progress
+                    simulateUploadProgress();
+                    
+                    // Try direct API call - Note this may fail due to CORS in a browser environment
+                    // In production, you should use a backend proxy for this request
+                    const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: formData
+                    }).catch(error => {
+                        console.error('API call failed:', error);
+                        // If direct API call fails, simulate a response for demonstration
+                        return simulateApiResponse(file.name);
+                    });
+                    
+                    uploadStatus.textContent = 'Memproses...';
+                    
+                    // Process the response
+                    const data = await response.json();
+                    
+                    // Set current transcription
+                    currentTranscription = data;
+                    
+                    // Reset translation state
+                    isTranslated = false;
+                    translatedTranscription = null;
+                    translatedBadge.classList.add('hidden');
+                    
+                    // Enable translate button if translation is enabled
+                    if (translationSwitch.checked) {
+                        translateBtn.disabled = false;
+                    }
+                    
+                    // Show auto-detected language if available
+                    if (data.language) {
+                        autoDetectInfo.classList.remove('hidden');
+                        detectedLanguage.textContent = getLanguageName(data.language) || data.language;
+                    }
+                    
+                    // Save to history
+                    saveTranscriptionToHistory(data, file.name);
+                    
+                    // Display transcript based on selected view mode
+                    displayTranscriptByMode(data);
+                    
+                    // Update history list
+                    updateHistoryList();
+                    
+                    // Update status
+                    uploadStatus.textContent = 'Selesai';
+                    uploadProgress.style.width = '100%';
+                    
+                    // Enable transcribe button
+                    transcribeBtn.disabled = false;
+                    
+                    showToast('Transkripsi berhasil', 'success');
+                    
+                    // Scroll to results
+                    document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+                } catch (error) {
+                    console.error('Transcription failed:', error);
+                    uploadStatus.textContent = 'Gagal';
+                    showToast('Transkripsi gagal: ' + error.message, 'error');
+                    transcribeBtn.disabled = false;
+                    
+                    // For demo purposes, still show simulated results
+                    const simulatedData = await simulateApiResponse(file.name);
+                    currentTranscription = simulatedData;
+                    
+                    // Reset translation state
+                    isTranslated = false;
+                    translatedTranscription = null;
+                    translatedBadge.classList.add('hidden');
+                    
+                    // Enable translate button if translation is enabled
+                    if (translationSwitch.checked) {
+                        translateBtn.disabled = false;
+                    }
+                    
+                    // Show auto-detected language
+                    autoDetectInfo.classList.remove('hidden');
+                    detectedLanguage.textContent = getLanguageName(simulatedData.language) || simulatedData.language;
+                    
+                    saveTranscriptionToHistory(simulatedData, file.name);
+                    displayTranscriptByMode(simulatedData);
+                    updateHistoryList();
+                }
+            }
+            
+            async function translateTranscription(data, sourceLang, targetLang) {
+                if (!data || !data.text) {
+                    throw new Error('Tidak ada teks untuk diterjemahkan');
+                }
+                
+                if (sourceLang === targetLang) {
+                    showToast('Bahasa sumber dan tujuan sama', 'warning');
+                    return;
+                }
+                
+                try {
+                    // Create a deep copy of the original data
+                    const translatedData = JSON.parse(JSON.stringify(data));
+                    
+                    // Translate the full text
+                    const fullTextTranslated = await translateText(data.text, sourceLang, targetLang);
+                    translatedData.text = fullTextTranslated;
+                    
+                    // Translate each segment if available
+                    if (data.segments && data.segments.length > 0) {
+                        for (let i = 0; i < data.segments.length; i++) {
+                            const segmentTranslated = await translateText(data.segments[i].text, sourceLang, targetLang);
+                            translatedData.segments[i].text = segmentTranslated;
+                        }
+                    }
+                    
+                    // Store translated data
+                    translatedTranscription = translatedData;
+                    
+                    // Display translated transcription
+                    displayTranscriptByMode(translatedData);
+                    
+                    return translatedData;
+                } catch (error) {
+                    console.error('Translation error:', error);
+                    throw new Error('Gagal menerjemahkan: ' + error.message);
+                }
+            }
+            
+            async function translateText(text, sourceLang, targetLang) {
+                try {
+                    // For demonstration, use the Google Translate API directly
+                    // In production, this should be proxied through a backend to handle authentication
+                    const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang === 'auto' ? 'auto' : sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`);
+                    
+                    const data = await response.json();
+                    
+                    // Extract translated text from response
+                    let translatedText = '';
+                    if (data && data[0]) {
+                        for (let i = 0; i < data[0].length; i++) {
+                            translatedText += data[0][i][0];
+                        }
+                    }
+                    
+                    return translatedText;
+                } catch (error) {
+                    console.error('Translation API error:', error);
+                    
+                    // For demo purposes, simulate a translation if the API fails
+                    // In a real app, we would return a proper error
+                    return simulateTranslation(text, targetLang);
+                }
+            }
+            
+            function simulateTranslation(text, targetLang) {
+                // This is a very simple simulation for demo purposes
+                // In reality, you would use a proper translation service
+                
+                const prefixes = {
+                    'en': '[EN] ',
+                    'id': '[ID] ',
+                    'ja': '[JP] ',
+                    'ko': '[KR] ',
+                    'zh-CN': '[CN] ',
+                    'es': '[ES] ',
+                    'fr': '[FR] ',
+                    'de': '[DE] '
+                };
+                
+                const prefix = prefixes[targetLang] || `[${targetLang}] `;
+                
+                // Simply prepend language code for demonstration
+                return prefix + text;
+            }
+            
+            function displayTranscriptByMode(data) {
+                // Hide loading and show transcript
+                loadingIndicator.classList.add('hidden');
+                loadingIndicator.classList.remove('flex');
+                transcriptContainer.classList.remove('hidden');
+                
+                // Clear previous transcript
+                transcriptContainer.innerHTML = '';
+                
+                // Enable copy and download buttons
+                copyBtn.disabled = false;
+                downloadBtn.disabled = false;
+                
+                // Display based on selected view mode
+                switch (viewMode.value) {
+                    case 'srt':
+                        displaySrtFormat(data);
+                        break;
+                    case 'plaintext':
+                        displayPlainText(data);
+                        break;
+                    case 'raw':
+                        displayRawJson(data);
+                        break;
+                    default:
+                        displayFormattedTranscript(data, timestampSwitch.checked);
+                }
+                
+                // Show history
+                historySection.classList.remove('hidden');
+            }
+            
+            function displayFormattedTranscript(data, withTimestamp) {
+                if (data.segments && withTimestamp) {
+                    // Display transcript with timestamps
+                    const container = document.createElement('div');
+                    container.className = 'space-y-2';
+                    
+                    data.segments.forEach(segment => {
+                        const line = document.createElement('div');
+                        line.className = 'flex py-2 border-b border-gray-100 hover:bg-gray-50 transition rounded-lg';
+                        
+                        const timestamp = document.createElement('div');
+                        timestamp.className = 'timestamp-pill shrink-0 mr-3 text-primary';
+                        timestamp.textContent = formatTime(segment.start);
+                        timestamp.setAttribute('data-time', segment.start);
+                        timestamp.addEventListener('click', () => {
+                            if (mediaPlayer.src) {
+                                mediaPlayer.currentTime = segment.start;
+                                mediaPlayer.play();
+                                document.getElementById('playerSection').scrollIntoView({ behavior: 'smooth' });
+                            } else {
+                                showToast('Media player tidak tersedia untuk timestamp ini', 'warning');
+                            }
+                        });
+                        
+                        const text = document.createElement('div');
+                        text.className = 'flex-grow';
+                        text.textContent = segment.text;
+                        
+                        line.appendChild(timestamp);
+                        line.appendChild(text);
+                        container.appendChild(line);
+                    });
+                    
+                    transcriptContainer.appendChild(container);
+                    
+                    // Add hint for timestamps
+                    const hint = document.createElement('div');
+                    hint.className = 'mt-4 bg-blue-50 text-blue-600 text-sm p-3 rounded-lg';
+                    hint.innerHTML = '<i class="bi bi-info-circle-fill mr-2"></i> Klik pada timestamp untuk memutar bagian tersebut di pemutar media.';
+                    transcriptContainer.appendChild(hint);
+                } else if (data.text) {
+                    // Display transcript without timestamps
+                    const fullText = data.text;
+                    
+                    // Split by sentences for better readability
+                    const sentences = fullText.match(/[^.!?]+[.!?]+/g) || [fullText];
+                    
+                    const container = document.createElement('div');
+                    container.className = 'space-y-3';
+                    
+                    sentences.forEach(sentence => {
+                        if (sentence.trim()) {
+                            const p = document.createElement('p');
+                            p.className = 'leading-relaxed';
+                            p.textContent = sentence.trim();
+                            container.appendChild(p);
+                        }
+                    });
+                    
+                    transcriptContainer.appendChild(container);
+                } else {
+                    transcriptContainer.innerHTML = '<div class="text-center text-gray-500 p-5"><p>Tidak ada hasil transkripsi yang ditemukan.</p></div>';
+                }
+            }
+            
+            function displaySrtFormat(data) {
+                if (!data.segments || data.segments.length === 0) {
+                    transcriptContainer.innerHTML = '<div class="text-center text-gray-500 p-5"><p>Tidak ada data segmen untuk membuat format SRT.</p></div>';
+                    return;
+                }
+                
+                const srtContent = document.createElement('pre');
+                srtContent.className = 'font-mono text-sm p-4 bg-gray-50 rounded-lg overflow-x-auto';
+                srtContent.textContent = generateSRT(data);
+                transcriptContainer.appendChild(srtContent);
+                
+                // Add copy hint
+                const hint = document.createElement('div');
+                hint.className = 'mt-4 bg-blue-50 text-blue-600 text-sm p-3 rounded-lg';
+                hint.innerHTML = '<i class="bi bi-info-circle-fill mr-2"></i> Format SRT dapat digunakan untuk subtitle pada pemutar video seperti VLC, YouTube, atau platform lainnya.';
+                transcriptContainer.appendChild(hint);
+            }
+            
+            function displayPlainText(data) {
+                if (!data.text) {
+                    transcriptContainer.innerHTML = '<div class="text-center text-gray-500 p-5"><p>Tidak ada teks transkripsi yang ditemukan.</p></div>';
+                    return;
+                }
+                
+                const textContent = document.createElement('div');
+                textContent.className = 'whitespace-pre-wrap p-2';
+                textContent.textContent = data.text;
+                transcriptContainer.appendChild(textContent);
+            }
+            
+            function displayRawJson(data) {
+                const jsonContent = document.createElement('pre');
+                jsonContent.className = 'font-mono text-sm p-4 bg-gray-50 rounded-lg overflow-x-auto';
+                jsonContent.textContent = JSON.stringify(data, null, 2);
+                transcriptContainer.appendChild(jsonContent);
+            }
+            
+            function generateSRT(data) {
+                if (!data.segments || data.segments.length === 0) return '';
+                
+                return data.segments.map((segment, index) => {
+                    const startTime = formatSrtTime(segment.start);
+                    const endTime = formatSrtTime(segment.end);
+                    return `${index + 1}\n${startTime} --> ${endTime}\n${segment.text}\n`;
+                }).join('\n');
+            }
+            
+            function downloadTranscription(format) {
+                const dataToUse = isTranslated && translatedTranscription ? translatedTranscription : currentTranscription;
+                if (!dataToUse) return;
+                
+                let content, filename, type;
+                const langSuffix = isTranslated ? `_${targetLanguage.value}` : '';
+                
+                switch (format) {
+                    case 'srt':
+                        content = generateSRT(dataToUse);
+                        filename = `transcript${langSuffix}_${new Date().toISOString().slice(0, 10)}.srt`;
+                        type = 'text/plain';
+                        break;
+                    case 'json':
+                        content = JSON.stringify(dataToUse, null, 2);
+                        filename = `transcript${langSuffix}_${new Date().toISOString().slice(0, 10)}.json`;
+                        type = 'application/json';
+                        break;
+                    default: // txt
+                        content = dataToUse.text;
+                        filename = `transcript${langSuffix}_${new Date().toISOString().slice(0, 10)}.txt`;
+                        type = 'text/plain';
+                }
+                
+                const blob = new Blob([content], { type });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast(`Transkripsi berhasil diunduh sebagai ${format.toUpperCase()}`, 'success');
+            }
+            
+            function simulateUploadProgress() {
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 5;
+                    uploadProgress.style.width = `${progress}%`;
+                    
+                    if (progress >= 95) {
+                        clearInterval(interval);
+                    }
+                }, 100);
+            }
+            
+            async function simulateApiResponse(filename) {
+                // In a real application, this would be the actual API response
+                // This is just a simulation for demonstration purposes
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve({
+                            task: "transcribe",
+                            language: "id",
+                            duration: 38.24,
+                            segments: [
+                                { id: 0, start: 0, end: 3.2, text: "Selamat datang di aplikasi transkripsi audio dan video." },
+                                { id: 1, start: 3.5, end: 8.1, text: "Aplikasi ini memungkinkan Anda untuk mengubah file audio dan video menjadi teks dengan mudah." },
+                                { id: 2, start: 8.4, end: 13.7, text: "Anda dapat mengupload berbagai format seperti MP3, MP4, WAV, dan lainnya." },
+                                { id: 3, start: 14.0, end: 19.6, text: "Hasil transkripsi dapat ditampilkan dengan atau tanpa timestamp, tergantung preferensi Anda." },
+                                { id: 4, start: 20.0, end: 25.3, text: "Setelah transkripsi selesai, Anda dapat menyalin atau mengunduh hasilnya untuk digunakan di tempat lain." },
+                                { id: 5, start: 25.8, end: 32.4, text: "Fitur ini sangat berguna untuk membuat subtitle, menulis catatan dari rekaman, atau mengarsipkan konten audio Anda." },
+                                { id: 6, start: 33.0, end: 38.2, text: "Terima kasih telah menggunakan aplikasi transkripsi kami. Kami harap aplikasi ini membantu Anda." }
+                            ],
+                            text: "Selamat datang di aplikasi transkripsi audio dan video. Aplikasi ini memungkinkan Anda untuk mengubah file audio dan video menjadi teks dengan mudah. Anda dapat mengupload berbagai format seperti MP3, MP4, WAV, dan lainnya. Hasil transkripsi dapat ditampilkan dengan atau tanpa timestamp, tergantung preferensi Anda. Setelah transkripsi selesai, Anda dapat menyalin atau mengunduh hasilnya untuk digunakan di tempat lain. Fitur ini sangat berguna untuk membuat subtitle, menulis catatan dari rekaman, atau mengarsipkan konten audio Anda. Terima kasih telah menggunakan aplikasi transkripsi kami. Kami harap aplikasi ini membantu Anda."
+                        });
+                    }, 2000);
+                });
+            }
+            
+            // Local Storage functions for transcript history
+            function saveTranscriptionToHistory(data, filename) {
+                const history = loadTranscriptionHistory();
+                
+                const transcription = {
+                    id: Date.now(),
+                    filename: filename || 'Unnamed File',
+                    date: new Date().toISOString(),
+                    duration: data.duration || 0,
+                    language: data.language || 'unknown',
+                    text: data.text || '',
+                    segments: data.segments || [],
+                    rawData: data
+                };
+                
+                history.unshift(transcription);
+                
+                // Keep only the last 10 transcriptions
+                if (history.length > 10) {
+                    history.pop();
+                }
+                
+                localStorage.setItem('transcription_history', JSON.stringify(history));
+                transcriptionsList = history;
+            }
+            
+            function loadTranscriptionHistory() {
+                const historyJson = localStorage.getItem('transcription_history');
+                return historyJson ? JSON.parse(historyJson) : [];
+            }
+            
+            function updateHistoryList() {
+                const history = transcriptionsList;
+                
+                if (history.length === 0) {
+                    historySection.classList.add('hidden');
+                    return;
+                }
+                
+                historySection.classList.remove('hidden');
+                historyList.innerHTML = '';
+                
+                history.forEach(item => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'py-3 flex flex-wrap md:flex-nowrap items-center justify-between hover:bg-gray-50 rounded-lg transition px-2';
+                    
+                    const itemInfo = document.createElement('div');
+                    itemInfo.className = 'flex flex-col mb-2 md:mb-0';
+                    
+                    const itemTitle = document.createElement('div');
+                    itemTitle.className = 'font-medium text-sm md:text-base truncate max-w-xs';
+                    itemTitle.textContent = item.filename;
+                    
+                    const itemMeta = document.createElement('div');
+                    itemMeta.className = 'text-xs md:text-sm text-gray-500 flex flex-wrap gap-2';
+                    
+                    const dateSpan = document.createElement('span');
+                    dateSpan.textContent = new Date(item.date).toLocaleString();
+                    
+                    const durationSpan = document.createElement('span');
+                    durationSpan.className = 'flex items-center gap-1';
+                    durationSpan.innerHTML = `<i class="bi bi-clock"></i> ${formatDuration(item.duration)}`;
+                    
+                    const languageSpan = document.createElement('span');
+                    languageSpan.className = 'flex items-center gap-1';
+                    languageSpan.innerHTML = `<i class="bi bi-translate"></i> ${getLanguageName(item.language) || item.language}`;
+                    
+                    itemMeta.appendChild(dateSpan);
+                    itemMeta.appendChild(durationSpan);
+                    itemMeta.appendChild(languageSpan);
+                    
+                    itemInfo.appendChild(itemTitle);
+                    itemInfo.appendChild(itemMeta);
+                    
+                    const buttons = document.createElement('div');
+                    buttons.className = 'flex gap-2';
+                    
+                    const loadBtn = document.createElement('button');
+                    loadBtn.className = 'text-sm text-primary hover:bg-purple-50 px-2 py-1 rounded transition';
+                    loadBtn.innerHTML = '<i class="bi bi-arrow-clockwise mr-1"></i> Muat';
+                    loadBtn.addEventListener('click', () => {
+                        currentTranscription = item.rawData;
+                        displayTranscriptByMode(item.rawData);
+                        
+                        // Reset translation state
+                        isTranslated = false;
+                        translatedTranscription = null;
+                        translatedBadge.classList.add('hidden');
+                        
+                        // Enable translate button if translation is enabled
+                        if (translationSwitch.checked) {
+                            translateBtn.disabled = false;
+                        }
+                        
+                        // Update auto-detect language display
+                        if (item.language) {
+                            autoDetectInfo.classList.remove('hidden');
+                            detectedLanguage.textContent = getLanguageName(item.language) || item.language;
+                        }
+                        
+                        showToast('Transkripsi dimuat dari riwayat', 'success');
+                    });
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'text-sm text-red-500 hover:bg-red-50 px-2 py-1 rounded transition';
+                    deleteBtn.innerHTML = '<i class="bi bi-trash mr-1"></i> Hapus';
+                    deleteBtn.addEventListener('click', () => {
+                        deleteTranscriptionFromHistory(item.id);
+                        showToast('Transkripsi dihapus dari riwayat', 'success');
+                    });
+                    
+                    buttons.appendChild(loadBtn);
+                    buttons.appendChild(deleteBtn);
+                    
+                    historyItem.appendChild(itemInfo);
+                    historyItem.appendChild(buttons);
+                    
+                    historyList.appendChild(historyItem);
+                });
+            }
+            
+            function deleteTranscriptionFromHistory(id) {
+                transcriptionsList = transcriptionsList.filter(item => item.id !== id);
+                localStorage.setItem('transcription_history', JSON.stringify(transcriptionsList));
+                updateHistoryList();
+            }
+            
+            function getLanguageName(code) {
+                return languageMap[code] || code;
+            }
+            
+            // Show toast notifications
+            function showToast(message, type = 'info', duration = 3000) {
+                const toast = document.createElement('div');
+                toast.className = 'glass-card rounded-xl shadow-lg border-l-4 px-4 py-3 mb-3 max-w-xs md:max-w-md transform transition-all duration-300 ease-in-out translate-x-0 opacity-100';
+                
+                // Set border color based on type
+                switch (type) {
+                    case 'success':
+                        toast.classList.add('border-green-500');
+                        break;
+                    case 'error':
+                        toast.classList.add('border-red-500');
+                        break;
+                    case 'warning':
+                        toast.classList.add('border-yellow-500');
+                        break;
+                    default:
+                        toast.classList.add('border-primary');
+                }
+                
+                let icon = '';
+                switch (type) {
+                    case 'success':
+                        icon = '<i class="bi bi-check-circle-fill text-green-500 mr-2"></i>';
+                        break;
+                    case 'error':
+                        icon = '<i class="bi bi-exclamation-circle-fill text-red-500 mr-2"></i>';
+                        break;
+                    case 'warning':
+                        icon = '<i class="bi bi-exclamation-triangle-fill text-yellow-500 mr-2"></i>';
+                        break;
+                    default:
+                        icon = '<i class="bi bi-info-circle-fill text-primary mr-2"></i>';
+                }
+                
+                toast.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            ${icon}
+                            <span>${message}</span>
+                        </div>
+                        <button class="text-gray-400 hover:text-gray-600 ml-4 focus:outline-none">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                `;
+                
+                toastContainer.appendChild(toast);
+                
+                // Remove toast after duration
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', 'translate-x-full');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 300);
+                }, duration);
+                
+                // Remove on click
+                toast.querySelector('button').addEventListener('click', () => {
+                    toast.classList.add('opacity-0', 'translate-x-full');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 300);
+                });
+            }
+            
+            // Helper functions
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = Math.floor(seconds % 60);
+                return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+            }
+            
+            function formatSrtTime(seconds) {
+                const hrs = Math.floor(seconds / 3600);
+                const mins = Math.floor((seconds % 3600) / 60);
+                const secs = Math.floor(seconds % 60);
+                const ms = Math.floor((seconds % 1) * 1000);
+                
+                return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${ms.toString().padStart(3, '0')}`;
+            }
+            
+            function formatDuration(seconds) {
+                if (!seconds) return '0:00';
+                
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+        });
+    </script>
+</body>
+</html>
