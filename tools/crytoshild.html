@@ -1,0 +1,2938 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CryptoShield - Enkripsi dan Dekripsi Aman</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.5.23/jsrsasign-all-min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        /* Color Palette */
+        --primary-color: #3a86ff;
+        --primary-dark: #2667cc;
+        --primary-light: #73a9ff;
+        --secondary-color: #8338ec;
+        --success-color: #06d6a0;
+        --warning-color: #ff006e;
+        --error-color: #ef476f;
+        --info-color: #118ab2;
+        
+        /* Neutral Colors */
+        --white: #ffffff;
+        --light-gray-1: #f8f9fa;
+        --light-gray-2: #e9ecef;
+        --light-gray-3: #dee2e6;
+        --medium-gray-1: #ced4da;
+        --medium-gray-2: #adb5bd;
+        --dark-gray-1: #6c757d;
+        --dark-gray-2: #495057;
+        --dark-gray-3: #343a40;
+        --black: #212529;
+        
+        /* Typography */
+        --body-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        --mono-font: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        
+        /* Spacing */
+        --space-xs: 0.25rem;
+        --space-sm: 0.5rem;
+        --space-md: 1rem;
+        --space-lg: 1.5rem;
+        --space-xl: 2rem;
+        --space-xxl: 3rem;
+        
+        /* Element sizing */
+        --border-radius-sm: 0.25rem;
+        --border-radius-md: 0.5rem;
+        --border-radius-lg: 0.75rem;
+        --border-radius-xl: 1rem;
+        
+        /* Shadows */
+        --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+        --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+        --shadow-xl: 0 15px 25px rgba(0, 0, 0, 0.15);
+        
+        /* Animations */
+        --transition-fast: 150ms ease;
+        --transition-normal: 250ms ease;
+        --transition-slow: 350ms ease;
+        
+        /* Z-index levels */
+        --z-dropdown: 1000;
+        --z-sticky: 1020;
+        --z-fixed: 1030;
+        --z-modal-backdrop: 1040;
+        --z-modal: 1050;
+        --z-popover: 1060;
+        --z-tooltip: 1070;
+      }
+
+      /* Light/Dark mode custom properties */
+      body.light-mode {
+        --bg-color: var(--light-gray-1);
+        --content-bg: var(--white);
+        --text-color: var(--dark-gray-3);
+        --text-secondary: var(--dark-gray-1);
+        --border-color: var(--light-gray-3);
+        --input-bg: var(--white);
+        --input-border: var(--light-gray-3);
+        --input-text: var(--dark-gray-3);
+        --icon-color: var(--dark-gray-2);
+        --card-bg: var(--white);
+        --header-bg: var(--white);
+        --tab-bg: var(--light-gray-2);
+        --tab-active-bg: var(--primary-color);
+        --tab-active-text: var(--white);
+        --tooltip-bg: var(--dark-gray-3);
+        --tooltip-text: var(--white);
+      }
+
+      body.dark-mode {
+        --bg-color: #121212;
+        --content-bg: #1e1e1e;
+        --text-color: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --border-color: #333333;
+        --input-bg: #2a2a2a;
+        --input-border: #3a3a3a;
+        --input-text: #e0e0e0;
+        --icon-color: #a0a0a0;
+        --card-bg: #2a2a2a;
+        --header-bg: #1e1e1e;
+        --tab-bg: #252525;
+        --tab-active-bg: var(--primary-color);
+        --tab-active-text: var(--white);
+        --tooltip-bg: var(--light-gray-1);
+        --tooltip-text: var(--dark-gray-3);
+      }
+
+      /* Base Styles */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        font-size: 16px;
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: var(--body-font);
+        line-height: 1.6;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: background-color var(--transition-normal), color var(--transition-normal);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+      }
+
+      /* Typography */
+      h1, h2, h3, h4, h5, h6 {
+        margin-top: 0;
+        margin-bottom: var(--space-md);
+        font-weight: 600;
+        line-height: 1.3;
+      }
+
+      h1 {
+        font-size: 2.25rem;
+        letter-spacing: -0.025em;
+      }
+
+      h2 {
+        font-size: 1.75rem;
+        letter-spacing: -0.015em;
+      }
+
+      h3 {
+        font-size: 1.5rem;
+      }
+
+      p {
+        margin-top: 0;
+        margin-bottom: var(--space-md);
+      }
+
+      a {
+        color: var(--primary-color);
+        text-decoration: none;
+        transition: color var(--transition-fast);
+      }
+
+      a:hover {
+        color: var(--primary-dark);
+        text-decoration: underline;
+      }
+
+      /* Container & Layout */
+      .container {
+        width: 100%;
+        padding-right: var(--space-md);
+        padding-left: var(--space-md);
+        margin-right: auto;
+        margin-left: auto;
+        max-width: 1200px;
+      }
+
+      .app-container {
+        flex: 1;
+        padding-top: var(--space-lg);
+        padding-bottom: var(--space-xxl);
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: -15px;
+        margin-left: -15px;
+      }
+
+      .col, .col-md-6, .col-lg-4 {
+        position: relative;
+        width: 100%;
+        padding-right: 15px;
+        padding-left: 15px;
+      }
+
+      @media (min-width: 768px) {
+        .col-md-6 {
+          flex: 0 0 50%;
+          max-width: 50%;
+        }
+      }
+
+      @media (min-width: 992px) {
+        .col-lg-4 {
+          flex: 0 0 33.333333%;
+          max-width: 33.333333%;
+        }
+      }
+
+      /* Header & Navbar */
+      .app-header {
+        background-color: var(--header-bg);
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        padding: var(--space-md) 0;
+        position: sticky;
+        top: 0;
+        z-index: var(--z-sticky);
+        transition: background-color var(--transition-normal);
+      }
+
+      .app-header .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .app-logo {
+        display: flex;
+        align-items: center;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-color);
+        text-decoration: none;
+      }
+
+      .app-logo:hover {
+        text-decoration: none;
+        color: var(--primary-color);
+      }
+
+      .app-logo i {
+        margin-right: var(--space-sm);
+        color: var(--primary-color);
+      }
+
+      .app-nav {
+        display: flex;
+        align-items: center;
+      }
+
+      /* Cards & Content Containers */
+      .card {
+        background-color: var(--card-bg);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-md);
+        margin-bottom: var(--space-lg);
+        overflow: hidden;
+        transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+        border: 1px solid var(--border-color);
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .card-header {
+        padding: var(--space-lg) var(--space-lg) var(--space-md);
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .card-header .card-title {
+        margin-bottom: 0;
+        font-weight: 600;
+        color: var(--primary-color);
+      }
+
+      .card-body {
+        padding: var(--space-lg);
+      }
+
+      .card-body:last-child {
+        padding-bottom: var(--space-lg);
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        margin-bottom: var(--space-md);
+        color: var(--primary-color);
+      }
+
+      .section-title i {
+        margin-right: var(--space-sm);
+      }
+
+      /* Tabs & Navigation */
+      .tab-nav {
+        display: flex;
+        background-color: var(--content-bg);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: var(--space-lg);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .tab-link {
+        flex: 1;
+        padding: var(--space-md) var(--space-sm);
+        text-align: center;
+        cursor: pointer;
+        color: var(--text-color);
+        font-weight: 500;
+        background-color: var(--tab-bg);
+        transition: all var(--transition-normal);
+        border: none;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-sm);
+      }
+
+      .tab-link:hover {
+        background-color: var(--primary-light);
+        color: var(--white);
+      }
+
+      .tab-link.active {
+        background-color: var(--tab-active-bg);
+        color: var(--tab-active-text);
+        font-weight: 600;
+      }
+
+      .tab-link i {
+        font-size: 1.1rem;
+      }
+
+      .tab-indicator {
+        position: absolute;
+        bottom: 0;
+        height: 3px;
+        background-color: var(--primary-color);
+        transition: all var(--transition-normal);
+      }
+
+      .tab-content {
+        display: none;
+        animation: fadeIn 0.4s ease forwards;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Forms & Inputs */
+      .form-group {
+        margin-bottom: var(--space-md);
+      }
+
+      label {
+        display: block;
+        margin-bottom: var(--space-sm);
+        font-weight: 500;
+        color: var(--text-color);
+      }
+
+      textarea, 
+      input[type="text"], 
+      input[type="password"], 
+      input[type="email"] {
+        display: block;
+        width: 100%;
+        padding: var(--space-md);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: var(--input-text);
+        background-color: var(--input-bg);
+        background-clip: padding-box;
+        border: 1px solid var(--input-border);
+        border-radius: var(--border-radius-md);
+        transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        font-family: var(--mono-font);
+      }
+
+      textarea:focus, 
+      input[type="text"]:focus, 
+      input[type="password"]:focus, 
+      input[type="email"]:focus {
+        color: var(--input-text);
+        background-color: var(--input-bg);
+        border-color: var(--primary-light);
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(58, 134, 255, 0.25);
+      }
+
+      textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      .input-group {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        width: 100%;
+      }
+
+      .input-group > textarea,
+      .input-group > input {
+        position: relative;
+        flex: 1 1 auto;
+        width: 1%;
+        min-width: 0;
+        margin-bottom: 0;
+      }
+
+      .input-group-append {
+        display: flex;
+        margin-left: -1px;
+      }
+
+      .input-group > textarea:not(:last-child),
+      .input-group > input:not(:last-child) {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+
+      .input-group .btn:not(:first-child) {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+      }
+
+      /* Input Floating Labels */
+      .form-floating {
+        position: relative;
+      }
+
+      .form-floating > input,
+      .form-floating > textarea {
+        height: calc(3.5rem + 2px);
+        padding: var(--space-xl) var(--space-md) var(--space-sm);
+      }
+
+      .form-floating > textarea {
+        height: auto;
+        min-height: calc(3.5rem + 2px);
+      }
+
+      .form-floating > label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        padding: var(--space-md) var(--space-md);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        pointer-events: none;
+        border: 1px solid transparent;
+        transform-origin: 0 0;
+        transition: opacity .1s ease-in-out, transform .1s ease-in-out;
+        color: var(--text-secondary);
+      }
+
+      .form-floating > input:focus ~ label,
+      .form-floating > input:not(:placeholder-shown) ~ label,
+      .form-floating > textarea:focus ~ label,
+      .form-floating > textarea:not(:placeholder-shown) ~ label {
+        opacity: .75;
+        transform: scale(.85) translateY(-0.75rem) translateX(0.15rem);
+      }
+
+      /* Buttons */
+      .btn {
+        display: inline-block;
+        font-weight: 500;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: middle;
+        user-select: none;
+        border: 1px solid transparent;
+        padding: var(--space-sm) var(--space-md);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        border-radius: var(--border-radius-md);
+        transition: all var(--transition-fast);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-sm);
+      }
+
+      .btn i {
+        font-size: 1rem;
+      }
+
+      .btn:focus, .btn:hover {
+        text-decoration: none;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(58, 134, 255, 0.25);
+        transform: translateY(-1px);
+      }
+
+      .btn-sm {
+        padding: var(--space-xs) var(--space-sm);
+        font-size: 0.875rem;
+        border-radius: var(--border-radius-sm);
+      }
+
+      .btn-lg {
+        padding: var(--space-md) var(--space-lg);
+        font-size: 1.125rem;
+        border-radius: var(--border-radius-lg);
+      }
+
+      .btn-primary {
+        color: #fff;
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+      }
+
+      .btn-primary:hover, .btn-primary:focus {
+        background-color: var(--primary-dark);
+        border-color: var(--primary-dark);
+      }
+
+      .btn-success {
+        color: #fff;
+        background-color: var(--success-color);
+        border-color: var(--success-color);
+      }
+
+      .btn-success:hover, .btn-success:focus {
+        background-color: #05b386;
+        border-color: #05b386;
+      }
+
+      .btn-danger {
+        color: #fff;
+        background-color: var(--error-color);
+        border-color: var(--error-color);
+      }
+
+      .btn-danger:hover, .btn-danger:focus {
+        background-color: #e42f5c;
+        border-color: #e42f5c;
+      }
+
+      .btn-warning {
+        color: #fff;
+        background-color: var(--warning-color);
+        border-color: var(--warning-color);
+      }
+
+      .btn-warning:hover, .btn-warning:focus {
+        background-color: #e0005f;
+        border-color: #e0005f;
+      }
+
+      .btn-info {
+        color: #fff;
+        background-color: var(--info-color);
+        border-color: var(--info-color);
+      }
+
+      .btn-info:hover, .btn-info:focus {
+        background-color: #0f78a0;
+        border-color: #0f78a0;
+      }
+
+      .btn-outline-primary {
+        color: var(--primary-color);
+        background-color: transparent;
+        border-color: var(--primary-color);
+      }
+
+      .btn-outline-primary:hover, .btn-outline-primary:focus {
+        color: #fff;
+        background-color: var(--primary-color);
+      }
+
+      .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-md);
+      }
+
+      /* For small screens, stack buttons vertically */
+      @media (max-width: 576px) {
+        .btn-group {
+          flex-direction: column;
+        }
+        
+        .btn-group .btn {
+          width: 100%;
+          margin-bottom: var(--space-xs);
+        }
+      }
+
+      /* Interactive Elements */
+      .badge {
+        display: inline-block;
+        padding: var(--space-xs) var(--space-sm);
+        font-size: 0.75rem;
+        font-weight: 500;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: var(--border-radius-md);
+        transition: all var(--transition-fast);
+      }
+
+      .badge-primary {
+        color: #fff;
+        background-color: var(--primary-color);
+      }
+
+      .badge-success {
+        color: #fff;
+        background-color: var(--success-color);
+      }
+
+      .badge-warning {
+        color: #fff;
+        background-color: var(--warning-color);
+      }
+
+      .badge-danger {
+        color: #fff;
+        background-color: var(--error-color);
+      }
+
+      .badge-info {
+        color: #fff;
+        background-color: var(--info-color);
+      }
+
+      /* Alerts & Notifications */
+      .alert {
+        position: relative;
+        padding: var(--space-md) var(--space-lg);
+        margin-bottom: var(--space-md);
+        border: 1px solid transparent;
+        border-radius: var(--border-radius-md);
+        display: flex;
+        align-items: center;
+      }
+
+      .alert-icon {
+        margin-right: var(--space-md);
+        font-size: 1.25rem;
+      }
+
+      .alert-primary {
+        color: var(--primary-dark);
+        background-color: rgba(58, 134, 255, 0.15);
+        border-color: rgba(58, 134, 255, 0.3);
+      }
+
+      .alert-success {
+        color: #047857;
+        background-color: rgba(6, 214, 160, 0.15);
+        border-color: rgba(6, 214, 160, 0.3);
+      }
+
+      .alert-warning {
+        color: #c20e5a;
+        background-color: rgba(255, 0, 110, 0.15);
+        border-color: rgba(255, 0, 110, 0.3);
+      }
+
+      .alert-danger {
+        color: #be123c;
+        background-color: rgba(239, 71, 111, 0.15);
+        border-color: rgba(239, 71, 111, 0.3);
+      }
+
+      .alert-info {
+        color: #09537a;
+        background-color: rgba(17, 138, 178, 0.15);
+        border-color: rgba(17, 138, 178, 0.3);
+      }
+
+      /* Progress & Loading Indicators */
+      .progress {
+        display: flex;
+        height: 0.5rem;
+        overflow: hidden;
+        font-size: 0.75rem;
+        background-color: var(--light-gray-2);
+        border-radius: var(--border-radius-lg);
+        margin-bottom: var(--space-md);
+      }
+
+      .progress-bar {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        color: #fff;
+        text-align: center;
+        white-space: nowrap;
+        background-color: var(--primary-color);
+        transition: width 0.3s ease;
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 1.5rem;
+        height: 1.5rem;
+        vertical-align: text-bottom;
+        border: 0.2em solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: spinner 0.75s linear infinite;
+      }
+
+      @keyframes spinner {
+        to { transform: rotate(360deg); }
+      }
+
+      /* Toast Notifications */
+      .toast-container {
+        position: fixed;
+        bottom: var(--space-lg);
+        right: var(--space-lg);
+        z-index: var(--z-tooltip);
+      }
+
+      .toast {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        max-width: 350px;
+        padding: var(--space-md);
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--shadow-lg);
+        margin-top: var(--space-md);
+        transform: translateX(150%);
+        transition: transform var(--transition-normal);
+      }
+
+      .toast.show {
+        transform: translateX(0);
+      }
+
+      .toast-success {
+        background-color: var(--success-color);
+        color: white;
+      }
+
+      .toast-error {
+        background-color: var(--error-color);
+        color: white;
+      }
+
+      .toast-warning {
+        background-color: var(--warning-color);
+        color: white;
+      }
+
+      .toast-info {
+        background-color: var(--info-color);
+        color: white;
+      }
+
+      .toast-icon {
+        margin-right: var(--space-md);
+        font-size: 1.25rem;
+      }
+
+      .toast-content {
+        flex-grow: 1;
+      }
+
+      .toast-title {
+        font-weight: 600;
+        margin-bottom: var(--space-xs);
+      }
+
+      .toast-message {
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
+
+      .toast-close {
+        padding: var(--space-xs);
+        background: none;
+        border: none;
+        color: currentColor;
+        opacity: 0.7;
+        cursor: pointer;
+        transition: opacity var(--transition-fast);
+      }
+
+      .toast-close:hover {
+        opacity: 1;
+      }
+
+      /* Copy popup */
+      .copy-tooltip {
+        position: absolute;
+        top: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--tooltip-bg);
+        color: var(--tooltip-text);
+        padding: var(--space-xs) var(--space-sm);
+        border-radius: var(--border-radius-sm);
+        font-size: 0.8rem;
+        opacity: 0;
+        transition: opacity var(--transition-fast);
+        pointer-events: none;
+        z-index: var(--z-tooltip);
+      }
+
+      /* Utilities & Helper Classes */
+      .text-center {
+        text-align: center;
+      }
+
+      .text-end {
+        text-align: right;
+      }
+
+      .mb-0 { margin-bottom: 0 !important; }
+      .mb-1 { margin-bottom: var(--space-xs) !important; }
+      .mb-2 { margin-bottom: var(--space-sm) !important; }
+      .mb-3 { margin-bottom: var(--space-md) !important; }
+      .mb-4 { margin-bottom: var(--space-lg) !important; }
+      .mb-5 { margin-bottom: var(--space-xl) !important; }
+
+      .mt-0 { margin-top: 0 !important; }
+      .mt-1 { margin-top: var(--space-xs) !important; }
+      .mt-2 { margin-top: var(--space-sm) !important; }
+      .mt-3 { margin-top: var(--space-md) !important; }
+      .mt-4 { margin-top: var(--space-lg) !important; }
+      .mt-5 { margin-top: var(--space-xl) !important; }
+
+      .ms-auto { margin-left: auto !important; }
+      .me-auto { margin-right: auto !important; }
+
+      .d-flex { display: flex !important; }
+      .align-items-center { align-items: center !important; }
+      .justify-content-center { justify-content: center !important; }
+      .justify-content-between { justify-content: space-between !important; }
+      .flex-column { flex-direction: column !important; }
+      .flex-grow-1 { flex-grow: 1 !important; }
+
+      .position-relative { position: relative !important; }
+      .position-absolute { position: absolute !important; }
+
+      .w-100 { width: 100% !important; }
+      .h-100 { height: 100% !important; }
+
+      .text-primary { color: var(--primary-color) !important; }
+      .text-success { color: var(--success-color) !important; }
+      .text-warning { color: var(--warning-color) !important; }
+      .text-danger { color: var(--error-color) !important; }
+      .text-info { color: var(--info-color) !important; }
+      .text-muted { color: var(--text-secondary) !important; }
+
+      .bg-primary { background-color: var(--primary-color) !important; }
+      .bg-success { background-color: var(--success-color) !important; }
+      .bg-warning { background-color: var(--warning-color) !important; }
+      .bg-danger { background-color: var(--error-color) !important; }
+      .bg-info { background-color: var(--info-color) !important; }
+
+      .rounded { border-radius: var(--border-radius-md) !important; }
+      .rounded-circle { border-radius: 50% !important; }
+
+      .shadow-sm { box-shadow: var(--shadow-sm) !important; }
+      .shadow { box-shadow: var(--shadow-md) !important; }
+      .shadow-lg { box-shadow: var(--shadow-lg) !important; }
+
+      .overflow-hidden { overflow: hidden !important; }
+      .overflow-auto { overflow: auto !important; }
+
+      /* File upload styling */
+      .file-upload {
+        display: none;
+      }
+
+      .file-upload-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-sm);
+        padding: var(--space-sm) var(--space-md);
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: var(--border-radius-md);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        font-weight: 500;
+        border: 1px solid var(--primary-color);
+      }
+
+      .file-upload-label:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-1px);
+      }
+
+      /* Encryption status */
+      .encryption-status {
+        display: flex;
+        align-items: center;
+        padding: var(--space-md);
+        border-radius: var(--border-radius-md);
+        margin-bottom: var(--space-md);
+        gap: var(--space-sm);
+      }
+
+      .encryption-status.secure {
+        background-color: rgba(6, 214, 160, 0.1);
+        border: 1px solid rgba(6, 214, 160, 0.3);
+        color: #047857;
+      }
+
+      .encryption-status.warning {
+        background-color: rgba(255, 0, 110, 0.1);
+        border: 1px solid rgba(255, 0, 110, 0.3);
+        color: #c20e5a;
+      }
+
+      /* Key strength indicator */
+      .key-strength {
+        height: 5px;
+        background-color: var(--light-gray-2);
+        border-radius: var(--border-radius-sm);
+        overflow: hidden;
+        margin-top: var(--space-xs);
+      }
+
+      .key-strength-bar {
+        height: 100%;
+        transition: width var(--transition-normal);
+      }
+
+      .strength-weak {
+        width: 33%;
+        background-color: var(--error-color);
+      }
+
+      .strength-medium {
+        width: 66%;
+        background-color: var(--warning-color);
+      }
+
+      .strength-strong {
+        width: 100%;
+        background-color: var(--success-color);
+      }
+
+      /* History list */
+      .history-container {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        margin-top: var(--space-md);
+      }
+
+      .history-item {
+        padding: var(--space-md);
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: background-color var(--transition-fast);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .history-item:hover {
+        background-color: rgba(58, 134, 255, 0.1);
+      }
+
+      .history-item:last-child {
+        border-bottom: none;
+      }
+
+      .history-text {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .history-actions {
+        display: flex;
+        gap: var(--space-sm);
+      }
+
+      .history-actions button {
+        background: none;
+        border: none;
+        color: var(--primary-color);
+        cursor: pointer;
+        padding: var(--space-xs);
+        font-size: 0.9rem;
+        opacity: 0.8;
+        transition: opacity var(--transition-fast);
+      }
+
+      .history-actions button:hover {
+        opacity: 1;
+      }
+
+      /* Footer */
+      .app-footer {
+        background-color: var(--card-bg);
+        border-top: 1px solid var(--border-color);
+        padding: var(--space-lg) 0;
+        margin-top: auto;
+        text-align: center;
+      }
+
+      .app-footer p {
+        margin-bottom: 0;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+      }
+
+      /* Theme Toggle Button */
+      .theme-toggle {
+        position: fixed;
+        top: var(--space-lg);
+        right: var(--space-lg);
+        z-index: var(--z-fixed);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        cursor: pointer;
+        box-shadow: var(--shadow-md);
+        transition: transform var(--transition-normal), background-color var(--transition-normal);
+      }
+
+      .theme-toggle:hover {
+        transform: rotate(30deg);
+      }
+
+      .theme-toggle i {
+        color: var(--text-color);
+        font-size: 1.25rem;
+      }
+
+      /* Accordion for RSA keys */
+      .accordion {
+        margin-top: var(--space-md);
+      }
+
+      .accordion-item {
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        overflow: hidden;
+        margin-bottom: var(--space-sm);
+      }
+
+      .accordion-header {
+        margin: 0;
+      }
+
+      .accordion-button {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: var(--space-md);
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-color);
+        background-color: var(--card-bg);
+        border: none;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color var(--transition-fast);
+      }
+
+      .accordion-button:hover {
+        background-color: rgba(58, 134, 255, 0.1);
+      }
+
+      .accordion-button::after {
+        content: '\f078';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        margin-left: auto;
+        transition: transform var(--transition-fast);
+      }
+
+      .accordion-button:not(.collapsed)::after {
+        transform: rotate(180deg);
+      }
+
+      .accordion-collapse {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height var(--transition-normal);
+      }
+
+      .accordion-collapse.show {
+        max-height: 500px;
+      }
+
+      .accordion-body {
+        padding: var(--space-md);
+        border-top: 1px solid var(--border-color);
+      }
+
+      /* Mobile-specific adjustments */
+      @media (max-width: 768px) {
+        :root {
+          --space-md: 0.75rem;
+          --space-lg: 1.25rem;
+          --space-xl: 1.75rem;
+        }
+
+        .container {
+          padding-right: var(--space-sm);
+          padding-left: var(--space-sm);
+        }
+
+        h1 {
+          font-size: 1.75rem;
+        }
+
+        h2 {
+          font-size: 1.5rem;
+        }
+
+        h3 {
+          font-size: 1.25rem;
+        }
+
+        .theme-toggle {
+          top: var(--space-md);
+          right: var(--space-md);
+          width: 36px;
+          height: 36px;
+        }
+
+        .tab-link {
+          padding: var(--space-sm) var(--space-xs);
+          font-size: 0.9rem;
+        }
+
+        .tab-link span {
+          display: none;
+        }
+
+        .tab-link i {
+          margin-right: 0;
+        }
+
+        .card-body {
+          padding: var(--space-md);
+        }
+
+        .toast-container {
+          right: var(--space-sm);
+          left: var(--space-sm);
+          bottom: var(--space-sm);
+        }
+
+        .toast {
+          max-width: 100%;
+        }
+      }
+
+      /* For very small screens (iPhone SE etc) */
+      @media (max-width: 380px) {
+        .app-logo {
+          font-size: 1rem;
+        }
+
+        .btn {
+          padding: var(--space-xs) var(--space-sm);
+          font-size: 0.85rem;
+        }
+
+        .btn i {
+          font-size: 0.9rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body class="light-mode">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="container">
+        <a href="#" class="app-logo">
+          <i class="fas fa-shield-alt"></i>
+          CryptoShield
+        </a>
+        <div class="app-nav">
+          <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light theme">
+            <i class="fas fa-moon"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="app-container">
+      <div class="container">
+        <h1 class="text-center mb-4">Enkripsi dan Dekripsi Aman</h1>
+        <p class="text-center mb-5">Amankan data Anda dengan algoritma kriptografi standar industri menggunakan AES, Triple DES, dan RSA</p>
+
+        <!-- Tabs Navigation -->
+        <div class="tab-nav">
+          <button class="tab-link active" data-tab="aes">
+            <i class="fas fa-lock"></i>
+            <span>AES</span>
+          </button>
+          <button class="tab-link" data-tab="des">
+            <i class="fas fa-key"></i>
+            <span>Triple DES</span>
+          </button>
+          <button class="tab-link" data-tab="rsa">
+            <i class="fas fa-shield-alt"></i>
+            <span>RSA</span>
+          </button>
+          <button class="tab-link" data-tab="history">
+            <i class="fas fa-history"></i>
+            <span>Riwayat</span>
+          </button>
+          <div class="tab-indicator"></div>
+        </div>
+
+        <!-- AES Tab -->
+        <div id="aesTab" class="tab-content active">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">AES Enkripsi</h2>
+                </div>
+                <div class="card-body">
+                  <div class="encryption-status secure">
+                    <i class="fas fa-shield-alt"></i>
+                    <div>AES adalah algoritma enkripsi simetris yang aman dengan kunci 256-bit</div>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="aesInputEnc">Teks untuk dienkripsi</label>
+                    <div class="position-relative">
+                      <textarea id="aesInputEnc" class="form-control" placeholder="Masukkan teks yang ingin dienkripsi"></textarea>
+                      <div id="aesInputEncCount" class="text-muted mt-1" style="font-size: 0.8rem; text-align: right;">0 karakter</div>
+                    </div>
+                  </div>
+                  
+                  <div class="btn-group">
+                    <button class="btn btn-primary" onclick="generateAESKey()">
+                      <i class="fas fa-key"></i> Generate Key
+                    </button>
+                    <button class="btn btn-success" onclick="aesEncrypt()">
+                      <i class="fas fa-lock"></i> Enkripsi
+                    </button>
+                    <label class="file-upload-label">
+                      <i class="fas fa-file-upload"></i> Upload File
+                      <input type="file" class="file-upload" id="aesFileUpload" onchange="handleFileUpload(this, 'aes', 'enc')">
+                    </label>
+                    <button class="btn btn-info" onclick="clearAESEncryptionForm()">
+                      <i class="fas fa-eraser"></i> Clear
+                    </button>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="aesOutputEnc">Hasil Enkripsi</label>
+                    <div class="position-relative">
+                      <textarea id="aesOutputEnc" class="form-control" placeholder="Hasil enkripsi akan muncul di sini" readonly></textarea>
+                      <div class="copy-tooltip" id="aesOutputEncCopyTooltip">Tersalin!</div>
+                      <button class="btn btn-sm btn-primary position-absolute" style="bottom: 10px; right: 10px;" onclick="copyToClipboard('aesOutputEnc')">
+                        <i class="fas fa-copy"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-floating mb-3">
+                        <input type="text" id="aesKeyEnc" class="form-control" placeholder=" ">
+                        <label for="aesKeyEnc">AES Key</label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating mb-3">
+                        <input type="text" id="aesIvEnc" class="form-control" placeholder=" ">
+                        <label for="aesIvEnc">AES IV</label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="key-strength">
+                    <div class="key-strength-bar" id="aesKeyStrength"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">AES Dekripsi</h2>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <label for="aesInputDec">Teks terenkripsi</label>
+                    <textarea id="aesInputDec" class="form-control" placeholder="Masukkan teks terenkripsi yang ingin didekripsi"></textarea>
+                  </div>
+                  
+                  <div class="btn-group">
+                    <button class="btn btn-primary" onclick="aesDecrypt()">
+                      <i class="fas fa-unlock"></i> Dekripsi
+                    </button>
+                    <button class="btn btn-info" onclick="pasteFromClipboard('aesInputDec')">
+                      <i class="fas fa-paste"></i> Paste
+                    </button>
+                    <button class="btn btn-info" onclick="pasteFromEncryption('aesOutputEnc', 'aesInputDec')">
+                      <i class="fas fa-arrow-down"></i> Dari Enkripsi
+                    </button>
+                    <button class="btn btn-warning" onclick="clearAESDecryptionForm()">
+                      <i class="fas fa-eraser"></i> Clear
+                    </button>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="aesOutputDec">Hasil Dekripsi</label>
+                    <div class="position-relative">
+                      <textarea id="aesOutputDec" class="form-control" placeholder="Hasil dekripsi akan muncul di sini" readonly></textarea>
+                      <div class="copy-tooltip" id="aesOutputDecCopyTooltip">Tersalin!</div>
+                      <button class="btn btn-sm btn-primary position-absolute" style="bottom: 10px; right: 10px;" onclick="copyToClipboard('aesOutputDec')">
+                        <i class="fas fa-copy"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-floating mb-3">
+                        <input type="text" id="aesKeyDec" class="form-control" placeholder=" ">
+                        <label for="aesKeyDec">AES Key</label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating mb-3">
+                        <input type="text" id="aesIvDec" class="form-control" placeholder=" ">
+                        <label for="aesIvDec">AES IV</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Triple DES Tab -->
+        <div id="desTab" class="tab-content">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">Triple DES Enkripsi</h2>
+                </div>
+                <div class="card-body">
+                  <div class="encryption-status warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>Triple DES masih aman, tetapi AES direkomendasikan untuk aplikasi baru</div>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="desInputEnc">Teks untuk dienkripsi</label>
+                    <div class="position-relative">
+                      <textarea id="desInputEnc" class="form-control" placeholder="Masukkan teks yang ingin dienkripsi"></textarea>
+                      <div id="desInputEncCount" class="text-muted mt-1" style="font-size: 0.8rem; text-align: right;">0 karakter</div>
+                    </div>
+                  </div>
+                  
+                  <div class="btn-group">
+                    <button class="btn btn-primary" onclick="generateDESKey()">
+                      <i class="fas fa-key"></i> Generate Key
+                    </button>
+                    <button class="btn btn-success" onclick="desEncrypt()">
+                      <i class="fas fa-lock"></i> Enkripsi
+                    </button>
+                    <label class="file-upload-label">
+                      <i class="fas fa-file-upload"></i> Upload File
+                      <input type="file" class="file-upload" id="desFileUpload" onchange="handleFileUpload(this, 'des', 'enc')">
+                    </label>
+                    <button class="btn btn-info" onclick="clearDESEncryptionForm()">
+                      <i class="fas fa-eraser"></i> Clear
+                    </button>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="desOutputEnc">Hasil Enkripsi</label>
+                    <div class="position-relative">
+                      <textarea id="desOutputEnc" class="form-control" placeholder="Hasil enkripsi akan muncul di sini" readonly></textarea>
+                      <div class="copy-tooltip" id="desOutputEncCopyTooltip">Tersalin!</div>
+                      <button class="btn btn-sm btn-primary position-absolute" style="bottom: 10px; right: 10px;" onclick="copyToClipboard('desOutputEnc')">
+                        <i class="fas fa-copy"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-floating mb-3">
+                        <input type="text" id="desKeyEnc" class="form-control" placeholder=" ">
+                        <label for="desKeyEnc">Triple DES Key</label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating mb-3">
+                        <input type="text" id="desIvEnc" class="form-control" placeholder=" ">
+                        <label for="desIvEnc">Triple DES IV</label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="key-strength">
+                    <div class="key-strength-bar" id="desKeyStrength"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">Triple DES Dekripsi</h2>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <label for="desInputDec">Teks terenkripsi</label>
+                    <textarea id="desInputDec" class="form-control" placeholder="Masukkan teks terenkripsi yang ingin didekripsi"></textarea>
+                  </div>
+                  
+                  <div class="btn-group">
+                    <button class="btn btn-primary" onclick="desDecrypt()">
+                      <i class="fas fa-unlock"></i> Dekripsi
+                    </button>
+                    <button class="btn btn-info" onclick="pasteFromClipboard('desInputDec')">
+                      <i class="fas fa-paste"></i> Paste
+                    </button>
+                    <button class="btn btn-info" onclick="pasteFromEncryption('desOutputEnc', 'desInputDec')">
+                      <i class="fas fa-arrow-down"></i> Dari Enkripsi
+                    </button>
+                    <button class="btn btn-warning" onclick="clearDESDecryptionForm()">
+                      <i class="fas fa-eraser"></i> Clear
+                    </button>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="desOutputDec">Hasil Dekripsi</label>
+                    <div class="position-relative">
+                      <textarea id="desOutputDec" class="form-control" placeholder="Hasil dekripsi akan muncul di sini" readonly></textarea>
+                      <div class="copy-tooltip" id="desOutputDecCopyTooltip">Tersalin!</div>
+                      <button class="btn btn-sm btn-primary position-absolute" style="bottom: 10px; right: 10px;" onclick="copyToClipboard('desOutputDec')">
+                        <i class="fas fa-copy"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-floating mb-3">
+                        <input type="text" id="desKeyDec" class="form-control" placeholder=" ">
+                        <label for="desKeyDec">Triple DES Key</label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating mb-3">
+                        <input type="text" id="desIvDec" class="form-control" placeholder=" ">
+                        <label for="desIvDec">Triple DES IV</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RSA Tab -->
+        <div id="rsaTab" class="tab-content">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">RSA Enkripsi</h2>
+                </div>
+                <div class="card-body">
+                  <div class="encryption-status secure">
+                    <i class="fas fa-shield-alt"></i>
+                    <div>RSA adalah algoritma asimetris yang aman dengan pasangan kunci publik/privat</div>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="rsaInputEnc">Teks untuk dienkripsi</label>
+                    <div class="position-relative">
+                      <textarea id="rsaInputEnc" class="form-control" placeholder="Masukkan teks yang ingin dienkripsi"></textarea>
+                      <div id="rsaInputEncCount" class="text-muted mt-1" style="font-size: 0.8rem; text-align: right;">0 karakter</div>
+                    </div>
+                  </div>
+                  
+                  <div class="progress" id="rsaKeyGenProgress" style="display: none;">
+                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                  </div>
+                  
+                  <div class="btn-group">
+                    <button class="btn btn-primary" onclick="generateRSAKey(2048)">
+                      <i class="fas fa-key"></i> 2048-bit Key
+                    </button>
+                    <button class="btn btn-primary" onclick="generateRSAKey(4096)">
+                      <i class="fas fa-key"></i> 4096-bit Key
+                    </button>
+                    <button class="btn btn-success" onclick="rsaEncrypt()">
+                      <i class="fas fa-lock"></i> Enkripsi
+                    </button>
+                    <label class="file-upload-label">
+                      <i class="fas fa-file-upload"></i> Upload File
+                      <input type="file" class="file-upload" id="rsaFileUpload" onchange="handleFileUpload(this, 'rsa', 'enc')">
+                    </label>
+                    <button class="btn btn-info" onclick="clearRSAEncryptionForm()">
+                      <i class="fas fa-eraser"></i> Clear
+                    </button>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="rsaOutputEnc">Hasil Enkripsi</label>
+                    <div class="position-relative">
+                      <textarea id="rsaOutputEnc" class="form-control" placeholder="Hasil enkripsi akan muncul di sini" readonly></textarea>
+                      <div class="copy-tooltip" id="rsaOutputEncCopyTooltip">Tersalin!</div>
+                      <button class="btn btn-sm btn-primary position-absolute" style="bottom: 10px; right: 10px;" onclick="copyToClipboard('rsaOutputEnc')">
+                        <i class="fas fa-copy"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="accordion" id="rsaKeysAccordion">
+                    <div class="accordion-item">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false">
+                          RSA Public Key
+                        </button>
+                      </h2>
+                      <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#rsaKeysAccordion">
+                        <div class="accordion-body">
+                          <textarea id="rsaPublicKeyEnc" class="form-control" placeholder="RSA Public Key" readonly style="height: 150px;"></textarea>
+                          <button class="btn btn-sm btn-info mt-2" onclick="copyToClipboard('rsaPublicKeyEnc')">
+                            <i class="fas fa-copy"></i> Copy Public Key
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="accordion-item">
+                      <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false">
+                          RSA Private Key (Rahasia)
+                        </button>
+                      </h2>
+                      <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#rsaKeysAccordion">
+                        <div class="accordion-body">
+                          <textarea id="rsaPrivateKeyEnc" class="form-control" placeholder="RSA Private Key" readonly style="height: 250px;"></textarea>
+                          <div class="mt-2 d-flex gap-2">
+                            <button class="btn btn-sm btn-info" onclick="copyToClipboard('rsaPrivateKeyEnc')">
+                              <i class="fas fa-copy"></i> Copy Private Key
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="downloadKey('rsaPrivateKeyEnc', 'private_key.pem')">
+                              <i class="fas fa-download"></i> Download Private Key
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">RSA Dekripsi</h2>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <label for="rsaInputDec">Teks terenkripsi</label>
+                    <textarea id="rsaInputDec" class="form-control" placeholder="Masukkan teks terenkripsi yang ingin didekripsi"></textarea>
+                  </div>
+                  
+                  <div class="btn-group">
+                    <button class="btn btn-primary" onclick="rsaDecrypt()">
+                      <i class="fas fa-unlock"></i> Dekripsi
+                    </button>
+                    <button class="btn btn-info" onclick="pasteFromClipboard('rsaInputDec')">
+                      <i class="fas fa-paste"></i> Paste
+                    </button>
+                    <button class="btn btn-info" onclick="pasteFromEncryption('rsaOutputEnc', 'rsaInputDec')">
+                      <i class="fas fa-arrow-down"></i> Dari Enkripsi
+                    </button>
+                    <button class="btn btn-warning" onclick="clearRSADecryptionForm()">
+                      <i class="fas fa-eraser"></i> Clear
+                    </button>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="rsaOutputDec">Hasil Dekripsi</label>
+                    <div class="position-relative">
+                      <textarea id="rsaOutputDec" class="form-control" placeholder="Hasil dekripsi akan muncul di sini" readonly></textarea>
+                      <div class="copy-tooltip" id="rsaOutputDecCopyTooltip">Tersalin!</div>
+                      <button class="btn btn-sm btn-primary position-absolute" style="bottom: 10px; right: 10px;" onclick="copyToClipboard('rsaOutputDec')">
+                        <i class="fas fa-copy"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="rsaPrivateKeyDec">RSA Private Key</label>
+                    <div class="input-group">
+                      <textarea id="rsaPrivateKeyDec" class="form-control" placeholder="Paste Private Key di sini" style="height: 100px;"></textarea>
+                      <button class="btn btn-info" onclick="pasteFromEncryption('rsaPrivateKeyEnc', 'rsaPrivateKeyDec')">
+                        <i class="fas fa-arrow-down"></i>
+                      </button>
+                    </div>
+                    <div class="mt-2">
+                      <label class="file-upload-label">
+                        <i class="fas fa-file-upload"></i> Upload Private Key
+                        <input type="file" class="file-upload" id="rsaPrivateKeyFile" onchange="loadPrivateKeyFile(this)">
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="historyTab" class="tab-content">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Riwayat Enkripsi & Dekripsi</h2>
+            </div>
+            <div class="card-body">
+              <p>Berikut adalah riwayat operasi enkripsi dan dekripsi terbaru Anda. Semua data disimpan secara lokal di browser Anda.</p>
+              
+              <div class="btn-group">
+                <button class="btn btn-danger" onclick="clearHistory()">
+                  <i class="fas fa-trash"></i> Hapus Semua Riwayat
+                </button>
+                <button class="btn btn-info" onclick="exportHistory()">
+                  <i class="fas fa-download"></i> Export Riwayat
+                </button>
+                <button class="btn btn-primary" onclick="importHistory()">
+                  <i class="fas fa-upload"></i> Import Riwayat
+                </button>
+                <input type="file" id="historyImport" class="file-upload" onchange="handleHistoryImport(this)">
+              </div>
+              
+              <div class="history-container" id="historyContainer">
+                <div class="text-center p-3 text-muted">
+                  <i class="fas fa-history fa-2x mb-2"></i>
+                  <p>Belum ada riwayat operasi.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="container">
+        <p>CryptoShield v1.0 &copy; 2025 - Semua data diproses di browser Anda dan tidak dikirim ke server</p>
+      </div>
+    </footer>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+      // Global variables
+      let encryptionHistory = [];
+      const MAX_HISTORY_ITEMS = 50;
+      let darkMode = false;
+
+      // Initialize app
+      document.addEventListener('DOMContentLoaded', function() {
+        // Load history from local storage
+        loadHistory();
+        
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+          enableDarkMode();
+        } else {
+          enableLightMode();
+        }
+
+        // Initialize tabs
+        initializeTabs();
+        
+        // Initialize accordions
+        initializeAccordions();
+        
+        // Setup character counters
+        setupCharacterCounters();
+        
+        // Setup keyboard shortcuts
+        setupKeyboardShortcuts();
+      });
+
+      // Initialize tabs functionality
+      function initializeTabs() {
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const indicator = document.querySelector('.tab-indicator');
+        
+        // Set initial indicator position
+        const activeTab = document.querySelector('.tab-link.active');
+        if (activeTab && indicator) {
+          indicator.style.width = `${activeTab.offsetWidth}px`;
+          indicator.style.left = `${activeTab.offsetLeft}px`;
+        }
+        
+        tabLinks.forEach(link => {
+          link.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-tab');
+            switchTab(tabId);
+          });
+        });
+      }
+
+      // Initialize accordions
+      function initializeAccordions() {
+        const accordionButtons = document.querySelectorAll('.accordion-button');
+        
+        accordionButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-bs-target');
+            const target = document.querySelector(targetId);
+            
+            if (target) {
+              const isExpanded = this.getAttribute('aria-expanded') === 'true';
+              
+              // Close all accordions
+              document.querySelectorAll('.accordion-collapse.show').forEach(el => {
+                el.classList.remove('show');
+                const relatedButton = document.querySelector(`[data-bs-target="#${el.id}"]`);
+                if (relatedButton) {
+                  relatedButton.classList.add('collapsed');
+                  relatedButton.setAttribute('aria-expanded', 'false');
+                }
+              });
+              
+              // Toggle current accordion
+              if (!isExpanded) {
+                target.classList.add('show');
+                this.classList.remove('collapsed');
+                this.setAttribute('aria-expanded', 'true');
+              } else {
+                target.classList.remove('show');
+                this.classList.add('collapsed');
+                this.setAttribute('aria-expanded', 'false');
+              }
+            }
+          });
+        });
+      }
+
+      // Setup character counters
+      function setupCharacterCounters() {
+        const textareas = [
+          { input: 'aesInputEnc', counter: 'aesInputEncCount' },
+          { input: 'desInputEnc', counter: 'desInputEncCount' },
+          { input: 'rsaInputEnc', counter: 'rsaInputEncCount' }
+        ];
+        
+        textareas.forEach(item => {
+          const textarea = document.getElementById(item.input);
+          const counter = document.getElementById(item.counter);
+          
+          if (textarea && counter) {
+            textarea.addEventListener('input', function() {
+              const count = this.value.length;
+              counter.textContent = `${count} karakter`;
+              
+              // Add warning for RSA if text is too long
+              if (item.input === 'rsaInputEnc' && count > 200) {
+                counter.classList.add('text-danger');
+                counter.textContent += ' (terlalu panjang untuk RSA)';
+              } else {
+                counter.classList.remove('text-danger');
+              }
+            });
+          }
+        });
+      }
+
+      // Setup keyboard shortcuts
+      function setupKeyboardShortcuts() {
+        document.addEventListener('keydown', function(e) {
+          // Ctrl+Enter to encrypt/decrypt in the active tab
+          if (e.ctrlKey && e.key === 'Enter') {
+            const activeTab = document.querySelector('.tab-content.active');
+            if (activeTab) {
+              const tabId = activeTab.id;
+              
+              if (tabId === 'aesTab') {
+                if (document.activeElement.id === 'aesInputEnc' || document.activeElement.closest('.card')?.querySelector('#aesInputEnc')) {
+                  aesEncrypt();
+                } else if (document.activeElement.id === 'aesInputDec' || document.activeElement.closest('.card')?.querySelector('#aesInputDec')) {
+                  aesDecrypt();
+                }
+              } else if (tabId === 'desTab') {
+                if (document.activeElement.id === 'desInputEnc' || document.activeElement.closest('.card')?.querySelector('#desInputEnc')) {
+                  desEncrypt();
+                } else if (document.activeElement.id === 'desInputDec' || document.activeElement.closest('.card')?.querySelector('#desInputDec')) {
+                  desDecrypt();
+                }
+              } else if (tabId === 'rsaTab') {
+                if (document.activeElement.id === 'rsaInputEnc' || document.activeElement.closest('.card')?.querySelector('#rsaInputEnc')) {
+                  rsaEncrypt();
+                } else if (document.activeElement.id === 'rsaInputDec' || document.activeElement.closest('.card')?.querySelector('#rsaInputDec')) {
+                  rsaDecrypt();
+                }
+              }
+            }
+          }
+          
+          // Ctrl+C to copy when text is selected in readonly textareas
+          if (e.ctrlKey && e.key === 'c') {
+            const activeElement = document.activeElement;
+            if (activeElement.tagName === 'TEXTAREA' && activeElement.readOnly && window.getSelection().toString()) {
+              copyToClipboard(activeElement.id);
+              e.preventDefault();
+            }
+          }
+        });
+      }
+
+      // Theme toggle
+      document.getElementById('theme-toggle').addEventListener('click', function() {
+        if (document.body.classList.contains('light-mode')) {
+          enableDarkMode();
+        } else {
+          enableLightMode();
+        }
+      });
+
+      function enableDarkMode() {
+        document.body.classList.remove('light-mode');
+        document.body.classList.add('dark-mode');
+        document.querySelector('#theme-toggle i').classList.remove('fa-moon');
+        document.querySelector('#theme-toggle i').classList.add('fa-sun');
+        localStorage.setItem('theme', 'dark');
+        darkMode = true;
+      }
+
+      function enableLightMode() {
+        document.body.classList.remove('dark-mode');
+        document.body.classList.add('light-mode');
+        document.querySelector('#theme-toggle i').classList.remove('fa-sun');
+        document.querySelector('#theme-toggle i').classList.add('fa-moon');
+        localStorage.setItem('theme', 'light');
+        darkMode = false;
+      }
+
+      function switchTab(tabName) {
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const indicator = document.querySelector('.tab-indicator');
+        
+        // Remove active class from all tabs
+        tabLinks.forEach(tab => tab.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        // Add active class to selected tab
+        const activeTabLink = document.querySelector(`.tab-link[data-tab="${tabName}"]`);
+        activeTabLink.classList.add('active');
+        document.getElementById(`${tabName}Tab`).classList.add('active');
+        
+        // Move indicator
+        if (indicator) {
+          indicator.style.width = `${activeTabLink.offsetWidth}px`;
+          indicator.style.left = `${activeTabLink.offsetLeft}px`;
+        }
+      }
+
+      // Generate keys with improved feedback
+      function generateAESKey() {
+        try {
+          // Show loading effect
+          const generateBtn = document.querySelector('.btn-primary[onclick="generateAESKey()"]');
+          const originalText = generateBtn.innerHTML;
+          generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+          generateBtn.disabled = true;
+          
+          setTimeout(() => {
+            const key = CryptoJS.lib.WordArray.random(32);
+            const iv = CryptoJS.lib.WordArray.random(16);
+            document.getElementById("aesKeyEnc").value = key.toString();
+            document.getElementById("aesIvEnc").value = iv.toString();
+            document.getElementById("aesKeyDec").value = key.toString();
+            document.getElementById("aesIvDec").value = iv.toString();
+            
+            // Set key strength indicator
+            document.getElementById("aesKeyStrength").className = "key-strength-bar strength-strong";
+            
+            showToast("success", "AES key dan IV berhasil digenerate", "Kunci AES 256-bit yang kuat telah dibuat");
+            addToHistory({
+              type: "aes",
+              action: "generate_key",
+              timestamp: new Date().toISOString()
+            });
+            
+            // Restore button
+            generateBtn.innerHTML = originalText;
+            generateBtn.disabled = false;
+          }, 500); // Slight delay to show loading effect
+        } catch (error) {
+          showToast("error", "Terjadi kesalahan", "Gagal generate AES key dan IV: " + error.message);
+        }
+      }
+
+      function generateDESKey() {
+        try {
+          // Show loading effect
+          const generateBtn = document.querySelector('.btn-primary[onclick="generateDESKey()"]');
+          const originalText = generateBtn.innerHTML;
+          generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+          generateBtn.disabled = true;
+          
+          setTimeout(() => {
+            const key = CryptoJS.lib.WordArray.random(24);
+            const iv = CryptoJS.lib.WordArray.random(8);
+            document.getElementById("desKeyEnc").value = key.toString();
+            document.getElementById("desIvEnc").value = iv.toString();
+            document.getElementById("desKeyDec").value = key.toString();
+            document.getElementById("desIvDec").value = iv.toString();
+            
+            // Set key strength indicator
+            document.getElementById("desKeyStrength").className = "key-strength-bar strength-medium";
+            
+            showToast("info", "Triple DES key dan IV berhasil digenerate", "Triple DES masih cukup aman, tetapi AES lebih direkomendasikan");
+            addToHistory({
+              type: "des",
+              action: "generate_key",
+              timestamp: new Date().toISOString()
+            });
+            
+            // Restore button
+            generateBtn.innerHTML = originalText;
+            generateBtn.disabled = false;
+          }, 500); // Slight delay to show loading effect
+        } catch (error) {
+          showToast("error", "Terjadi kesalahan", "Gagal generate Triple DES key dan IV: " + error.message);
+        }
+      }
+
+      function generateRSAKey(keySize = 2048) {
+        try {
+          // Show loading and disable buttons
+          const generateBtns = document.querySelectorAll('.btn-primary[onclick^="generateRSAKey"]');
+          const encryptBtn = document.querySelector('.btn-success[onclick="rsaEncrypt()"]');
+          
+          generateBtns.forEach(btn => {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Generating...`;
+          });
+          if (encryptBtn) encryptBtn.disabled = true;
+          
+          // Show progress
+          const progressContainer = document.getElementById('rsaKeyGenProgress');
+          const progressBar = progressContainer.querySelector('.progress-bar');
+          progressContainer.style.display = 'block';
+          progressBar.style.width = '10%';
+          
+          showToast("info", "Generating RSA Keys", "Mohon tunggu, membuat pasangan kunci RSA " + keySize + "-bit...");
+          
+          // Generate keys in a non-blocking way with simulated progress
+          setTimeout(() => {
+            progressBar.style.width = '30%';
+            
+            setTimeout(() => {
+              progressBar.style.width = '60%';
+              
+              setTimeout(() => {
+                progressBar.style.width = '80%';
+                
+                // Actually generate the keys (this is the CPU-intensive part)
+                setTimeout(() => {
+                  try {
+                    const rsaKey = KEYUTIL.generateKeypair("RSA", keySize);
+                    const publicKey = KEYUTIL.getPEM(rsaKey.pubKeyObj);
+                    const privateKey = KEYUTIL.getPEM(rsaKey.prvKeyObj, "PKCS1PRV");
+                    document.getElementById("rsaPublicKeyEnc").value = publicKey;
+                    document.getElementById("rsaPrivateKeyEnc").value = privateKey;
+                    document.getElementById("rsaPrivateKeyDec").value = privateKey;
+                    
+                    progressBar.style.width = '100%';
+                    
+                    setTimeout(() => {
+                      // Hide progress and restore buttons
+                      progressContainer.style.display = 'none';
+                      progressBar.style.width = '0%';
+                      
+                      generateBtns.forEach(btn => {
+                        btn.disabled = false;
+                        btn.innerHTML = btn.getAttribute('onclick').includes('2048') ? 
+                          '<i class="fas fa-key"></i> 2048-bit Key' : 
+                          '<i class="fas fa-key"></i> 4096-bit Key';
+                      });
+                      if (encryptBtn) encryptBtn.disabled = false;
+                      
+                      showToast("success", "RSA key pair berhasil digenerate", `RSA ${keySize}-bit key pair telah dibuat`);
+                      addToHistory({
+                        type: "rsa",
+                        action: "generate_key",
+                        keySize: keySize,
+                        timestamp: new Date().toISOString()
+                      });
+                      
+                      // Auto-expand the public key accordion
+                      const publicKeyAccordion = document.querySelector('[data-bs-target="#collapseOne"]');
+                      if (publicKeyAccordion) {
+                        const event = new Event('click');
+                        publicKeyAccordion.dispatchEvent(event);
+                      }
+                    }, 500);
+                  } catch (error) {
+                    progressContainer.style.display = 'none';
+                    generateBtns.forEach(btn => {
+                      btn.disabled = false;
+                      btn.innerHTML = btn.getAttribute('onclick').includes('2048') ? 
+                        '<i class="fas fa-key"></i> 2048-bit Key' : 
+                        '<i class="fas fa-key"></i> 4096-bit Key';
+                    });
+                    if (encryptBtn) encryptBtn.disabled = false;
+                    
+                    showToast("error", "Terjadi kesalahan", "Gagal generate RSA key pair: " + error.message);
+                  }
+                }, 500);
+              }, 500);
+            }, 500);
+          }, 300);
+        } catch (error) {
+          document.getElementById('rsaKeyGenProgress').style.display = 'none';
+          showToast("error", "Terjadi kesalahan", "Gagal generate RSA key pair: " + error.message);
+        }
+      }
+
+      // Enhanced encryption functions
+      function aesEncrypt() {
+        const plaintext = document.getElementById("aesInputEnc").value;
+        const key = document.getElementById("aesKeyEnc").value;
+        const iv = document.getElementById("aesIvEnc").value;
+
+        if (!plaintext) {
+          showToast("error", "Teks kosong", "Mohon masukkan teks untuk dienkripsi");
+          document.getElementById("aesInputEnc").focus();
+          return;
+        }
+        
+        if (!key || !iv) {
+          // Auto-generate if missing
+          if (!key && !iv) {
+            generateAESKey();
+            setTimeout(() => aesEncrypt(), 600);
+            return;
+          }
+          showToast("error", "Key/IV kosong", "Mohon generate atau masukkan key dan IV");
+          return;
+        }
+
+        try {
+          // Show loading effect
+          const encryptBtn = document.querySelector('.btn-success[onclick="aesEncrypt()"]');
+          encryptBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enkripsi...';
+          encryptBtn.disabled = true;
+          
+          setTimeout(() => {
+            try {
+              const encrypted = CryptoJS.AES.encrypt(
+                plaintext,
+                CryptoJS.enc.Hex.parse(key),
+                {
+                  iv: CryptoJS.enc.Hex.parse(iv),
+                  mode: CryptoJS.mode.CBC,
+                  padding: CryptoJS.pad.Pkcs7,
+                }
+              );
+              document.getElementById("aesOutputEnc").value = encrypted.toString();
+              showToast("success", "Enkripsi berhasil", `Teks (${plaintext.length} karakter) telah dienkripsi dengan AES`);
+              
+              // Add to history
+              addToHistory({
+                type: "aes",
+                action: "encrypt",
+                input: truncateText(plaintext, 20),
+                output: truncateText(encrypted.toString(), 20),
+                timestamp: new Date().toISOString()
+              });
+            } catch (error) {
+              showToast("error", "Terjadi kesalahan", "Gagal enkripsi AES: " + error.message);
+            } finally {
+              // Restore button
+              encryptBtn.innerHTML = '<i class="fas fa-lock"></i> Enkripsi';
+              encryptBtn.disabled = false;
+            }
+          }, 300);
+        } catch (error) {
+          showToast("error", "Terjadi kesalahan", "Gagal enkripsi AES: " + error.message);
+        }
+      }
+
+      function aesDecrypt() {
+        const ciphertext = document.getElementById("aesInputDec").value;
+        const key = document.getElementById("aesKeyDec").value;
+        const iv = document.getElementById("aesIvDec").value;
+
+        if (!ciphertext) {
+          showToast("error", "Teks terenkripsi kosong", "Mohon masukkan teks terenkripsi untuk didekripsi");
+          document.getElementById("aesInputDec").focus();
+          return;
+        }
+        
+        if (!key || !iv) {
+          showToast("error", "Key/IV kosong", "Mohon masukkan key dan IV yang valid");
+          return;
+        }
+
+        try {
+          // Show loading effect
+          const decryptBtn = document.querySelector('.btn-primary[onclick="aesDecrypt()"]');
+          decryptBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Dekripsi...';
+          decryptBtn.disabled = true;
+          
+          setTimeout(() => {
+            try {
+              const decrypted = CryptoJS.AES.decrypt(
+                ciphertext,
+                CryptoJS.enc.Hex.parse(key),
+                {
+                  iv: CryptoJS.enc.Hex.parse(iv),
+                  mode: CryptoJS.mode.CBC,
+                  padding: CryptoJS.pad.Pkcs7,
+                }
+              );
+              const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
+              
+              if (!decryptedText) {
+                throw new Error("Hasil dekripsi kosong. Key/IV mungkin salah.");
+              }
+              
+              document.getElementById("aesOutputDec").value = decryptedText;
+              showToast("success", "Dekripsi berhasil", "Teks terenkripsi telah didekripsi dengan AES");
+              
+              // Add to history
+              addToHistory({
+                type: "aes",
+                action: "decrypt",
+                input: truncateText(ciphertext, 20),
+                output: truncateText(decryptedText, 20),
+                timestamp: new Date().toISOString()
+              });
+            } catch (error) {
+              showToast("error", "Terjadi kesalahan", "Gagal dekripsi AES: " + error.message);
+            } finally {
+              // Restore button
+              decryptBtn.innerHTML = '<i class="fas fa-unlock"></i> Dekripsi';
+              decryptBtn.disabled = false;
+            }
+          }, 300);
+        } catch (error) {
+          showToast("error", "Terjadi kesalahan", "Gagal dekripsi AES: " + error.message);
+        }
+      }
+
+      function desEncrypt() {
+        const plaintext = document.getElementById("desInputEnc").value;
+        const key = document.getElementById("desKeyEnc").value;
+        const iv = document.getElementById("desIvEnc").value;
+
+        if (!plaintext) {
+          showToast("error", "Teks kosong", "Mohon masukkan teks untuk dienkripsi");
+          document.getElementById("desInputEnc").focus();
+          return;
+        }
+        
+        if (!key || !iv) {
+          // Auto-generate if missing
+          if (!key && !iv) {
+            generateDESKey();
+            setTimeout(() => desEncrypt(), 600);
+            return;
+          }
+          showToast("error", "Key/IV kosong", "Mohon generate atau masukkan key dan IV");
+          return;
+        }
+
+        try {
+          // Show loading effect
+          const encryptBtn = document.querySelector('.btn-success[onclick="desEncrypt()"]');
+          encryptBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enkripsi...';
+          encryptBtn.disabled = true;
+          
+          setTimeout(() => {
+            try {
+              const encrypted = CryptoJS.TripleDES.encrypt(
+                plaintext,
+                CryptoJS.enc.Hex.parse(key),
+                {
+                  iv: CryptoJS.enc.Hex.parse(iv),
+                  mode: CryptoJS.mode.CBC,
+                  padding: CryptoJS.pad.Pkcs7,
+                }
+              );
+              document.getElementById("desOutputEnc").value = encrypted.toString();
+              showToast("success", "Enkripsi berhasil", `Teks (${plaintext.length} karakter) telah dienkripsi dengan Triple DES`);
+              
+              // Add to history
+              addToHistory({
+                type: "des",
+                action: "encrypt",
+                input: truncateText(plaintext, 20),
+                output: truncateText(encrypted.toString(), 20),
+                timestamp: new Date().toISOString()
+              });
+            } catch (error) {
+              showToast("error", "Terjadi kesalahan", "Gagal enkripsi Triple DES: " + error.message);
+            } finally {
+              // Restore button
+              encryptBtn.innerHTML = '<i class="fas fa-lock"></i> Enkripsi';
+              encryptBtn.disabled = false;
+            }
+          }, 300);
+        } catch (error) {
+          showToast("error", "Terjadi kesalahan", "Gagal enkripsi Triple DES: " + error.message);
+        }
+      }
+
+      function desDecrypt() {
+        const ciphertext = document.getElementById("desInputDec").value;
+        const key = document.getElementById("desKeyDec").value;
+        const iv = document.getElementById("desIvDec").value;
+
+        if (!ciphertext) {
+          showToast("error", "Teks terenkripsi kosong", "Mohon masukkan teks terenkripsi untuk didekripsi");
+          document.getElementById("desInputDec").focus();
+          return;
+        }
+        
+        if (!key || !iv) {
+          showToast("error", "Key/IV kosong", "Mohon masukkan key dan IV yang valid");
+          return;
+        }
+
+        try {
+          // Show loading effect
+          const decryptBtn = document.querySelector('.btn-primary[onclick="desDecrypt()"]');
+          decryptBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Dekripsi...';
+          decryptBtn.disabled = true;
+          
+          setTimeout(() => {
+            try {
+              const decrypted = CryptoJS.TripleDES.decrypt(
+                ciphertext,
+                CryptoJS.enc.Hex.parse(key),
+                {
+                  iv: CryptoJS.enc.Hex.parse(iv),
+                  mode: CryptoJS.mode.CBC,
+                  padding: CryptoJS.pad.Pkcs7,
+                }
+              );
+              const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
+              
+              if (!decryptedText) {
+                throw new Error("Hasil dekripsi kosong. Key/IV mungkin salah.");
+              }
+              
+              document.getElementById("desOutputDec").value = decryptedText;
+              showToast("success", "Dekripsi berhasil", "Teks terenkripsi telah didekripsi dengan Triple DES");
+              
+              // Add to history
+              addToHistory({
+                type: "des",
+                action: "decrypt",
+                input: truncateText(ciphertext, 20),
+                output: truncateText(decryptedText, 20),
+                timestamp: new Date().toISOString()
+              });
+            } catch (error) {
+              showToast("error", "Terjadi kesalahan", "Gagal dekripsi Triple DES: " + error.message);
+            } finally {
+              // Restore button
+              decryptBtn.innerHTML = '<i class="fas fa-unlock"></i> Dekripsi';
+              decryptBtn.disabled = false;
+            }
+          }, 300);
+        } catch (error) {
+          showToast("error", "Terjadi kesalahan", "Gagal dekripsi Triple DES: " + error.message);
+        }
+      }
+
+      function rsaEncrypt() {
+        const plaintext = document.getElementById("rsaInputEnc").value;
+        const publicKeyPEM = document.getElementById("rsaPublicKeyEnc").value;
+
+        if (!plaintext) {
+          showToast("error", "Teks kosong", "Mohon masukkan teks untuk dienkripsi");
+          document.getElementById("rsaInputEnc").focus();
+          return;
+        }
+        
+        if (!publicKeyPEM) {
+          showToast("error", "Public key kosong", "Mohon generate atau masukkan RSA public key");
+          // Scroll to key generation buttons
+          document.querySelector('.btn-primary[onclick="generateRSAKey(2048)"]').scrollIntoView({ behavior: 'smooth' });
+          return;
+        }
+        
+        // Check if plaintext is too long for RSA
+        if (plaintext.length > 200) {
+          showToast("warning", "Teks terlalu panjang", "RSA tidak direkomendasikan untuk teks panjang. Teks akan dienkripsi, tetapi pertimbangkan menggunakan AES untuk teks panjang.");
+        }
+
+        try {
+          // Show loading effect
+          const encryptBtn = document.querySelector('.btn-success[onclick="rsaEncrypt()"]');
+          encryptBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enkripsi...';
+          encryptBtn.disabled = true;
+          
+          setTimeout(() => {
+            try {
+              const publicKey = KEYUTIL.getKey(publicKeyPEM);
+              const encrypted = KJUR.crypto.Cipher.encrypt(
+                plaintext,
+                publicKey,
+                "RSAOAEP"
+              );
+              document.getElementById("rsaOutputEnc").value = hextob64(encrypted);
+              showToast("success", "Enkripsi berhasil", `Teks (${plaintext.length} karakter) telah dienkripsi dengan RSA`);
+              
+              // Add to history
+              addToHistory({
+                type: "rsa",
+                action: "encrypt",
+                input: truncateText(plaintext, 20),
+                output: truncateText(hextob64(encrypted), 20),
+                timestamp: new Date().toISOString()
+              });
+            } catch (error) {
+              showToast("error", "Terjadi kesalahan", "Gagal enkripsi RSA: " + error.message);
+            } finally {
+              // Restore button
+              encryptBtn.innerHTML = '<i class="fas fa-lock"></i> Enkripsi';
+              encryptBtn.disabled = false;
+            }
+          }, 300);
+        } catch (error) {
+          showToast("error", "Terjadi kesalahan", "Gagal enkripsi RSA: " + error.message);
+        }
+      }
+
+      function rsaDecrypt() {
+        const ciphertext = document.getElementById("rsaInputDec").value;
+        const privateKeyPEM = document.getElementById("rsaPrivateKeyDec").value;
+
+        if (!ciphertext) {
+          showToast("error", "Teks terenkripsi kosong", "Mohon masukkan teks terenkripsi untuk didekripsi");
+          document.getElementById("rsaInputDec").focus();
+          return;
+        }
+        
+        if (!privateKeyPEM) {
+          showToast("error", "Private key kosong", "Mohon masukkan RSA private key");
+          document.getElementById("rsaPrivateKeyDec").focus();
+          return;
+        }
+
+        try {
+          // Show loading effect
+          const decryptBtn = document.querySelector('.btn-primary[onclick="rsaDecrypt()"]');
+          decryptBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Dekripsi...';
+          decryptBtn.disabled = true;
+          
+          setTimeout(() => {
+            try {
+              const privateKey = KEYUTIL.getKey(privateKeyPEM);
+              const decrypted = KJUR.crypto.Cipher.decrypt(
+                b64tohex(ciphertext),
+                privateKey,
+                "RSAOAEP"
+              );
+              document.getElementById("rsaOutputDec").value = decrypted;
+              showToast("success", "Dekripsi berhasil", "Teks terenkripsi telah didekripsi dengan RSA");
+              
+              // Add to history
+              addToHistory({
+                type: "rsa",
+                action: "decrypt",
+                input: truncateText(ciphertext, 20),
+                output: truncateText(decrypted, 20),
+                timestamp: new Date().toISOString()
+              });
+            } catch (error) {
+              showToast("error", "Terjadi kesalahan", "Gagal dekripsi RSA: " + error.message);
+            } finally {
+              // Restore button
+              decryptBtn.innerHTML = '<i class="fas fa-unlock"></i> Dekripsi';
+              decryptBtn.disabled = false;
+            }
+          }, 300);
+        } catch (error) {
+          showToast("error", "Terjadi kesalahan", "Gagal dekripsi RSA: " + error.message);
+        }
+      }
+
+      // Utility functions
+      function copyToClipboard(elementId) {
+        const element = document.getElementById(elementId);
+        element.select();
+        document.execCommand("copy");
+        
+        // Show micro tooltip on element
+        const tooltip = document.getElementById(`${elementId}CopyTooltip`);
+        if (tooltip) {
+          tooltip.style.opacity = 1;
+          setTimeout(() => {
+            tooltip.style.opacity = 0;
+          }, 1000);
+        } else {
+          showToast("info", "Teks disalin", "Teks telah disalin ke clipboard");
+        }
+      }
+
+      function pasteFromClipboard(targetId) {
+        navigator.clipboard.readText()
+          .then(text => {
+            document.getElementById(targetId).value = text;
+            showToast("info", "Teks dipaste", "Teks dari clipboard telah dipaste");
+          })
+          .catch(err => {
+            showToast("error", "Terjadi kesalahan", "Tidak dapat mengakses clipboard: " + err.message);
+          });
+      }
+
+      function pasteFromEncryption(sourceId, targetId) {
+        const source = document.getElementById(sourceId);
+        const target = document.getElementById(targetId);
+        target.value = source.value;
+        showToast("info", "Teks dipaste", "Teks hasil enkripsi telah dipaste ke input dekripsi");
+      }
+
+      function showToast(type, title, message) {
+        const toastContainer = document.getElementById("toastContainer");
+        
+        const toast = document.createElement("div");
+        toast.className = `toast toast-${type}`;
+        
+        const icon = type === "success" ? "check-circle" : 
+                     type === "error" ? "exclamation-circle" : 
+                     type === "warning" ? "exclamation-triangle" : "info-circle";
+        
+        toast.innerHTML = `
+          <div class="toast-icon">
+            <i class="fas fa-${icon}"></i>
+          </div>
+          <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+          </div>
+          <button class="toast-close" aria-label="Close toast">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        // Add event listener to close button
+        toast.querySelector('.toast-close').addEventListener('click', function() {
+          toast.style.transform = 'translateX(150%)';
+          setTimeout(() => {
+            toast.remove();
+          }, 300);
+        });
+        
+        // Show the toast with slight delay for proper animation
+        setTimeout(() => {
+          toast.classList.add('show');
+        }, 10);
+        
+        // Hide toast after 5 seconds
+        setTimeout(() => {
+          if (toast.parentElement) { // Check if still in DOM
+            toast.style.transform = 'translateX(150%)';
+            setTimeout(() => {
+              if (toast.parentElement) toast.remove();
+            }, 300);
+          }
+        }, 5000);
+      }
+
+      // Clear form functions
+      function clearAESEncryptionForm() {
+        document.getElementById("aesInputEnc").value = "";
+        document.getElementById("aesOutputEnc").value = "";
+        document.getElementById("aesInputEncCount").textContent = "0 karakter";
+        showToast("info", "Form dibersihkan", "Form enkripsi AES telah dibersihkan");
+      }
+
+      function clearAESDecryptionForm() {
+        document.getElementById("aesInputDec").value = "";
+        document.getElementById("aesOutputDec").value = "";
+        showToast("info", "Form dibersihkan", "Form dekripsi AES telah dibersihkan");
+      }
+
+      function clearDESEncryptionForm() {
+        document.getElementById("desInputEnc").value = "";
+        document.getElementById("desOutputEnc").value = "";
+        document.getElementById("desInputEncCount").textContent = "0 karakter";
+        showToast("info", "Form dibersihkan", "Form enkripsi Triple DES telah dibersihkan");
+      }
+
+      function clearDESDecryptionForm() {
+        document.getElementById("desInputDec").value = "";
+        document.getElementById("desOutputDec").value = "";
+        showToast("info", "Form dibersihkan", "Form dekripsi Triple DES telah dibersihkan");
+      }
+
+      function clearRSAEncryptionForm() {
+        document.getElementById("rsaInputEnc").value = "";
+        document.getElementById("rsaOutputEnc").value = "";
+        document.getElementById("rsaInputEncCount").textContent = "0 karakter";
+        showToast("info", "Form dibersihkan", "Form enkripsi RSA telah dibersihkan");
+      }
+
+      function clearRSADecryptionForm() {
+        document.getElementById("rsaInputDec").value = "";
+        document.getElementById("rsaOutputDec").value = "";
+        showToast("info", "Form dibersihkan", "Form dekripsi RSA telah dibersihkan");
+      }
+
+      // File handling
+      function handleFileUpload(fileInput, algorithm, operation) {
+        const file = fileInput.files[0];
+        if (!file) return;
+        
+        // Check file size
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+          showToast("error", "File terlalu besar", "Maksimal ukuran file adalah 10MB");
+          fileInput.value = '';
+          return;
+        }
+        
+        // Show loading toast
+        showToast("info", "Membaca file", `Sedang membaca file "${file.name}" (${formatBytes(file.size)})`);
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const content = e.target.result;
+          
+          // Set the content to the appropriate input field
+          if (algorithm === 'aes' && operation === 'enc') {
+            document.getElementById('aesInputEnc').value = content;
+            document.getElementById('aesInputEncCount').textContent = `${content.length} karakter`;
+          } else if (algorithm === 'des' && operation === 'enc') {
+            document.getElementById('desInputEnc').value = content;
+            document.getElementById('desInputEncCount').textContent = `${content.length} karakter`;
+          } else if (algorithm === 'rsa' && operation === 'enc') {
+            document.getElementById('rsaInputEnc').value = content;
+            document.getElementById('rsaInputEncCount').textContent = `${content.length} karakter${content.length > 200 ? ' (terlalu panjang untuk RSA)' : ''}`;
+            
+            if (content.length > 200) {
+              document.getElementById('rsaInputEncCount').classList.add('text-danger');
+            }
+          }
+          
+          showToast("success", "File berhasil diupload", `File "${file.name}" (${formatBytes(file.size)}) telah diupload`);
+        };
+        reader.onerror = function() {
+          showToast("error", "Error membaca file", "Terjadi kesalahan saat membaca file");
+          fileInput.value = '';
+        };
+        
+        // Determine if we need to read as text or binary
+        const isTextFile = /\.(txt|json|csv|html|xml|md|js|css|java|py|c|cpp|h|cs|php|rb|pl|swift|go|rs|ts|jsx|vue)$/i.test(file.name);
+        
+        if (isTextFile) {
+          reader.readAsText(file);
+        } else {
+          // For non-text files, read as base64
+          reader.readAsDataURL(file);
+        }
+      }
+
+      function loadPrivateKeyFile(fileInput) {
+        const file = fileInput.files[0];
+        if (!file) return;
+        
+        // Show loading toast
+        showToast("info", "Membaca private key", `Sedang membaca file "${file.name}"`);
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const content = e.target.result;
+          document.getElementById('rsaPrivateKeyDec').value = content;
+          showToast("success", "Private Key diupload", "File private key berhasil diload");
+        };
+        reader.onerror = function() {
+          showToast("error", "Error membaca file", "Terjadi kesalahan saat membaca file private key");
+          fileInput.value = '';
+        };
+        
+        reader.readAsText(file);
+      }
+
+      function downloadKey(elementId, filename) {
+        const content = document.getElementById(elementId).value;
+        if (!content) {
+          showToast("error", "Tidak ada data", "Tidak ada data kunci untuk didownload");
+          return;
+        }
+        
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        URL.revokeObjectURL(url);
+        showToast("success", "Download berhasil", `File "${filename}" telah didownload`);
+      }
+
+      // History functions
+      function addToHistory(item) {
+        // Check if very similar item already exists
+        const similarIndex = encryptionHistory.findIndex(existing => 
+          existing.type === item.type && 
+          existing.action === item.action && 
+          (item.input && existing.input === item.input) && 
+          (item.output && existing.output === item.output)
+        );
+        
+        if (similarIndex !== -1) {
+          // Update timestamp and move to top
+          encryptionHistory.splice(similarIndex, 1);
+        }
+        
+        encryptionHistory.unshift(item);
+        
+        // Limit history length
+        if (encryptionHistory.length > MAX_HISTORY_ITEMS) {
+          encryptionHistory.pop();
+        }
+        
+        // Save to local storage
+        saveHistory();
+        
+        // Update history display if visible
+        if (document.getElementById('historyTab').classList.contains('active')) {
+          renderHistory();
+        }
+      }
+
+      function saveHistory() {
+        try {
+          localStorage.setItem('encryptionHistory', JSON.stringify(encryptionHistory));
+        } catch (e) {
+          console.error('Failed to save history to localStorage', e);
+          showToast("error", "Terjadi kesalahan", "Gagal menyimpan riwayat ke localStorage");
+        }
+      }
+
+      function loadHistory() {
+        try {
+          const saved = localStorage.getItem('encryptionHistory');
+          if (saved) {
+            encryptionHistory = JSON.parse(saved);
+            renderHistory();
+          }
+        } catch (e) {
+          console.error('Failed to load history from localStorage', e);
+          showToast("error", "Terjadi kesalahan", "Gagal memuat riwayat dari localStorage");
+        }
+      }
+
+      function renderHistory() {
+        const container = document.getElementById('historyContainer');
+        
+        if (encryptionHistory.length === 0) {
+          container.innerHTML = `
+            <div class="text-center p-3 text-muted">
+              <i class="fas fa-history fa-2x mb-2"></i>
+              <p>Belum ada riwayat operasi.</p>
+            </div>
+          `;
+          return;
+        }
+        
+        let html = '';
+        encryptionHistory.forEach((item, index) => {
+          const date = new Date(item.timestamp);
+          const timeStr = date.toLocaleString();
+          
+          let icon, actionText, description;
+          
+          if (item.action === 'generate_key') {
+            icon = 'key';
+            actionText = 'Generate Key';
+            description = `Generate ${item.type.toUpperCase()} Key${item.keySize ? ` (${item.keySize}-bit)` : ''}`;
+          } else if (item.action === 'encrypt') {
+            icon = 'lock';
+            actionText = 'Enkripsi';
+            description = `${item.type.toUpperCase()}: "${item.input}"`;
+          } else if (item.action === 'decrypt') {
+            icon = 'unlock';
+            actionText = 'Dekripsi';
+            description = `${item.type.toUpperCase()}: "${item.output}"`;
+          }
+          
+          html += `
+            <div class="history-item" data-index="${index}">
+              <div class="history-text">
+                <i class="fas fa-${icon} me-2"></i>
+                <strong>${actionText}</strong> - ${description}
+                <small class="text-muted d-block">${timeStr}</small>
+              </div>
+              <div class="history-actions">
+                <button onclick="loadHistoryItem(${index})" aria-label="Load history item">
+                  <i class="fas fa-redo"></i>
+                </button>
+                <button onclick="removeHistoryItem(${index}, event)" aria-label="Remove history item">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        });
+        
+        container.innerHTML = html;
+      }
+
+      function loadHistoryItem(index) {
+        const item = encryptionHistory[index];
+        if (!item) return;
+        
+        // Switch to the appropriate tab
+        switchTab(item.type);
+        
+        // Load the data based on action type
+        if (item.action === 'encrypt') {
+          if (item.type === 'aes') {
+            document.getElementById('aesInputDec').value = item.output;
+            document.getElementById('aesInputDec').focus();
+          } else if (item.type === 'des') {
+            document.getElementById('desInputDec').value = item.output;
+            document.getElementById('desInputDec').focus();
+          } else if (item.type === 'rsa') {
+            document.getElementById('rsaInputDec').value = item.output;
+            document.getElementById('rsaInputDec').focus();
+          }
+          showToast("info", "Item riwayat dimuat", "Hasil enkripsi telah dimuat ke form dekripsi");
+        } else if (item.action === 'decrypt') {
+          if (item.type === 'aes') {
+            document.getElementById('aesInputEnc').value = item.output;
+            document.getElementById('aesInputEnc').focus();
+          } else if (item.type === 'des') {
+            document.getElementById('desInputEnc').value = item.output;
+            document.getElementById('desInputEnc').focus();
+          } else if (item.type === 'rsa') {
+            document.getElementById('rsaInputEnc').value = item.output;
+            document.getElementById('rsaInputEnc').focus();
+          }
+          showToast("info", "Item riwayat dimuat", "Hasil dekripsi telah dimuat ke form enkripsi");
+        }
+      }
+
+      function removeHistoryItem(index, event) {
+        event.stopPropagation();
+        encryptionHistory.splice(index, 1);
+        saveHistory();
+        renderHistory();
+        showToast("info", "Item dihapus", "Item riwayat telah dihapus");
+      }
+
+      function clearHistory() {
+        if (confirm('Apakah Anda yakin ingin menghapus semua riwayat?')) {
+          encryptionHistory = [];
+          saveHistory();
+          renderHistory();
+          showToast("info", "Riwayat dibersihkan", "Semua riwayat telah dihapus");
+        }
+      }
+
+      function exportHistory() {
+        if (encryptionHistory.length === 0) {
+          showToast("error", "Tidak ada data", "Tidak ada riwayat untuk diexport");
+          return;
+        }
+        
+        const jsonData = JSON.stringify(encryptionHistory, null, 2);
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'cryptoshield_history.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        URL.revokeObjectURL(url);
+        showToast("success", "Export berhasil", "Riwayat telah diexport sebagai JSON");
+      }
+
+      function importHistory() {
+        document.getElementById('historyImport').click();
+      }
+
+      function handleHistoryImport(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        if (file.type !== 'application/json') {
+          showToast("error", "Format tidak valid", "Mohon upload file JSON yang valid");
+          input.value = '';
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const importedHistory = JSON.parse(e.target.result);
+            
+            if (!Array.isArray(importedHistory)) {
+              throw new Error("Format data tidak valid");
+            }
+            
+            // Validate each item
+            importedHistory.forEach(item => {
+              if (!item.type || !item.action || !item.timestamp) {
+                throw new Error("Format data riwayat tidak valid");
+              }
+            });
+            
+            // Merge with existing history
+            const mergedHistory = [...importedHistory, ...encryptionHistory];
+            
+            // Remove duplicates based on timestamp
+            const uniqueHistory = [];
+            const timestamps = new Set();
+            
+            for (const item of mergedHistory) {
+              if (!timestamps.has(item.timestamp)) {
+                timestamps.add(item.timestamp);
+                uniqueHistory.push(item);
+              }
+            }
+            
+            // Sort by timestamp (newest first)
+            uniqueHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            // Limit to max items
+            encryptionHistory = uniqueHistory.slice(0, MAX_HISTORY_ITEMS);
+            
+            saveHistory();
+            renderHistory();
+            showToast("success", "Import berhasil", `${encryptionHistory.length} item riwayat telah diimport`);
+          } catch (error) {
+            showToast("error", "Import gagal", "Format file riwayat tidak valid: " + error.message);
+          }
+        };
+        reader.onerror = function() {
+          showToast("error", "Error membaca file", "Terjadi kesalahan saat membaca file import");
+        };
+        
+        reader.readAsText(file);
+        input.value = '';
+      }
+
+      // Helper functions
+      function truncateText(text, maxLength) {
+        if (!text) return '';
+        return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
+      }
+
+      function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+      }
+    </script>
+  </body>
+</html>
