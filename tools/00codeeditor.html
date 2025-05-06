@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vibe Code Editor Pro - File Manager Enhanced</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/material-darker.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/eclipse.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/neat.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/htmlmixed/htmlmixed.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/closetag.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/display/placeholder.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/selection/active-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/search/search.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/search/searchcursor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/search/jump-to-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/dialog/dialog.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/dialog/dialog.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/xml-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/html-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/css-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/javascript-hint.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.11/beautify-html.min.js"></script>
+
+    <style>
+        :root {
+            --header-height: 60px;
+            --footer-height: 45px;
+            --bg-primary: #111827; /* slate-900 */
+            --bg-secondary: #1f2937; /* slate-800 */
+            --bg-tertiary: #374151; /* slate-700 */
+            --border-color: #4b5563; /* slate-600 */
+            --text-primary: #f3f4f6; /* slate-100 */
+            --text-secondary: #9ca3af; /* slate-400 */
+            --text-tertiary: #6b7280; /* slate-500 */
+            --accent-blue: #3b82f6; /* blue-500 */
+            --accent-green: #10b981; /* green-500 */
+            --accent-purple: #a855f7; /* purple-500 */
+            --accent-orange: #f97316; /* orange-500 */
+            --accent-cyan: #0ea5e9; /* cyan-500 */
+            --accent-yellow: #facc15; /* yellow-400 */
+            --accent-red: #ef4444; /* red-500 */
+            --accent-indigo: #6366f1; /* indigo-500 */
+            --accent-gray: #6b7280; /* slate-500 */
+            --divider-color: #4b5563; /* slate-600 */
+            --divider-hover-color: #9ca3af; /* slate-400 */
+            --divider-active-color: var(--accent-blue);
+            --min-pane-size: 50px;
+            --editor-font-size: 14px;
+            --file-explorer-width: 250px;
+            --file-explorer-min-width: 150px; /* Slightly reduced min width */
+        }
+        .cm-s-eclipse { background-color: #ffffff; color: #000000; }
+        .cm-s-eclipse .CodeMirror-gutters { background: #f7f7f7; border-right: 1px solid #eeeeee; }
+        .cm-s-eclipse .CodeMirror-activeline-background { background: #e8f2ff !important; }
+        .cm-s-eclipse .cm-matchhighlight { background-color: #a8d1ff; }
+        .cm-s-neat { background-color: #ffffff; color: #333333; }
+        .cm-s-neat .CodeMirror-gutters { background: #f1f1f1; border-right: 1px solid #dddddd; }
+        .cm-s-neat .CodeMirror-activeline-background { background: #e8e8e8 !important; }
+
+        html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background-color: var(--bg-primary); color: var(--text-primary); -webkit-tap-highlight-color: transparent; }
+        .main-container { display: flex; flex-direction: column; height: 100vh; }
+        .main-header { height: var(--header-height); flex-shrink: 0; z-index: 20; background-color: var(--bg-secondary); box-shadow: 0 2px 4px rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-color); }
+        .main-footer { height: var(--footer-height); flex-shrink: 0; background-color: var(--bg-secondary); border-top: 1px solid var(--border-color); padding: 0 1rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); z-index: 10; }
+
+        .workspace-area { display: flex; flex-grow: 1; height: calc(100vh - var(--header-height) - var(--footer-height)); overflow: hidden; position: relative; }
+
+        #file-explorer-panel {
+            width: var(--file-explorer-width);
+            min-width: var(--file-explorer-min-width);
+            max-width: 50%;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            border-right-width: 1px;
+            padding: 0.5rem;
+            margin:0;
+            opacity: 1;
+            visibility: visible;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            flex-shrink: 0;
+            position: relative;
+            transition: width 0.3s ease,
+                        min-width 0.3s ease,
+                        max-width 0.3s ease,
+                        padding 0.3s ease,
+                        margin 0.3s ease,
+                        border-width 0.3s ease,
+                        opacity 0.3s ease;
+        }
+
+        #file-explorer-panel.hidden-sidebar {
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border-width: 0 !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            overflow: hidden !important;
+            pointer-events: none !important;
+        }
+
+        .file-explorer-header { margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 0.25rem;}
+        .file-explorer-header .action-button { padding: 0.3rem 0.5rem; font-size: 0.75rem; flex-grow: 1; min-width: 80px; }
+        .file-explorer-header .action-button ion-icon { font-size: 0.9rem; margin-right: 0.2rem; }
+
+        #file-tree { list-style: none; padding-left: 0; flex-grow: 1; }
+        #file-tree .tree-item {
+            padding: 0.4rem 0.6rem; /* Increased padding */
+            border-radius: 0.375rem; /* Consistent radius */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem; /* Slightly larger font */
+            margin-bottom: 3px; /* A bit more space */
+            min-height: 38px; /* Better tap height */
+            transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+        }
+        #file-tree .tree-item:hover { background-color: var(--bg-tertiary); color: var(--text-primary); }
+        #file-tree .tree-item.active-file { background-color: var(--accent-blue); color: white; font-weight: 600; } /* Slightly bolder */
+        #file-tree .tree-item .item-icon {
+            margin-right: 0.6rem; /* More space */
+            font-size: 1.1rem; /* Larger icon */
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        #file-tree .tree-item .toggle-icon { /* Specific for folder toggle */
+            margin-right: 0.25rem;
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+            transition: transform 0.2s ease-out;
+        }
+        #file-tree .tree-item .item-name { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #file-tree .tree-item .item-actions { display: none; margin-left: auto; }
+        #file-tree .tree-item:hover .item-actions { display: flex; align-items: center; gap: 0.3rem; }
+        #file-tree .tree-item .item-actions button {
+            background: none; border: none; color: var(--text-secondary);
+            padding: 0.25rem; /* Ensure tap area */
+            cursor: pointer;
+            font-size: 1rem; /* Larger action icons */
+            line-height: 1;
+        }
+        #file-tree .tree-item .item-actions button:hover { color: var(--text-primary); }
+        #file-tree ul {
+            list-style: none;
+            padding-left: 1.25rem; /* Indentation for nested */
+            margin-top: 3px;
+        }
+        .folder-content { display: none; }
+        .folder-item.expanded > .folder-content { display: block; }
+        .folder-item.expanded > .tree-item .toggle-icon {
+            transform: rotate(90deg);
+            color: var(--text-primary); /* Highlight when expanded */
+        }
+
+
+        #file-explorer-resizer {
+            width: 5px;
+            background-color: var(--divider-color);
+            cursor: col-resize;
+            position: absolute;
+            top: 0;
+            right: -2.5px;
+            height: 100%;
+            z-index: 15;
+            transition: background-color 0.2s ease, opacity 0.3s ease;
+        }
+        #file-explorer-resizer:hover, #file-explorer-resizer.resizing { background-color: var(--divider-active-color); }
+        #file-explorer-panel.hidden-sidebar + #file-explorer-resizer {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            width: 0 !important;
+        }
+
+        .editor-preview-area { flex-grow: 1; overflow: auto; display: flex; flex-direction: column; position: relative; }
+        .content-area { flex-grow: 1; overflow: hidden; position: relative; }
+        .editor-area-wrapper { height: 100%; padding: 0.5rem; display: block; }
+        #split-container { display: none; width: 100%; height: 100%; overflow: hidden; position: absolute; top: 0; left: 0; }
+        #split-container.split-horizontal { flex-direction: row; }
+        #split-container.split-vertical { flex-direction: column; }
+        #split-editor-pane, #split-preview-pane { overflow: hidden; position: relative; }
+        #split-editor-pane { background-color: var(--bg-secondary); padding: 0.5rem; box-sizing: border-box; }
+        #split-preview-pane { background-color: white; }
+        .split-divider { flex-shrink: 0; background-color: var(--divider-color); position: relative; z-index: 10; transition: background-color 0.2s ease; }
+        .split-divider:hover { background-color: var(--divider-hover-color); }
+        .split-divider.resizing, .split-divider:active { background-color: var(--divider-active-color); }
+        #split-container.split-horizontal > .split-divider { width: 8px; height: 100%; cursor: col-resize; margin: 0 0px; }
+        #split-container.split-vertical > .split-divider { height: 8px; width: 100%; cursor: row-resize; margin: 0px 0; }
+        body.resizing { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
+        body.resizing-horizontal { cursor: col-resize; }
+        body.resizing-vertical { cursor: row-resize; }
+        body.resizing iframe { pointer-events: none; }
+        body:not(.split-active) .editor-area-wrapper { display: block; }
+        body:not(.split-active) #split-container { display: none; }
+        body.split-active .editor-area-wrapper { display: none; }
+        body.split-active #split-container { display: flex; }
+
+        .CodeMirror { border: none; font-size: var(--editor-font-size); line-height: 1.6; height: 100% !important; }
+        #split-editor-pane .CodeMirror { border-radius: 0; }
+        .CodeMirror-placeholder { color: var(--text-tertiary) !important; font-style: italic; padding: 0.5rem; }
+        .CodeMirror-activeline-background { background: rgba(255, 255, 255, 0.08) !important; }
+        .cm-matchhighlight { background-color: rgba(255, 255, 0, 0.2); }
+        .CodeMirror-hints { z-index: 100 !important; background-color: var(--bg-tertiary) !important; border: 1px solid var(--border-color) !important; box-shadow: 0 3px 8px rgba(0,0,0,0.3); }
+        .CodeMirror-hint { color: var(--text-primary) !important; padding: 3px 8px !important; border-radius: 2px; }
+        li.CodeMirror-hint-active { background-color: var(--accent-blue) !important; color: white !important; }
+
+        .action-button { display: inline-flex; align-items: center; justify-content: center; padding: 0.4rem 0.6rem; border-radius: 0.375rem; font-weight: 500; font-size: 0.8rem; transition: all 0.2s ease-in-out; cursor: pointer; border: 1px solid transparent; outline: none; color: var(--text-primary); background-color: var(--bg-tertiary); -webkit-tap-highlight-color: rgba(255, 255, 255, 0.2); }
+        .action-button:hover:not(:disabled) { background-color: var(--border-color); }
+        .action-button:focus-visible { box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5); border-color: var(--accent-blue); }
+        .action-button:active:not(:disabled) { transform: translateY(1px) scale(0.97); }
+        .action-button:disabled { opacity: 0.5; cursor: not-allowed; background-color: var(--bg-tertiary) !important; }
+        .action-button ion-icon { font-size: 1rem; margin-right: 0.3rem; }
+        .action-button span.btn-text { display: none; }
+        .split-button.active-horizontal, .split-button.active-vertical { background-color: var(--accent-indigo); border-color: var(--accent-indigo); }
+
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltiptext { visibility: hidden; width: max-content; max-width: 180px; background-color: var(--bg-secondary); color: var(--text-primary); text-align: center; border-radius: 0.375rem; padding: 6px 10px; position: absolute; z-index: 100; bottom: 145%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out; font-size: 0.75rem; font-weight: 500; pointer-events: none; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: var(--bg-secondary) transparent transparent transparent; }
+        .tooltip:hover .tooltiptext, .tooltip:focus-within .tooltiptext { visibility: visible; opacity: 1; transition-delay: 0.5s; }
+
+        @media (min-width: 640px) {
+            .action-button span.btn-text { display: inline; }
+            .file-explorer-header .action-button span.btn-text { display: inline; }
+        }
+        @media (min-width: 768px) {
+            .action-button { padding: 0.5rem 0.75rem; font-size: 0.875rem; }
+            .action-button ion-icon { font-size: 1.1rem; margin-right: 0.4rem; }
+        }
+        @media (max-width: 400px) {
+            .file-explorer-header .action-button span.btn-text { display: none !important; }
+            .file-explorer-header .action-button ion-icon { margin-right: 0; }
+            .file-explorer-header .action-button { padding: 0.4rem; }
+        }
+        @media (max-width: 480px) {
+            .action-button ion-icon { margin-right: 0; font-size: 1.1rem; }
+            .action-button span.btn-text-main-header { display: none !important; }
+            .main-header h1 { font-size: 1.1rem; }
+            .main-header h1 ion-icon { font-size: 1.3rem; }
+            .header-controls { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; -ms-overflow-style: none; }
+            .header-controls::-webkit-scrollbar { display: none; }
+            .main-footer { font-size: 0.75rem; padding: 0 0.75rem;}
+            .footer-filename { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        }
+
+
+        .run-button { background-color: var(--accent-blue); border-color: var(--accent-blue); } .run-button:hover:not(:disabled) { background-color: #2563eb; border-color: #1d4ed8; }
+        .new-tab-button { background-color: var(--accent-green); border-color: var(--accent-green); } .new-tab-button:hover:not(:disabled) { background-color: #059669; border-color: #047857; }
+        .export-button { background-color: var(--accent-orange); border-color: var(--accent-orange); } .export-button:hover:not(:disabled) { background-color: #ea580c; border-color: #c2410c; }
+        .clear-button { background-color: var(--accent-red); border-color: var(--accent-red); } .clear-button:hover:not(:disabled) { background-color: #dc2626; border-color: #b91c1c; }
+        .import-button-color { background-color: var(--accent-purple); border-color: var(--accent-purple); } .import-button-color:hover:not(:disabled) { background-color: #9333ea; border-color: #7e22ce; }
+
+
+        .settings-dropdown { position: relative; display: inline-block; }
+        .settings-dropdown-content {
+            display: none; position: absolute; right: 0; background-color: var(--bg-secondary);
+            min-width: 240px; /* Slightly wider */
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.3); z-index: 101;
+            border-radius: 0.375rem; border: 1px solid var(--border-color);
+            padding: 0.5rem 0; margin-top: 4px;
+            max-height: 70vh; overflow-y: auto; /* Scrollable */
+        }
+        .settings-dropdown-content.show { display: block; }
+        .settings-dropdown-content div, .settings-dropdown-content a, .settings-dropdown-content button {
+            color: var(--text-primary); padding: 0.6rem 1.1rem; /* More touch-friendly */
+            text-decoration: none; display: block; font-size: 0.9rem; /* Consistent font size */
+            width: 100%; text-align: left; background: none; border: none; cursor: pointer;
+        }
+        .settings-dropdown-content div:not(.settings-item):hover, .settings-dropdown-content a:hover, .settings-dropdown-content button:hover:not(#clear-all-data-button) { background-color: var(--bg-tertiary); }
+        #clear-all-data-button:hover { background-color: var(--accent-red) !important; color: white !important; }
+        .settings-dropdown-content div label { margin-right: 0.5rem; color: var(--text-secondary); }
+        .settings-dropdown-content select, .settings-dropdown-content input[type=number] {
+            background-color: var(--bg-primary); border: 1px solid var(--border-color);
+            color: var(--text-primary); border-radius: 0.25rem;
+            padding: 0.35rem 0.6rem; /* Better padding for inputs */
+            margin-left: auto; width: auto; max-width: 100px; font-size: 0.85rem;
+        }
+        .settings-item { display: flex; align-items: center; justify-content: space-between; cursor: default; }
+        .settings-item:hover { background-color: var(--bg-tertiary); } /* Subtle hover for non-interactive items */
+        .settings-separator { height: 1px; background-color: var(--border-color); margin: 0.5rem 0; }
+        .shortcuts-link { cursor: pointer; text-align: center; font-weight: 500; }
+        .shortcuts-link ion-icon { vertical-align: middle; margin-right: 0.25rem; font-size: 1rem; }
+
+        .preview-modal-overlay { position: fixed; inset: 0; background-color: rgba(17, 24, 39, 0.8); backdrop-filter: blur(4px); z-index: 40; transition: opacity 0.3s ease; opacity: 0; pointer-events: none; }
+        .preview-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
+            width: 90vw; height: 90vh; /* Slightly larger default height */
+            max-width: 1200px; max-height: 800px; /* Max dimensions remain */
+            background-color: #ffffff; color: #1f2937; border-radius: 0.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            z-index: 50; display: flex; flex-direction: column; overflow: hidden;
+            transition: opacity 0.3s ease, transform 0.3s ease; opacity: 0; pointer-events: none;
+        }
+        .preview-modal-overlay.active, .preview-modal.active { opacity: 1; pointer-events: auto; }
+        .preview-modal.active { transform: translate(-50%, -50%) scale(1); }
+        .preview-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; background-color: #f9fafb; }
+        .preview-modal-title { font-size: 1.125rem; font-weight: 600; color: #374151; }
+        .preview-modal-close-button { background: none; border: none; color: #6b7280; font-size: 1.75rem; cursor: pointer; padding: 0.25rem; line-height: 1; border-radius: 9999px; transition: background-color 0.2s, color 0.2s, transform 0.1s; }
+        .preview-modal-close-button:hover { background-color: #e5e7eb; color: #1f2937; }
+        .preview-modal-close-button:active { transform: scale(0.9); }
+        .preview-modal-content { flex-grow: 1; overflow: hidden; padding: 0; background-color: white; }
+        #modal-preview-frame, #split-preview-frame { width: 100%; height: 100%; border: none; }
+        .hidden { display: none !important; }
+
+        #toast-container { position: fixed; bottom: var(--footer-height); margin-bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+        .toast { background-color: var(--accent-green); color: white; padding: 10px 20px; border-radius: 0.375rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-size: 0.875rem; opacity: 0; transform: translateY(20px) scale(0.95); transition: opacity 0.3s ease, transform 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .toast.show { opacity: 1; transform: translateY(0) scale(1); }
+        .toast.error { background-color: var(--accent-red); }
+        .toast.warning { background-color: var(--accent-orange); color: #422006; }
+        .toast.info { background-color: var(--accent-blue); }
+        .toast ion-icon { font-size: 1.1rem; }
+
+        .status-indicator { display: flex; align-items: center; gap: 0.5rem; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; transition: background-color 0.3s ease; }
+        .status-dot.saved { background-color: var(--accent-green); }
+        .status-dot.saving { background-color: var(--accent-yellow); animation: pulse 1.5s infinite ease-in-out; }
+        .status-dot.unsaved { background-color: var(--accent-orange); }
+        .status-dot.error { background-color: var(--accent-red); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .footer-filename { margin-left: 1rem; color: var(--text-tertiary); font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+
+        .CodeMirror-dialog {
+            background-color: var(--bg-secondary); color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 10px 15px; /* Slightly more padding */
+            font-size: 0.85rem; border-radius: 4px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            /* position: fixed !important; */ /* Ensures it's relative to viewport */
+            /* top: 10px !important; */ /* Position at the top */
+            /* left: 50% !important; */
+            /* transform: translateX(-50%) !important; */
+            /* width: auto !important; max-width: 400px; */
+            /* bottom: auto !important; */ /* Override CM default bottom positioning */
+        }
+        .CodeMirror-dialog input {
+            background-color: var(--bg-primary); color: var(--text-primary);
+            border: 1px solid var(--border-color); border-radius: 3px;
+            padding: 6px 8px; /* Slightly more padding */
+            outline: none; margin: 0 5px;
+        }
+        .CodeMirror-dialog input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4); }
+        .CodeMirror-dialog button {
+            background-color: var(--accent-blue); color: white; border: none;
+            padding: 6px 12px; /* Slightly more padding */
+            border-radius: 3px; cursor: pointer; margin-left: 5px; font-weight: 500;
+        }
+        .CodeMirror-dialog button:hover { background-color: #2563eb; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background-color: var(--bg-tertiary); border-radius: 4px; border: 2px solid var(--bg-primary); }
+        ::-webkit-scrollbar-thumb:hover { background-color: var(--border-color); }
+        * { scrollbar-width: thin; scrollbar-color: var(--bg-tertiary) var(--bg-primary); }
+
+        #file-context-menu {
+            position: absolute; background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color); border-radius: 0.375rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000;
+            padding: 0.25rem 0; min-width: 160px; /* Slightly wider */
+        }
+        #file-context-menu button {
+            display: block; width: 100%;
+            padding: 0.6rem 1.2rem; /* More touch-friendly */
+            text-align: left; background: none; border: none;
+            color: var(--text-primary); font-size: 0.875rem; cursor: pointer;
+            transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+        }
+        #file-context-menu button:hover { background-color: var(--accent-blue); color: white; }
+        #file-context-menu button ion-icon { margin-right: 0.5rem; vertical-align: middle; }
+
+        /* Scroll to Top Button Styles */
+        #scroll-to-top-button {
+            position: fixed;
+            bottom: calc(var(--footer-height) + 20px); /* Position above footer */
+            right: 20px;
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 20px; /* Icon size */
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 999;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, background-color 0.2s;
+        }
+        #scroll-to-top-button:hover {
+            background-color: #2563eb; /* Darker blue */
+            transform: scale(1.1);
+        }
+        #scroll-to-top-button:active {
+            transform: scale(0.95);
+        }
+
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="main-container">
+        <header class="main-header p-2 sm:px-3 flex justify-between items-center">
+            <div class="flex items-center shrink-0">
+                <div class="tooltip">
+                    <button id="toggle-sidebar-button" class="action-button mr-2">
+                        <ion-icon name="menu-outline"></ion-icon>
+                    </button>
+                    <span class="tooltiptext">Toggle File Explorer</span>
+                </div>
+                <h1 class="text-md sm:text-lg font-semibold text-white flex items-center whitespace-nowrap">
+                    <ion-icon name="color-palette-outline" class="text-xl sm:text-2xl mr-1.5 sm:mr-2 text-blue-400"></ion-icon>
+                    <span class="hidden md:inline">Vibe Editor Pro FM</span>
+                    <span class="md:hidden">Vibe FM</span>
+                </h1>
+            </div>
+
+
+            <div class="flex-grow flex justify-center items-center overflow-hidden px-1">
+                <div class="header-controls flex space-x-1 sm:space-x-1.5 items-center">
+                    <div class="tooltip">
+                        <button id="export-current-file-button" class="action-button export-button">
+                            <ion-icon name="cloud-download-outline"></ion-icon> <span class="btn-text btn-text-main-header">Export File</span>
+                        </button>
+                        <span class="tooltiptext">Export Current File</span>
+                    </div>
+
+                    <div class="h-5 w-px bg-gray-600 mx-1 sm:mx-2"></div>
+
+                    <div class="tooltip">
+                        <button id="copy-button" class="action-button">
+                            <ion-icon name="copy-outline"></ion-icon> <span class="btn-text btn-text-main-header">Copy</span>
+                        </button>
+                        <span class="tooltiptext">Copy (Ctrl+C)</span>
+                    </div>
+                    <div class="tooltip">
+                        <button id="paste-button" class="action-button">
+                            <ion-icon name="clipboard-outline"></ion-icon> <span class="btn-text btn-text-main-header">Paste</span>
+                        </button>
+                        <span class="tooltiptext">Paste (Ctrl+V)</span>
+                    </div>
+                    <div class="tooltip">
+                        <button id="format-button" class="action-button">
+                            <ion-icon name="sparkles-outline"></ion-icon> <span class="btn-text btn-text-main-header">Format</span>
+                        </button>
+                        <span class="tooltiptext">Format Code (Ctrl+Alt+F)</span>
+                    </div>
+                     <div class="tooltip">
+                        <button id="search-button" class="action-button">
+                            <ion-icon name="search-outline"></ion-icon> <span class="btn-text btn-text-main-header">Search</span>
+                        </button>
+                        <span class="tooltiptext">Search (Ctrl+F)</span>
+                    </div>
+                    <div class="tooltip">
+                        <button id="clear-content-button" class="action-button clear-button">
+                            <ion-icon name="refresh-outline"></ion-icon> <span class="btn-text btn-text-main-header">Clear</span>
+                        </button>
+                        <span class="tooltiptext">Clear Current File Content</span>
+                    </div>
+
+                    <div class="h-5 w-px bg-gray-600 mx-1 sm:mx-2"></div>
+
+                    <div class="tooltip">
+                         <button id="split-button" class="action-button split-button">
+                             <ion-icon id="split-icon" name="browsers-outline"></ion-icon>
+                             <span id="split-text" class="btn-text btn-text-main-header">Split</span>
+                         </button>
+                         <span id="split-tooltip" class="tooltiptext">Toggle Split View (Off)</span>
+                     </div>
+                    <div class="tooltip">
+                        <button id="run-button" class="action-button run-button">
+                            <ion-icon name="play-outline"></ion-icon> <span class="btn-text btn-text-main-header">Modal</span>
+                        </button>
+                        <span class="tooltiptext">Preview in Modal (Ctrl+S)</span>
+                    </div>
+                    <div class="tooltip">
+                        <button id="new-tab-button" class="action-button new-tab-button">
+                            <ion-icon name="open-outline"></ion-icon> <span class="btn-text btn-text-main-header">New Tab</span>
+                        </button>
+                        <span class="tooltiptext">Preview in New Tab</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 ml-3 shrink-0">
+                 <div class="settings-dropdown">
+                     <button id="settings-button" class="action-button" aria-label="Editor Settings">
+                         <ion-icon name="settings-outline"></ion-icon>
+                     </button>
+                     <div id="settings-dropdown-content" class="settings-dropdown-content">
+                         <div class="settings-item px-4 py-2"> <!-- Use Tailwind padding for consistency, or use the class rules -->
+                             <label for="theme-select" class="text-sm text-gray-400">Theme:</label>
+                             <select id="theme-select" class="ml-auto text-sm">
+                                 <option value="dracula">Dracula</option>
+                                 <option value="material-darker">Material Darker</option>
+                                 <option value="eclipse">Eclipse (Light)</option>
+                                 <option value="neat">Neat (Light)</option>
+                             </select>
+                         </div>
+                         <div class="settings-item px-4 py-2">
+                             <label for="font-size-input" class="text-sm text-gray-400">Font Size:</label>
+                             <input type="number" id="font-size-input" min="8" max="24" step="1" class="ml-auto text-sm w-20">
+                         </div>
+                         <div class="settings-separator"></div>
+                         <button id="trigger-import-button" class="import-button-color">
+                             <ion-icon name="cloud-upload-outline"></ion-icon>Import File to Project
+                         </button>
+                         <input type="file" id="import-file-input" class="hidden" accept=".html,.htm,.css,.js,.json,.txt,.md,text/*,application/json,application/javascript">
+
+                         <div class="settings-separator"></div>
+                         <button id="clear-all-data-button">
+                             <ion-icon name="nuclear-outline"></ion-icon>Clear All Editor Data
+                         </button>
+                         <div class="settings-separator"></div>
+                         <a id="shortcuts-link" class="shortcuts-link">
+                             <ion-icon name="keypad-outline"></ion-icon> Keyboard Shortcuts
+                         </a>
+                     </div>
+                 </div>
+            </div>
+        </header>
+
+        <div class="workspace-area">
+            <div id="file-explorer-panel">
+                <div class="file-explorer-header">
+                    <div class="tooltip w-1/2 pr-1">
+                        <button id="create-file-button" class="action-button w-full">
+                            <ion-icon name="document-text-outline"></ion-icon>
+                            <span class="btn-text">New File</span>
+                        </button>
+                        <span class="tooltiptext">New File (Ctrl+Alt+N)</span>
+                    </div>
+                    <div class="tooltip w-1/2 pl-1">
+                        <button id="create-folder-button" class="action-button w-full">
+                            <ion-icon name="folder-open-outline"></ion-icon>
+                            <span class="btn-text">New Folder</span>
+                        </button>
+                        <span class="tooltiptext">New Folder (Ctrl+Alt+Shift+N)</span>
+                    </div>
+                </div>
+                <ul id="file-tree"></ul>
+            </div>
+            <div id="file-explorer-resizer" title="Resize File Explorer"></div>
+
+            <div class="editor-preview-area" id="editor-preview-area-main"> <div class="editor-area-wrapper" id="editor-area-wrapper">
+                     <textarea id="code-editor-area" placeholder="Welcome! Select or create a file to begin."></textarea>
+                </div>
+                <div id="split-container">
+                    <div id="split-editor-pane"></div>
+                    <div class="split-divider" id="split-divider-main" title="Drag to resize"></div>
+                    <div id="split-preview-pane">
+                        <iframe id="split-preview-frame" title="Split Live Preview" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="main-footer">
+            <div class="flex items-center">
+                <div class="status-indicator">
+                    <div id="status-dot" class="status-dot saved" title="Saved"></div>
+                    <span id="status-text">Ready</span>
+                </div>
+                <span id="footer-filename" class="footer-filename" title="Current File">No file open</span>
+            </div>
+            <div class="cursor-position">
+                <span id="line-col-indicator">Ln 1, Col 1</span>
+            </div>
+        </footer>
+    </div>
+
+    <div id="file-context-menu" class="hidden">
+        <button id="ctx-rename"><ion-icon name="pencil-outline"></ion-icon>Rename</button>
+        <button id="ctx-delete"><ion-icon name="trash-outline"></ion-icon>Delete</button>
+        <button id="ctx-new-file-in-folder" class="hidden"><ion-icon name="document-text-outline"></ion-icon>New File Here</button>
+    </div>
+
+    <div id="preview-modal-overlay" class="preview-modal-overlay" aria-hidden="true"></div>
+    <div id="preview-modal" class="preview-modal" role="dialog" aria-modal="true" aria-labelledby="preview-modal-title" aria-hidden="true">
+        <div class="preview-modal-header">
+            <h2 id="preview-modal-title" class="preview-modal-title flex items-center">
+                <ion-icon name="tv-outline" class="inline-block align-middle mr-2 -mt-1"></ion-icon>Modal Preview
+            </h2>
+            <button id="preview-modal-close-button" class="preview-modal-close-button" aria-label="Close Preview">
+                <ion-icon name="close-outline" class="block align-middle"></ion-icon>
+            </button>
+        </div>
+        <div class="preview-modal-content">
+            <iframe id="modal-preview-frame" title="Modal Live Preview" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox"></iframe>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div id="shortcuts-modal-overlay" class="preview-modal-overlay" aria-hidden="true"></div>
+    <div id="shortcuts-modal" class="preview-modal" role="dialog" aria-modal="true" aria-labelledby="shortcuts-modal-title" aria-hidden="true" style="max-width: 500px; height: auto; max-height: 70vh;">
+         <div class="preview-modal-header">
+             <h2 id="shortcuts-modal-title" class="preview-modal-title flex items-center">
+                 <ion-icon name="keypad-outline" class="inline-block align-middle mr-2 -mt-1"></ion-icon>Keyboard Shortcuts
+             </h2>
+             <button id="shortcuts-modal-close-button" class="preview-modal-close-button" aria-label="Close Shortcuts">
+                 <ion-icon name="close-outline" class="block align-middle"></ion-icon>
+             </button>
+         </div>
+         <div class="preview-modal-content p-4 text-sm overflow-y-auto" style="background-color: var(--bg-secondary); color: var(--text-primary);">
+             <ul class="list-none space-y-2">
+                 <li><kbd class="kbd">Ctrl</kbd>+<kbd class="kbd">S</kbd>: Show Modal Preview</li>
+                 <li><kbd class="kbd">Ctrl</kbd>+<kbd class="kbd">F</kbd>: Search</li>
+                 <li><kbd class="kbd">Ctrl</kbd>+<kbd class="kbd">Alt</kbd>+<kbd class="kbd">F</kbd>: Format Code</li>
+                 <li><kbd class="kbd">Ctrl</kbd>+<kbd class="kbd">G</kbd> / <kbd class="kbd">Alt</kbd>+<kbd class="kbd">G</kbd>: Jump to Line</li>
+                 <li><kbd class="kbd">Ctrl</kbd>+<kbd class="kbd">Space</kbd>: Show Hints</li>
+                 <li><kbd class="kbd">Ctrl</kbd>+<kbd class="kbd">Alt</kbd>+<kbd class="kbd">N</kbd>: New File (Root)</li>
+                 <li><kbd class="kbd">Ctrl</kbd>+<kbd class="kbd">Alt</kbd>+<kbd class="kbd">Shift</kbd>+<kbd class="kbd">N</kbd>: New Folder (Root)</li>
+                 <li><kbd class="kbd">Esc</kbd>: Close Modals / Dialogs / Context Menu</li>
+             </ul>
+             <style>.kbd { display: inline-block; background-color: var(--bg-tertiary); color: var(--text-primary); padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 0.8em; border: 1px solid var(--border-color); box-shadow: 1px 1px 0 var(--border-color); margin: 0 1px; } </style>
+         </div>
+     </div>
+
+    <button id="scroll-to-top-button" title="Go to top">
+        <ion-icon name="arrow-up-outline"></ion-icon>
+    </button>
+
+    <script defer>
+        document.addEventListener('DOMContentLoaded', () => {
+            const editorArea = document.getElementById('code-editor-area');
+            const editorAreaWrapper = document.getElementById('editor-area-wrapper');
+            const runButton = document.getElementById('run-button');
+            const newTabButton = document.getElementById('new-tab-button');
+            const exportCurrentFileButton = document.getElementById('export-current-file-button');
+            const clearContentButton = document.getElementById('clear-content-button');
+            const copyButton = document.getElementById('copy-button');
+            const pasteButton = document.getElementById('paste-button');
+            const formatButton = document.getElementById('format-button');
+            const searchButton = document.getElementById('search-button');
+            const toastContainer = document.getElementById('toast-container');
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+            const lineColIndicator = document.getElementById('line-col-indicator');
+            const footerFilename = document.getElementById('footer-filename');
+            const previewModalOverlay = document.getElementById('preview-modal-overlay');
+            const previewModal = document.getElementById('preview-modal');
+            const modalPreviewFrame = document.getElementById('modal-preview-frame');
+            const closeModalButton = document.getElementById('preview-modal-close-button');
+            const splitButton = document.getElementById('split-button');
+            const splitIcon = document.getElementById('split-icon');
+            const splitText = document.getElementById('split-text');
+            const splitTooltip = document.getElementById('split-tooltip');
+            const splitContainer = document.getElementById('split-container');
+            const splitEditorPane = document.getElementById('split-editor-pane');
+            const splitPreviewPane = document.getElementById('split-preview-pane');
+            const splitPreviewFrame = document.getElementById('split-preview-frame');
+            const mainSplitDivider = document.getElementById('split-divider-main');
+            const settingsButton = document.getElementById('settings-button');
+            const settingsDropdownContent = document.getElementById('settings-dropdown-content');
+            const themeSelect = document.getElementById('theme-select');
+            const fontSizeInput = document.getElementById('font-size-input');
+            const shortcutsLink = document.getElementById('shortcuts-link');
+            const clearAllDataButton = document.getElementById('clear-all-data-button');
+            const shortcutsModalOverlay = document.getElementById('shortcuts-modal-overlay');
+            const shortcutsModal = document.getElementById('shortcuts-modal');
+            const closeShortcutsButton = document.getElementById('shortcuts-modal-close-button');
+            const fileExplorerPanel = document.getElementById('file-explorer-panel');
+            const fileExplorerResizer = document.getElementById('file-explorer-resizer');
+            const fileTree = document.getElementById('file-tree');
+            const createFileButton = document.getElementById('create-file-button');
+            const createFolderButton = document.getElementById('create-folder-button');
+            const importFileInput = document.getElementById('import-file-input');
+            const triggerImportButton = document.getElementById('trigger-import-button');
+            const fileContextMenu = document.getElementById('file-context-menu');
+            const ctxRenameButton = document.getElementById('ctx-rename');
+            const ctxDeleteButton = document.getElementById('ctx-delete');
+            const ctxNewFileInFolderButton = document.getElementById('ctx-new-file-in-folder');
+            const toggleSidebarButton = document.getElementById('toggle-sidebar-button');
+            const scrollToTopButton = document.getElementById('scroll-to-top-button');
+            const editorPreviewAreaMain = document.getElementById('editor-preview-area-main');
+
+            const LS_PREFIX = 'vibeEditorProFM_';
+            const LS_KEY_FILESYSTEM = LS_PREFIX + 'fileSystem_v2';
+            const LS_KEY_ACTIVE_FILE_ID = LS_PREFIX + 'activeFileId_v2';
+            const LS_KEY_EXPANDED_FOLDERS = LS_PREFIX + 'expandedFolders_v2';
+            const LS_KEY_EXPLORER_WIDTH = LS_PREFIX + 'explorerWidth_v1';
+            const LS_KEY_SIDEBAR_VISIBLE = LS_PREFIX + 'sidebarVisible_v1';
+            const LS_KEY_SPLIT_MODE = LS_PREFIX + 'splitMode_v6';
+            const LS_KEY_SPLIT_SIZE_H = LS_PREFIX + 'splitSizeH_v6';
+            const LS_KEY_SPLIT_SIZE_V = LS_PREFIX + 'splitSizeV_v6';
+            const LS_KEY_THEME = LS_PREFIX + 'theme_v6';
+            const LS_KEY_FONT_SIZE = LS_PREFIX + 'fontSize_v6';
+
+            const SAVE_DEBOUNCE_DELAY = 700;
+            const PREVIEW_UPDATE_DEBOUNCE = 250;
+            const RESIZE_DEBOUNCE = 50;
+            const MIN_PANE_SIZE_PX = 60;
+            const DEFAULT_FONT_SIZE = 14;
+            const DEFAULT_EXPLORER_WIDTH = 250;
+
+            let editor = null;
+            let saveTimeout;
+            let previewTimeout;
+            let resizeTimeout;
+            let currentSplitMode = 'none';
+            let isResizingSplit = false;
+            let isResizingExplorer = false;
+            let editorBasisH = 50;
+            let editorBasisV = 50;
+            let currentTheme = 'dracula';
+            let currentFontSize = DEFAULT_FONT_SIZE;
+            let fileSystem = [];
+            let activeFileId = null;
+            let expandedFolders = new Set();
+            let currentExplorerWidth = DEFAULT_EXPLORER_WIDTH;
+            let isSidebarVisible = true;
+            let contextMenuTargetId = null;
+
+            const defaultFileContent = (fileName = "welcome.html") => `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${fileName}</title>
+    <style>
+        body { font-family: system-ui, sans-serif; line-height: 1.6; padding: 2rem; background: #f0f9ff; color: #075985; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 4rem); text-align: center; }
+        h1 { color: #0369a1; }
+        p { max-width: 60ch; margin-bottom: 1.5rem;}
+        button { background-color: #0ea5e9; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; cursor: pointer; font-weight: 500; transition: background-color 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button:hover { background-color: #0284c7; }
+        .placeholder-content { height: 150vh; border: 2px dashed #cbd5e1; margin-top: 2rem; padding: 1rem; display:flex; align-items:center; justify-content:center; color: #64748b;}
+    </style>
+</head>
+<body>
+    <h1>🚀 Welcome to ${fileName}! 🚀</h1>
+    <p>Explore Vibe Editor Pro with enhanced File Management. Use the sidebar to manage your project. This page has extra content to demonstrate scrolling.</p>
+    <button onclick="alert('Hello from ${fileName}!')">Click Me</button>
+    <div class="placeholder-content">Scroll down to see the 'Scroll to Top' button appear!</div>
+    <script> console.log("Hello from ${fileName} in Vibe Editor Pro!"); <\/script>
+</body>
+</html>`;
+
+            try {
+                if (typeof CodeMirror === 'undefined') throw new Error("CodeMirror library not loaded.");
+                loadSettingsAndFileSystem();
+
+                editor = CodeMirror.fromTextArea(editorArea, {
+                    mode: 'htmlmixed', theme: currentTheme, lineNumbers: true, lineWrapping: true,
+                    autoCloseTags: true, matchBrackets: true, tabSize: 2, indentUnit: 2,
+                    scrollbarStyle: "native", placeholder: editorArea.placeholder, styleActiveLine: true,
+                    viewportMargin: Infinity, 
+                    extraKeys: {
+                        "Ctrl-S": showModalPreview, "Cmd-S": showModalPreview,
+                        "Ctrl-F": "findPersistent", "Cmd-F": "findPersistent",
+                        "Ctrl-Alt-F": formatCode, "Cmd-Alt-F": formatCode,
+                        "Alt-G": "jumpToLine", "Ctrl-G": "jumpToLine",
+                        "Ctrl-Space": "autocomplete",
+                        "Ctrl-Alt-N": () => createNewItem('file'),
+                        "Ctrl-Alt-Shift-N": () => createNewItem('folder'),
+                    },
+                    hintOptions: { completeSingle: false }
+                });
+
+                setEditorFontSize(currentFontSize, true);
+                editorAreaWrapper.appendChild(editor.getWrapperElement());
+                const scrollTarget = editor.getScrollerElement() || editorPreviewAreaMain;
+
+                if (scrollToTopButton && scrollTarget) {
+                    scrollTarget.addEventListener('scroll', () => {
+                        if (scrollTarget.scrollTop > 200) {
+                            scrollToTopButton.style.display = 'flex';
+                        } else {
+                            scrollToTopButton.style.display = 'none';
+                        }
+                    });
+                    scrollToTopButton.addEventListener('click', () => {
+                        scrollTarget.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                }
+
+
+                if (fileSystem.length === 0) {
+                    const newFileId = generateId();
+                    fileSystem.push({ id: newFileId, type: 'file', name: 'welcome.html', content: defaultFileContent('welcome.html'), parentId: null });
+                    activeFileId = newFileId;
+                    saveFileSystem();
+                }
+                applySidebarState();
+                openFileInEditor(activeFileId, true);
+                renderFileTree();
+                setSplitMode(currentSplitMode, true);
+                updateStatus('Ready', 'saved');
+                updateLineColIndicator();
+                updateFilenameDisplay();
+                updateSettingsUI();
+                applyExplorerWidth();
+
+                editor.on('change', handleEditorChange);
+                editor.on('cursorActivity', updateLineColIndicator);
+                initSplitResizer();
+                initExplorerResizer();
+                setTimeout(() => editor.refresh(), 350); // Increased delay slightly for complex startup
+                console.log("Vibe Editor Pro with FM (Enhanced) Initialized.");
+            } catch (e) {
+                console.error("Initialization Error:", e);
+                if (editorAreaWrapper) editorAreaWrapper.innerHTML = `<div class="p-4 text-red-400 bg-red-900 border border-red-700 rounded h-full">FATAL ERROR: ${e.message}</div>`;
+                disableAllButtons();
+                updateStatus('Editor Failed', 'error');
+            }
+
+            function getEditorContent() { return editor ? editor.getValue() : ''; }
+            function setEditorContent(content, origin = 'setValue') { if (editor) { editor.setValue(content); editor.clearHistory(); editor.setCursor({line: 0, ch: 0}); } }
+            function updateStatus(text, state) { if (statusText) statusText.textContent = text; if (statusDot) { statusDot.className = 'status-dot'; statusDot.classList.add(state); statusDot.title = state.charAt(0).toUpperCase() + state.slice(1); } }
+            function updateLineColIndicator() { if (editor && activeFileId && lineColIndicator) { const c = editor.getCursor(); lineColIndicator.textContent = `Ln ${c.line + 1}, Col ${c.ch + 1}`; } else if (lineColIndicator) { lineColIndicator.textContent = `Ln -, Col -`; } }
+            function updateFilenameDisplay() { if (footerFilename) { const file = getFileById(activeFileId); footerFilename.textContent = file ? file.name : 'No file open'; footerFilename.title = file ? `File: ${file.name}` : 'No file selected'; } }
+            function handleEditorChange(instance, changeObj) { if (changeObj.origin === 'setValue' || changeObj.origin === 'load' || changeObj.origin === 'beautify' || !activeFileId) { return; } updateStatus('Unsaved', 'unsaved'); saveActiveFileContentWithDebounce(); if (currentSplitMode !== 'none') { updateSplitPreviewWithDebounce(); } }
+
+            function generateId() { return Date.now().toString(36) + Math.random().toString(36).substring(2); }
+            function getFileById(id) { return fileSystem.find(item => item.id === id); }
+            function getChildrenOf(parentId) { return fileSystem.filter(item => item.parentId === parentId).sort((a,b) => { if (a.type !== b.type) { return a.type === 'folder' ? -1 : 1;} return a.name.localeCompare(b.name); }); }
+
+            function saveFileSystem() {
+                try {
+                    localStorage.setItem(LS_KEY_FILESYSTEM, JSON.stringify(fileSystem));
+                    localStorage.setItem(LS_KEY_ACTIVE_FILE_ID, activeFileId || '');
+                    localStorage.setItem(LS_KEY_EXPANDED_FOLDERS, JSON.stringify(Array.from(expandedFolders)));
+                } catch (e) { console.error("Error saving FS:", e); showToast("Error saving file structure.", "error"); }
+            }
+            function loadFileSystem() {
+                const fsData = localStorage.getItem(LS_KEY_FILESYSTEM);
+                const activeId = localStorage.getItem(LS_KEY_ACTIVE_FILE_ID);
+                const expandedData = localStorage.getItem(LS_KEY_EXPANDED_FOLDERS);
+                if (fsData) { fileSystem = JSON.parse(fsData); activeFileId = activeId || (fileSystem.find(f => f.type === 'file')?.id || null); }
+                else { fileSystem = []; activeFileId = null; }
+                if (expandedData) { expandedFolders = new Set(JSON.parse(expandedData)); } else { expandedFolders = new Set(); }
+            }
+
+            function createNewItem(type, parentId = null) {
+                hideContextMenu();
+                const defaultName = type === 'file' ? 'untitled.html' : 'NewFolder';
+                let name = prompt(`Enter ${type} name:`, defaultName);
+                if (!name || name.trim() === '') return;
+                name = name.trim();
+
+                const siblings = getChildrenOf(parentId);
+                if (siblings.some(s => s.name === name && s.type === type)) { showToast(`${type} "${name}" already exists here.`, "error"); return; }
+
+                const newItem = { id: generateId(), type: type, name: name, parentId: parentId };
+                if (type === 'file') { newItem.content = defaultFileContent(name); }
+                fileSystem.push(newItem);
+                if (type === 'file') { openFileInEditor(newItem.id); }
+                else { expandedFolders.add(newItem.id); }
+                saveFileSystem(); renderFileTree(); showToast(`${type} "${name}" created.`, "success");
+            }
+
+            function renameItem(itemId) {
+                hideContextMenu();
+                const item = getFileById(itemId); if (!item) return;
+                let newName = prompt(`Rename ${item.type} "${item.name}" to:`, item.name);
+                if (!newName || newName.trim() === '' || newName.trim() === item.name) return;
+                newName = newName.trim();
+                const siblings = getChildrenOf(item.parentId);
+                if (siblings.some(s => s.id !== itemId && s.name === newName && s.type === item.type)) { showToast(`${item.type} "${newName}" already exists here.`, "error"); return; }
+                item.name = newName; saveFileSystem(); renderFileTree();
+                if (item.id === activeFileId) updateFilenameDisplay();
+                showToast(`${item.type} renamed to "${newName}".`, "success");
+            }
+            function deleteItem(itemId) {
+                hideContextMenu();
+                const item = getFileById(itemId); if (!item) return;
+                let confirmationMessage = `Delete ${item.type} "${item.name}"?`;
+                let itemsToDelete = [itemId];
+                if (item.type === 'folder') {
+                    const children = getAllDescendants(itemId);
+                    itemsToDelete = itemsToDelete.concat(children.map(c => c.id));
+                    if (children.length > 0) confirmationMessage += `\nThis will also delete ${children.length} item(s) inside it.`;
+                }
+                confirmationMessage += "\nThis cannot be undone.";
+                if (confirm(confirmationMessage)) {
+                    fileSystem = fileSystem.filter(fsItem => !itemsToDelete.includes(fsItem.id));
+                    if (itemsToDelete.includes(activeFileId)) {
+                        activeFileId = null; setEditorContent("", 'delete');
+                        const firstFile = fileSystem.find(f => f.type === 'file');
+                        if (firstFile) { openFileInEditor(firstFile.id); }
+                        else { updateFilenameDisplay(); editor.setOption("readOnly", true); editor.setOption("placeholder", "Create a file..."); }
+                    }
+                    itemsToDelete.forEach(id => expandedFolders.delete(id));
+                    saveFileSystem(); renderFileTree(); showToast(`${item.type} "${item.name}" and contents deleted.`, "success");
+                }
+            }
+            function getAllDescendants(folderId) { let desc = []; let q = getChildrenOf(folderId); while (q.length > 0) { const curr = q.shift(); desc.push(curr); if (curr.type === 'folder') { q.push(...getChildrenOf(curr.id)); } } return desc; }
+
+            function openFileInEditor(fileId, isInitialLoad = false) {
+                hideContextMenu();
+                const fileToOpen = getFileById(fileId);
+                if (!fileToOpen || fileToOpen.type !== 'file') {
+                    if (!isInitialLoad && fileId) showToast("Cannot open item.", "error");
+                    if (!activeFileId && !isInitialLoad) {
+                         const firstFile = fileSystem.find(f => f.type === 'file');
+                         if(firstFile) openFileInEditor(firstFile.id);
+                         else { editor.setValue(""); editor.setOption("readOnly", true); editor.setOption("placeholder", "Create a new file."); activeFileId = null; updateFilenameDisplay(); updateStatus("No file", "saved"); }
+                    } return;
+                }
+                if (editor.getOption("readOnly")) { editor.setOption("readOnly", false); editor.setOption("placeholder", editorArea.placeholder); }
+                activeFileId = fileId; setEditorContent(fileToOpen.content || "", 'load');
+                updateFilenameDisplay(); updateStatus('Loaded', 'saved'); updateLineColIndicator(); editor.focus();
+                saveSetting(LS_KEY_ACTIVE_FILE_ID, activeFileId); renderFileTree();
+                if (currentSplitMode !== 'none') { updateSplitPreview(); }
+                if(!isInitialLoad) showToast(`Opened "${fileToOpen.name}"`, "info");
+            }
+            function saveActiveFileContentWithDebounce() { clearTimeout(saveTimeout); if (!activeFileId) return; updateStatus('Saving...', 'saving'); saveTimeout = setTimeout(() => { const file = getFileById(activeFileId); if (file && editor) { file.content = getEditorContent(); saveFileSystem(); updateStatus('Saved', 'saved'); console.log(`Content of "${file.name}" saved.`); } else if (!file) { updateStatus('Save Error', 'error'); console.error("Save error: active file not found."); } }, SAVE_DEBOUNCE_DELAY); }
+
+            function renderFileTree() {
+                fileTree.innerHTML = '';
+                const rootItems = getChildrenOf(null);
+                rootItems.forEach(item => fileTree.appendChild(createTreeElement(item, 0)));
+                const activeElem = fileTree.querySelector(`.tree-item[data-id="${activeFileId}"]`);
+                if (activeElem) activeElem.classList.add('active-file');
+            }
+            function createTreeElement(item, depth) {
+                const li = document.createElement('li');
+                li.className = `tree-list-item ${item.type}-item`;
+                if (item.type === 'folder') li.classList.add(expandedFolders.has(item.id) ? 'expanded' : 'collapsed');
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'tree-item group'; itemDiv.dataset.id = item.id; itemDiv.dataset.type = item.type;
+                // itemDiv.style.paddingLeft = `${depth * 0.75 + 0.6}rem`; // Adjusted paddingLeft for depth + base
+                itemDiv.style.paddingLeft = `${depth * 1.25 + (item.type === 'folder' ? 0 : 0.6) }rem`; // Dynamic padding for folder/file alignment
+
+
+                if (item.type === 'folder') {
+                    const toggleIcon = document.createElement('ion-icon');
+                    toggleIcon.setAttribute('name', 'chevron-forward-outline');
+                    toggleIcon.className = 'item-icon toggle-icon shrink-0'; // Removed mr-1 to control with paddingLeft
+                    itemDiv.appendChild(toggleIcon);
+                }
+                const icon = document.createElement('ion-icon');
+                icon.setAttribute('name', item.type === 'file' ? 'document-text-outline' : (expandedFolders.has(item.id) ? 'folder-open-outline' : 'folder-outline'));
+                icon.className = 'item-icon shrink-0';
+                if (item.type === 'folder') icon.classList.add('text-yellow-400'); else icon.classList.add('text-blue-300');
+
+                const nameSpan = document.createElement('span'); nameSpan.className = 'item-name'; nameSpan.textContent = item.name;
+                const actionsDiv = document.createElement('div'); actionsDiv.className = 'item-actions';
+                const renameBtn = document.createElement('button'); renameBtn.title = "Rename"; renameBtn.innerHTML = '<ion-icon name="pencil-outline"></ion-icon>'; renameBtn.onclick = (e) => { e.stopPropagation(); renameItem(item.id); };
+                const deleteBtn = document.createElement('button'); deleteBtn.title = "Delete"; deleteBtn.innerHTML = '<ion-icon name="trash-outline"></ion-icon>'; deleteBtn.onclick = (e) => { e.stopPropagation(); deleteItem(item.id); };
+                actionsDiv.appendChild(renameBtn); actionsDiv.appendChild(deleteBtn);
+
+                itemDiv.appendChild(icon); itemDiv.appendChild(nameSpan); itemDiv.appendChild(actionsDiv);
+                itemDiv.addEventListener('click', (e) => { e.stopPropagation(); if (item.type === 'file') { openFileInEditor(item.id); } else if (item.type === 'folder') { toggleFolder(item.id); } });
+                itemDiv.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); showContextMenu(e, item.id); });
+                li.appendChild(itemDiv);
+                if (item.type === 'folder') {
+                    const childrenUl = document.createElement('ul'); childrenUl.className = 'folder-content';
+                    if (expandedFolders.has(item.id)) { childrenUl.style.display = 'block'; const children = getChildrenOf(item.id); children.forEach(child => childrenUl.appendChild(createTreeElement(child, depth + 1))); }
+                    else { childrenUl.style.display = 'none'; }
+                    li.appendChild(childrenUl);
+                } return li;
+            }
+            function toggleFolder(folderId) { hideContextMenu(); if (expandedFolders.has(folderId)) { expandedFolders.delete(folderId); } else { expandedFolders.add(folderId); } saveFileSystem(); renderFileTree(); }
+
+            function showContextMenu(event, itemId) { const item = getFileById(itemId); if (!item) return; contextMenuTargetId = itemId; fileContextMenu.style.top = `${event.clientY}px`; fileContextMenu.style.left = `${event.clientX}px`; fileContextMenu.classList.remove('hidden'); if (item.type === 'folder') { ctxNewFileInFolderButton.classList.remove('hidden'); } else { ctxNewFileInFolderButton.classList.add('hidden'); } }
+            function hideContextMenu() { if (fileContextMenu) fileContextMenu.classList.add('hidden'); contextMenuTargetId = null; }
+            document.addEventListener('click', (e) => { hideContextMenu(); if (!settingsButton.contains(e.target) && !settingsDropdownContent.contains(e.target)) { settingsDropdownContent.classList.remove('show');} });
+            ctxRenameButton.onclick = () => { if (contextMenuTargetId) renameItem(contextMenuTargetId); };
+            ctxDeleteButton.onclick = () => { if (contextMenuTargetId) deleteItem(contextMenuTargetId); };
+            ctxNewFileInFolderButton.onclick = () => { if (contextMenuTargetId) { const pF = getFileById(contextMenuTargetId); if (pF && pF.type === 'folder') { createNewItem('file', contextMenuTargetId); } } };
+
+            function saveSetting(key, value) { try { localStorage.setItem(key, value); } catch (e) { console.warn(`Could not save setting ${key}`, e); } }
+            function loadSetting(key, defaultValue) { try { const v = localStorage.getItem(key); return v === null ? defaultValue : v; } catch (e) { return defaultValue; } }
+            function saveAllSettings() { saveSetting(LS_KEY_THEME, currentTheme); saveSetting(LS_KEY_FONT_SIZE, currentFontSize.toString()); saveSetting(LS_KEY_SPLIT_MODE, currentSplitMode); saveSetting(LS_KEY_SPLIT_SIZE_H, editorBasisH.toString()); saveSetting(LS_KEY_SPLIT_SIZE_V, editorBasisV.toString()); saveSetting(LS_KEY_EXPLORER_WIDTH, currentExplorerWidth.toString()); saveSetting(LS_KEY_SIDEBAR_VISIBLE, isSidebarVisible.toString()); console.log("Editor settings saved."); }
+            function loadSettingsAndFileSystem() {
+                loadFileSystem();
+                currentTheme = loadSetting(LS_KEY_THEME, 'dracula');
+                currentFontSize = parseInt(loadSetting(LS_KEY_FONT_SIZE, DEFAULT_FONT_SIZE.toString()), 10);
+                currentSplitMode = loadSetting(LS_KEY_SPLIT_MODE, 'none');
+                editorBasisH = parseFloat(loadSetting(LS_KEY_SPLIT_SIZE_H, '50'));
+                editorBasisV = parseFloat(loadSetting(LS_KEY_SPLIT_SIZE_V, '50'));
+                currentExplorerWidth = parseInt(loadSetting(LS_KEY_EXPLORER_WIDTH, DEFAULT_EXPLORER_WIDTH.toString()), 10);
+                isSidebarVisible = loadSetting(LS_KEY_SIDEBAR_VISIBLE, 'true') === 'true';
+            }
+            function updateSettingsUI() { if (themeSelect) themeSelect.value = currentTheme; if (fontSizeInput) fontSizeInput.value = currentFontSize; }
+
+            function toggleSidebar() {
+                isSidebarVisible = !isSidebarVisible;
+                applySidebarState();
+                saveSetting(LS_KEY_SIDEBAR_VISIBLE, isSidebarVisible.toString());
+                setTimeout(() => {
+                    if(editor) {
+                        editor.refresh();
+                         if (currentSplitMode !== 'none') { // Refresh split view editor as well
+                            const splitEditorInstance = splitEditorPane.querySelector('.CodeMirror') ? CodeMirror. élèves(splitEditorPane.querySelector('.CodeMirror')) : null;
+                            if (splitEditorInstance) splitEditorInstance.refresh();
+                        }
+                    }
+                }, 350); // Delay to allow transition
+            }
+
+            function applySidebarState() {
+                if (fileExplorerPanel && toggleSidebarButton) {
+                    fileExplorerPanel.classList.toggle('hidden-sidebar', !isSidebarVisible);
+
+                    const tooltip = toggleSidebarButton.parentElement.querySelector('.tooltiptext');
+                    if (isSidebarVisible) {
+                        toggleSidebarButton.innerHTML = '<ion-icon name="list-outline"></ion-icon>';
+                        if(tooltip) tooltip.textContent = "Hide File Explorer";
+                    } else {
+                        toggleSidebarButton.innerHTML = '<ion-icon name="menu-outline"></ion-icon>';
+                        if(tooltip) tooltip.textContent = "Show File Explorer";
+                    }
+                }
+            }
+            if (toggleSidebarButton) {
+                toggleSidebarButton.addEventListener('click', toggleSidebar);
+            }
+
+
+            function clearActiveFileContent() { if (!editor || !activeFileId) { showToast("No active file to clear.", "warning"); return; } const activeFile = getFileById(activeFileId); if (!activeFile) { showToast("Active file not found.", "error"); return; } if (confirm(`Clear all content from "${activeFile.name}"?`)) { setEditorContent('', 'clear'); showToast(`Content of "${activeFile.name}" cleared.`, "info"); } }
+            function handleFileImport(event) {
+                const file = event.target.files[0]; if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    let newFileName = file.name;
+                    let counter = 1;
+                    const checkName = (nameToCheck) => getChildrenOf(null).some(item => item.name === nameToCheck && item.type === 'file');
+
+                    while (checkName(newFileName)) {
+                        const nameParts = file.name.split('.');
+                        const ext = nameParts.length > 1 ? "." + nameParts.pop() : "";
+                        const baseName = nameParts.join('.');
+                        newFileName = `${baseName}_${counter}${ext}`;
+                        counter++;
+                    }
+                    if (newFileName !== file.name) {
+                        showToast(`A file named "${file.name}" already exists. Imported as "${newFileName}".`, "warning", 5000);
+                    }
+
+                    const newFile = { id: generateId(), type: 'file', name: newFileName, content: content, parentId: null };
+                    fileSystem.push(newFile); saveFileSystem(); renderFileTree(); openFileInEditor(newFile.id);
+                    showToast(`Imported "${newFileName}" successfully.`, "success");
+                };
+                reader.onerror = () => { showToast(`Error reading file.`, "error"); };
+                reader.readAsText(file);
+                importFileInput.value = null;
+            }
+            triggerImportButton.addEventListener('click', () => importFileInput.click());
+            importFileInput.addEventListener('change', handleFileImport);
+
+            function getMimeType(filename) {
+                const ext = filename.slice(filename.lastIndexOf('.') + 1).toLowerCase();
+                const types = {
+                    'html': 'text/html', 'htm': 'text/html', 'css': 'text/css', 'js': 'application/javascript',
+                    'json': 'application/json', 'txt': 'text/plain', 'md': 'text/markdown', 'xml': 'application/xml'
+                };
+                return types[ext] || 'application/octet-stream';
+            }
+
+            function exportActiveFile() {
+                if (!editor || !activeFileId) { showToast("No active file to export.", "warning"); return; }
+                const fileToExport = getFileById(activeFileId); if (!fileToExport) { showToast("Active file data not found.", "error"); return; }
+                const content = fileToExport.content;
+                const mimeType = getMimeType(fileToExport.name);
+                const blob = new Blob([content], { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                let suggestedName = fileToExport.name;
+                if (!suggestedName.match(/\.(html|css|js|json|txt|md)$/i) && mimeType === 'text/html') suggestedName += '.html';
+
+                const filename = prompt("Enter filename to export:", suggestedName);
+                if (filename === null) { URL.revokeObjectURL(url); return; }
+                let finalFilename = filename.trim().replace(/[<>:"/\\|?*]+/g, '_');
+                if (finalFilename === "") finalFilename = "export";
+
+                link.href = url; link.download = finalFilename; document.body.appendChild(link); link.click();
+                document.body.removeChild(link); URL.revokeObjectURL(url); showToast(`Exported "${finalFilename}"`, "success");
+            }
+            function clearAllEditorData() { if (confirm("⚠️ WARNING! ⚠️\n\nErase ALL files, folders, and editor settings?\nTHIS CANNOT BE UNDONE.")) { console.log("Clearing all data..."); Object.keys(localStorage).filter(key => key.startsWith(LS_PREFIX)).forEach(key => localStorage.removeItem(key)); fileSystem = []; activeFileId = null; expandedFolders = new Set(); currentTheme = 'dracula'; currentFontSize = DEFAULT_FONT_SIZE; currentSplitMode = 'none'; editorBasisH = 50; editorBasisV = 50; currentExplorerWidth = DEFAULT_EXPLORER_WIDTH; isSidebarVisible = true; setEditorContent('', 'clear_all'); editor.setOption("readOnly", true); editor.setOption("placeholder", "Create a file..."); const newFileId = generateId(); fileSystem.push({ id: newFileId, type: 'file', name: 'welcome.html', content: defaultFileContent('welcome.html'), parentId: null }); activeFileId = newFileId; saveFileSystem(); openFileInEditor(activeFileId, true); renderFileTree(); applySidebarState(); setEditorTheme(currentTheme); setEditorFontSize(currentFontSize); setSplitMode('none'); applyExplorerWidth(); updateSettingsUI(); updateFilenameDisplay(); updateStatus('All Data Cleared', 'info'); showToast("All editor data cleared.", "info"); } }
+
+            async function copyCode() { const code = getEditorContent(); if (!activeFileId || !code) { showToast("Nothing to copy.", "warning"); return; } try { await navigator.clipboard.writeText(code); showToast("Code copied.", "success"); } catch (err) { const ta = document.createElement("textarea"); ta.value = code; ta.style.position = "fixed"; ta.style.opacity = 0; document.body.appendChild(ta); ta.select(); try { if(document.execCommand('copy')) showToast("Copied (fallback).", "success"); else throw new Error(); } catch (fallErr) { showToast("Auto-copy failed. Use Ctrl+C.", "error"); } finally { document.body.removeChild(ta); } } }
+            async function pasteCode() { if (!editor || !activeFileId) { showToast("Open a file to paste.", "warning"); return; } try { const text = await navigator.clipboard.readText(); if (text) { editor.replaceSelection(text, 'around'); editor.focus(); showToast("Pasted.", "success"); } else { showToast("Clipboard empty.", "warning"); } } catch (err) { showToast("Paste failed. Try Ctrl+V.", "error"); editor.focus(); } }
+            function formatCode() { if (!editor || !activeFileId || typeof html_beautify === 'undefined') { showToast("Formatting unavailable or no file open.", "error"); return; } try { const currentContent = getEditorContent(); const cursor = editor.getCursor(); const scrollInfo = editor.getScrollInfo(); const formatted = html_beautify(currentContent, { indent_size: editor.getOption("indentUnit"), indent_char: ' ', max_preserve_newlines: 1, preserve_newlines: true, indent_scripts: 'keep', brace_style: 'collapse', end_with_newline: true, wrap_line_length: 0, indent_inner_html: true }); if (currentContent !== formatted) { editor.setValue(formatted); editor.setCursor(cursor); editor.scrollTo(scrollInfo.left, scrollInfo.top); editor.refresh(); showToast("Code formatted!", "success"); } else { showToast("Code already formatted.", "info"); } } catch (e) { showToast("Formatting error.", "error"); updateStatus('Format Error', 'error'); } }
+            function openInNewTab() { if(!activeFileId) {showToast("No active file to preview.", "warning"); return;} const file = getFileById(activeFileId); if(!file) return; const source = file.content; try { const blob = new Blob([source], { type: getMimeType(file.name) }); const url = URL.createObjectURL(blob); const win = window.open(url, '_blank'); setTimeout(() => URL.revokeObjectURL(url), 20000); if (!win) { showToast('Popup blocked.', 'warning'); } } catch (e) { showToast("Could not open preview.", "error"); } }
+            function disableAllButtons() { document.querySelectorAll('.action-button').forEach(b => { b.disabled = true; }); if(settingsButton) settingsButton.disabled = true; }
+
+            function showModalPreview() { if (!editor || !activeFileId) { showToast("No active file to preview.", "warning"); return; } updateStatus('Running preview...', 'saving'); const file = getFileById(activeFileId); if(!file) return; const source = file.content; try { modalPreviewFrame.srcdoc = source; } catch (e) { modalPreviewFrame.srcdoc = `<html><body>Error: ${e.message}</body></html>`; showToast("Modal preview error.", "error"); } previewModalOverlay.classList.add('active'); previewModal.classList.add('active'); previewModalOverlay.setAttribute('aria-hidden', 'false'); previewModal.setAttribute('aria-hidden', 'false'); closeModalButton.focus(); }
+            function hideModalPreview() { previewModalOverlay.classList.remove('active'); previewModal.classList.remove('active'); previewModalOverlay.setAttribute('aria-hidden', 'true'); previewModal.setAttribute('aria-hidden', 'true'); const onTransEnd = () => { if (modalPreviewFrame && !previewModal.classList.contains('active')) { modalPreviewFrame.srcdoc = 'about:blank'; } previewModal.removeEventListener('transitionend', onTransEnd, { once: true }); }; previewModal.addEventListener('transitionend', onTransEnd, { once: true }); setTimeout(() => { if (modalPreviewFrame && !previewModal.classList.contains('active')) { modalPreviewFrame.srcdoc = 'about:blank'; } }, 350); }
+
+            function updateSplitPreview() { if (!editor || currentSplitMode === 'none' || !activeFileId) return; const file = getFileById(activeFileId); if(!file) return; const source = file.content; try { splitPreviewFrame.srcdoc = source; } catch (e) { splitPreviewFrame.srcdoc = `<html><body>Error: ${e.message}</body></html>`; } }
+            function updateSplitPreviewWithDebounce() { clearTimeout(previewTimeout); previewTimeout = setTimeout(updateSplitPreview, PREVIEW_UPDATE_DEBOUNCE); }
+            function cycleSplitMode() { let nextMode = 'none'; switch (currentSplitMode) { case 'none': nextMode = 'horizontal'; break; case 'horizontal': nextMode = 'vertical'; break; case 'vertical': nextMode = 'none'; break; } setSplitMode(nextMode); }
+            function setSplitMode(mode, isInitial = false) { if (!editor) return; const prevMode = currentSplitMode; currentSplitMode = mode; document.body.classList.toggle('split-active', mode !== 'none'); splitContainer.classList.remove('split-horizontal', 'split-vertical'); ['flexBasis', 'width', 'height'].forEach(p => { splitEditorPane.style[p] = ''; splitPreviewPane.style[p] = ''; }); if (mode === 'horizontal') { splitContainer.classList.add('split-horizontal'); splitEditorPane.style.flexBasis = `${editorBasisH}%`; splitPreviewPane.style.flexBasis = `${100 - editorBasisH}%`; } else if (mode === 'vertical') { splitContainer.classList.add('split-vertical'); splitEditorPane.style.flexBasis = `${editorBasisV}%`; splitPreviewPane.style.flexBasis = `${100 - editorBasisV}%`; } if (mode !== 'none' && prevMode === 'none') { splitEditorPane.appendChild(editor.getWrapperElement()); } else if (mode === 'none' && prevMode !== 'none') { editorAreaWrapper.appendChild(editor.getWrapperElement()); } updateSplitButtonUI(); if (mode !== 'none') { setTimeout(() => editor.refresh(), 50); updateSplitPreview(); } else { splitPreviewFrame.srcdoc = 'about:blank'; setTimeout(() => editor.refresh(), 50); } if (!isInitial) { saveSetting(LS_KEY_SPLIT_MODE, currentSplitMode); showToast(mode !== 'none' ? (prevMode === 'none' ? `Split view: ${mode}`: `Switched to ${mode} split`) : "Split view off", "info"); } }
+            function updateSplitButtonUI() { splitButton.classList.remove('active-horizontal', 'active-vertical'); let icon = 'browsers-outline', txt = 'Split', tip = 'Toggle Split View (Off)'; if (currentSplitMode === 'horizontal') { splitButton.classList.add('active-horizontal'); icon = 'swap-vertical-outline'; txt = 'Split H'; tip = 'Switch to Vertical Split'; } else if (currentSplitMode === 'vertical') { splitButton.classList.add('active-vertical'); icon = 'power-outline'; txt = 'Split V'; tip = 'Turn Off Split View'; } else { tip = 'Toggle Split View (Horizontal)'; } splitIcon.setAttribute('name', icon); if (splitText && window.getComputedStyle(splitText).display !== 'none') { splitText.textContent = txt; } else { splitText.textContent = 'Split'; } splitTooltip.textContent = tip;}
+
+            function initSplitResizer() { let startX, startY, initSizeP; function startR(e) { if (currentSplitMode === 'none') return; e.preventDefault(); isResizingSplit = true; mainSplitDivider.classList.add('resizing'); document.body.classList.add('resizing', currentSplitMode === 'horizontal' ? 'resizing-horizontal' : 'resizing-vertical'); const ev = e.touches ? e.touches[0] : e; startX = ev.clientX; startY = ev.clientY; initSizeP = currentSplitMode === 'horizontal' ? editorBasisH : editorBasisV; ['mousemove', 'touchmove'].forEach(evName => window.addEventListener(evName, doR, { passive: false })); ['mouseup', 'touchend'].forEach(evName => window.addEventListener(evName, stopR)); } function doR(e) { if (!isResizingSplit) return; e.preventDefault(); const ev = e.touches ? e.touches[0] : e; const cRect = splitContainer.getBoundingClientRect(); let delta, cSize, newB; if (currentSplitMode === 'horizontal') { delta = ev.clientX - startX; cSize = cRect.width; newB = initSizeP + (delta / cSize) * 100; const minP = (MIN_PANE_SIZE_PX / cSize) * 100; editorBasisH = Math.max(minP, Math.min(newB, 100 - minP)); splitEditorPane.style.flexBasis = `${editorBasisH}%`; splitPreviewPane.style.flexBasis = `${100 - editorBasisH}%`; } else { delta = ev.clientY - startY; cSize = cRect.height; newB = initSizeP + (delta / cSize) * 100; const minP = (MIN_PANE_SIZE_PX / cSize) * 100; editorBasisV = Math.max(minP, Math.min(newB, 100 - minP)); splitEditorPane.style.flexBasis = `${editorBasisV}%`; splitPreviewPane.style.flexBasis = `${100 - editorBasisV}%`; } clearTimeout(resizeTimeout); resizeTimeout = setTimeout(() => { if (editor) editor.refresh(); }, RESIZE_DEBOUNCE); } function stopR() { if (!isResizingSplit) return; isResizingSplit = false; mainSplitDivider.classList.remove('resizing'); document.body.classList.remove('resizing', 'resizing-horizontal', 'resizing-vertical'); ['mousemove', 'touchmove', 'mouseup', 'touchend'].forEach(evName => window.removeEventListener(evName, evName.includes('move') ? doR : stopR)); if (currentSplitMode === 'horizontal') saveSetting(LS_KEY_SPLIT_SIZE_H, editorBasisH.toString()); else if (currentSplitMode === 'vertical') saveSetting(LS_KEY_SPLIT_SIZE_V, editorBasisV.toString()); if (editor) editor.refresh(); } mainSplitDivider.addEventListener('mousedown', startR); mainSplitDivider.addEventListener('touchstart', startR, { passive: false });}
+            function initExplorerResizer() { let startXExp, initWExp; function startRExp(e) { if(!isSidebarVisible) return; e.preventDefault(); isResizingExplorer = true; fileExplorerResizer.classList.add('resizing'); document.body.classList.add('resizing', 'resizing-horizontal'); startXExp = e.clientX; initWExp = fileExplorerPanel.offsetWidth; ['mousemove', 'mouseup'].forEach(evN => window.addEventListener(evN, evN === 'mousemove' ? doRExp : stopRExp)); } function doRExp(e) { if (!isResizingExplorer) return; e.preventDefault(); const deltaX = e.clientX - startXExp; let newW = initWExp + deltaX; const minW = parseInt(getComputedStyle(fileExplorerPanel).minWidth,10) || 150; const maxW = (window.innerWidth / 2); newW = Math.max(minW, Math.min(newW, maxW)); currentExplorerWidth = newW; fileExplorerPanel.style.width = `${currentExplorerWidth}px`; } function stopRExp() { if (!isResizingExplorer) return; isResizingExplorer = false; fileExplorerResizer.classList.remove('resizing'); document.body.classList.remove('resizing', 'resizing-horizontal'); ['mousemove', 'mouseup'].forEach(evN => window.removeEventListener(evN, evN === 'mousemove' ? doRExp : stopRExp)); saveSetting(LS_KEY_EXPLORER_WIDTH, currentExplorerWidth.toString()); } fileExplorerResizer.addEventListener('mousedown', startRExp); }
+            function applyExplorerWidth() { if (fileExplorerPanel && isSidebarVisible) { fileExplorerPanel.style.width = `${currentExplorerWidth}px`; } else if (fileExplorerPanel && !isSidebarVisible) { fileExplorerPanel.style.width = `0px`;} }
+
+            function toggleSettingsDropdown() { settingsDropdownContent.classList.toggle('show'); }
+            function setEditorTheme(themeName) { if (!editor) return; editor.setOption("theme", themeName); currentTheme = themeName; saveSetting(LS_KEY_THEME, themeName); }
+            function setEditorFontSize(size, isInitial = false) { if (!editor) return; const newSize = Math.max(8, Math.min(24, parseInt(size, 10))); if (isNaN(newSize)) return; currentFontSize = newSize; editor.getWrapperElement().style.fontSize = `${newSize}px`; document.documentElement.style.setProperty('--editor-font-size', `${newSize}px`); editor.refresh(); if (!isInitial) { saveSetting(LS_KEY_FONT_SIZE, newSize.toString()); } if (fontSizeInput) fontSizeInput.value = newSize; }
+            function showShortcutsModal() { shortcutsModalOverlay.classList.add('active'); shortcutsModal.classList.add('active'); shortcutsModalOverlay.setAttribute('aria-hidden', 'false'); shortcutsModal.setAttribute('aria-hidden', 'false'); closeShortcutsButton.focus(); settingsDropdownContent.classList.remove('show'); }
+            function hideShortcutsModal() { shortcutsModalOverlay.classList.remove('active'); shortcutsModal.classList.remove('active'); shortcutsModalOverlay.setAttribute('aria-hidden', 'true'); shortcutsModal.setAttribute('aria-hidden', 'true'); }
+
+            function showToast(message, type = "info", iconName = null, duration = 3500) { const toast = document.createElement('div'); toast.className = `toast ${type}`; let iconHTML = ''; if (iconName) { iconHTML = `<ion-icon name="${iconName}"></ion-icon>`; } else { switch(type) { case 'success': iconHTML = '<ion-icon name="checkmark-circle-outline"></ion-icon>'; break; case 'error': iconHTML = '<ion-icon name="alert-circle-outline"></ion-icon>'; break; case 'warning': iconHTML = '<ion-icon name="warning-outline"></ion-icon>'; break; case 'info': iconHTML = '<ion-icon name="information-circle-outline"></ion-icon>'; break; } } toast.innerHTML = `${iconHTML}<span>${message}</span>`; toastContainer.appendChild(toast); requestAnimationFrame(() => { toast.classList.add('show'); }); setTimeout(() => { toast.classList.remove('show'); toast.addEventListener('transitionend', () => { if(toast.parentNode) toast.remove(); }, { once: true }); setTimeout(() => { if(toast.parentNode) toast.remove(); }, 500); }, duration); }
+
+            if(runButton) runButton.addEventListener('click', showModalPreview);
+            if(newTabButton) newTabButton.addEventListener('click', openInNewTab);
+            if(exportCurrentFileButton) exportCurrentFileButton.addEventListener('click', exportActiveFile);
+            if(clearContentButton) clearContentButton.addEventListener('click', clearActiveFileContent);
+            if(clearAllDataButton) clearAllDataButton.addEventListener('click', clearAllEditorData);
+            if(copyButton) copyButton.addEventListener('click', copyCode);
+            if(pasteButton) pasteButton.addEventListener('click', pasteCode);
+            if(formatButton) formatButton.addEventListener('click', formatCode);
+            if(searchButton) searchButton.addEventListener('click', () => editor && activeFileId && CodeMirror.commands.findPersistent(editor));
+            if(splitButton) splitButton.addEventListener('click', cycleSplitMode);
+            if(createFileButton) createFileButton.addEventListener('click', () => createNewItem('file', null));
+            if(createFolderButton) createFolderButton.addEventListener('click', () => createNewItem('folder', null));
+            if(settingsButton) settingsButton.addEventListener('click', toggleSettingsDropdown);
+            if(themeSelect) themeSelect.addEventListener('change', (e) => setEditorTheme(e.target.value));
+            if(fontSizeInput) fontSizeInput.addEventListener('change', (e) => setEditorFontSize(e.target.value));
+            if(fontSizeInput) fontSizeInput.addEventListener('input', (e) => setEditorFontSize(e.target.value)); // For live updates on number input
+            if(shortcutsLink) shortcutsLink.addEventListener('click', showShortcutsModal);
+            if(closeModalButton) closeModalButton.addEventListener('click', hideModalPreview);
+            if(previewModalOverlay) previewModalOverlay.addEventListener('click', hideModalPreview);
+            if(closeShortcutsButton) closeShortcutsButton.addEventListener('click', hideShortcutsModal);
+            if(shortcutsModalOverlay) shortcutsModalOverlay.addEventListener('click', hideShortcutsModal);
+            document.addEventListener('keydown', (event) => { if (event.key === 'Escape') { if (previewModal.classList.contains('active')) { hideModalPreview(); } else if (shortcutsModal.classList.contains('active')) { hideShortcutsModal(); } else if (settingsDropdownContent.classList.contains('show')) { settingsDropdownContent.classList.remove('show'); } else if (!fileContextMenu.classList.contains('hidden')) { hideContextMenu(); } event.stopPropagation(); } });
+            [previewModal, shortcutsModal, fileContextMenu, settingsDropdownContent].forEach(el => el?.addEventListener('click', e => e.stopPropagation())); // Prevent closing dropdown when clicking inside
+
+            let winResizeDebounce; window.addEventListener('resize', () => { clearTimeout(winResizeDebounce); winResizeDebounce = setTimeout(() => { if (editor) { editor.refresh(); } updateSplitButtonUI(); /* updateSettingsUI(); Re-evaluate if needed for settings UI that changes on resize */ }, 250); });
+            window.addEventListener('beforeunload', (event) => { if (statusText?.textContent?.includes('Unsaved') || statusDot?.classList.contains('unsaved') || statusDot?.classList.contains('saving')) { event.preventDefault(); event.returnValue = ''; return ''; } });
+        });
+    </script>
+</body>
+</html>
