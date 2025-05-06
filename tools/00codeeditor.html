@@ -64,7 +64,7 @@
             --min-pane-size: 50px;
             --editor-font-size: 14px;
             --file-explorer-width: 250px;
-            --file-explorer-min-width: 150px; /* Slightly reduced min width */
+            --file-explorer-min-width: 180px;
         }
         .cm-s-eclipse { background-color: #ffffff; color: #000000; }
         .cm-s-eclipse .CodeMirror-gutters { background: #f7f7f7; border-right: 1px solid #eeeeee; }
@@ -124,54 +124,19 @@
         .file-explorer-header .action-button ion-icon { font-size: 0.9rem; margin-right: 0.2rem; }
 
         #file-tree { list-style: none; padding-left: 0; flex-grow: 1; }
-        #file-tree .tree-item {
-            padding: 0.4rem 0.6rem; /* Increased padding */
-            border-radius: 0.375rem; /* Consistent radius */
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            color: var(--text-secondary);
-            font-size: 0.9rem; /* Slightly larger font */
-            margin-bottom: 3px; /* A bit more space */
-            min-height: 38px; /* Better tap height */
-            transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
-        }
+        #file-tree .tree-item { padding: 0.3rem 0.5rem; border-radius: 0.25rem; cursor: pointer; display: flex; align-items: center; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 2px; }
         #file-tree .tree-item:hover { background-color: var(--bg-tertiary); color: var(--text-primary); }
-        #file-tree .tree-item.active-file { background-color: var(--accent-blue); color: white; font-weight: 600; } /* Slightly bolder */
-        #file-tree .tree-item .item-icon {
-            margin-right: 0.6rem; /* More space */
-            font-size: 1.1rem; /* Larger icon */
-            line-height: 1;
-            flex-shrink: 0;
-        }
-        #file-tree .tree-item .toggle-icon { /* Specific for folder toggle */
-            margin-right: 0.25rem;
-            font-size: 0.85rem;
-            color: var(--text-tertiary);
-            transition: transform 0.2s ease-out;
-        }
+        #file-tree .tree-item.active-file { background-color: var(--accent-blue); color: white; font-weight: 500; }
+        #file-tree .tree-item .item-icon { margin-right: 0.5rem; font-size: 1rem; line-height: 1; flex-shrink: 0; }
         #file-tree .tree-item .item-name { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #file-tree .tree-item .item-actions { display: none; margin-left: auto; }
         #file-tree .tree-item:hover .item-actions { display: flex; align-items: center; gap: 0.3rem; }
-        #file-tree .tree-item .item-actions button {
-            background: none; border: none; color: var(--text-secondary);
-            padding: 0.25rem; /* Ensure tap area */
-            cursor: pointer;
-            font-size: 1rem; /* Larger action icons */
-            line-height: 1;
-        }
+        #file-tree .tree-item .item-actions button { background: none; border: none; color: var(--text-secondary); padding: 0.1rem; cursor: pointer; font-size: 0.9rem; }
         #file-tree .tree-item .item-actions button:hover { color: var(--text-primary); }
-        #file-tree ul {
-            list-style: none;
-            padding-left: 1.25rem; /* Indentation for nested */
-            margin-top: 3px;
-        }
+        #file-tree ul { list-style: none; padding-left: 1rem; margin-top: 2px; }
         .folder-content { display: none; }
         .folder-item.expanded > .folder-content { display: block; }
-        .folder-item.expanded > .tree-item .toggle-icon {
-            transform: rotate(90deg);
-            color: var(--text-primary); /* Highlight when expanded */
-        }
+        .folder-item.expanded > .tree-item .toggle-icon { transform: rotate(90deg); }
 
 
         #file-explorer-resizer {
@@ -192,7 +157,7 @@
             width: 0 !important;
         }
 
-        .editor-preview-area { flex-grow: 1; overflow: auto; display: flex; flex-direction: column; position: relative; }
+        .editor-preview-area { flex-grow: 1; overflow: auto; display: flex; flex-direction: column; position: relative; } /* Changed overflow to auto for editor scrolling */
         .content-area { flex-grow: 1; overflow: hidden; position: relative; }
         .editor-area-wrapper { height: 100%; padding: 0.5rem; display: block; }
         #split-container { display: none; width: 100%; height: 100%; overflow: hidden; position: absolute; top: 0; left: 0; }
@@ -217,7 +182,7 @@
 
         .CodeMirror { border: none; font-size: var(--editor-font-size); line-height: 1.6; height: 100% !important; }
         #split-editor-pane .CodeMirror { border-radius: 0; }
-        .CodeMirror-placeholder { color: var(--text-tertiary) !important; font-style: italic; padding: 0.5rem; }
+        .CodeMirror-placeholder { color: #6b7280 !important; font-style: italic; }
         .CodeMirror-activeline-background { background: rgba(255, 255, 255, 0.08) !important; }
         .cm-matchhighlight { background-color: rgba(255, 255, 0, 0.2); }
         .CodeMirror-hints { z-index: 100 !important; background-color: var(--bg-tertiary) !important; border: 1px solid var(--border-color) !important; box-shadow: 0 3px 8px rgba(0,0,0,0.3); }
@@ -271,45 +236,21 @@
 
 
         .settings-dropdown { position: relative; display: inline-block; }
-        .settings-dropdown-content {
-            display: none; position: absolute; right: 0; background-color: var(--bg-secondary);
-            min-width: 240px; /* Slightly wider */
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.3); z-index: 101;
-            border-radius: 0.375rem; border: 1px solid var(--border-color);
-            padding: 0.5rem 0; margin-top: 4px;
-            max-height: 70vh; overflow-y: auto; /* Scrollable */
-        }
+        .settings-dropdown-content { display: none; position: absolute; right: 0; background-color: var(--bg-secondary); min-width: 220px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.3); z-index: 101; border-radius: 0.375rem; border: 1px solid var(--border-color); padding: 0.5rem 0; margin-top: 4px; }
         .settings-dropdown-content.show { display: block; }
-        .settings-dropdown-content div, .settings-dropdown-content a, .settings-dropdown-content button {
-            color: var(--text-primary); padding: 0.6rem 1.1rem; /* More touch-friendly */
-            text-decoration: none; display: block; font-size: 0.9rem; /* Consistent font size */
-            width: 100%; text-align: left; background: none; border: none; cursor: pointer;
-        }
+        .settings-dropdown-content div, .settings-dropdown-content a, .settings-dropdown-content button { color: var(--text-primary); padding: 0.5rem 1rem; text-decoration: none; display: block; font-size: 0.875rem; width: 100%; text-align: left; background: none; border: none; cursor: pointer; }
         .settings-dropdown-content div:not(.settings-item):hover, .settings-dropdown-content a:hover, .settings-dropdown-content button:hover:not(#clear-all-data-button) { background-color: var(--bg-tertiary); }
         #clear-all-data-button:hover { background-color: var(--accent-red) !important; color: white !important; }
         .settings-dropdown-content div label { margin-right: 0.5rem; color: var(--text-secondary); }
-        .settings-dropdown-content select, .settings-dropdown-content input[type=number] {
-            background-color: var(--bg-primary); border: 1px solid var(--border-color);
-            color: var(--text-primary); border-radius: 0.25rem;
-            padding: 0.35rem 0.6rem; /* Better padding for inputs */
-            margin-left: auto; width: auto; max-width: 100px; font-size: 0.85rem;
-        }
+        .settings-dropdown-content select, .settings-dropdown-content input[type=number] { background-color: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 0.25rem; padding: 0.25rem 0.5rem; margin-left: auto; width: auto; max-width: 100px; font-size: 0.8rem; }
         .settings-item { display: flex; align-items: center; justify-content: space-between; cursor: default; }
-        .settings-item:hover { background-color: var(--bg-tertiary); } /* Subtle hover for non-interactive items */
+        .settings-item:hover { background-color: var(--bg-tertiary); }
         .settings-separator { height: 1px; background-color: var(--border-color); margin: 0.5rem 0; }
         .shortcuts-link { cursor: pointer; text-align: center; font-weight: 500; }
         .shortcuts-link ion-icon { vertical-align: middle; margin-right: 0.25rem; font-size: 1rem; }
 
         .preview-modal-overlay { position: fixed; inset: 0; background-color: rgba(17, 24, 39, 0.8); backdrop-filter: blur(4px); z-index: 40; transition: opacity 0.3s ease; opacity: 0; pointer-events: none; }
-        .preview-modal {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
-            width: 90vw; height: 90vh; /* Slightly larger default height */
-            max-width: 1200px; max-height: 800px; /* Max dimensions remain */
-            background-color: #ffffff; color: #1f2937; border-radius: 0.5rem;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-            z-index: 50; display: flex; flex-direction: column; overflow: hidden;
-            transition: opacity 0.3s ease, transform 0.3s ease; opacity: 0; pointer-events: none;
-        }
+        .preview-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95); width: 90vw; height: 85vh; max-width: 1200px; max-height: 800px; background-color: #ffffff; color: #1f2937; border-radius: 0.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); z-index: 50; display: flex; flex-direction: column; overflow: hidden; transition: opacity 0.3s ease, transform 0.3s ease; opacity: 0; pointer-events: none; }
         .preview-modal-overlay.active, .preview-modal.active { opacity: 1; pointer-events: auto; }
         .preview-modal.active { transform: translate(-50%, -50%) scale(1); }
         .preview-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; background-color: #f9fafb; }
@@ -338,31 +279,10 @@
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         .footer-filename { margin-left: 1rem; color: var(--text-tertiary); font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
 
-        .CodeMirror-dialog {
-            background-color: var(--bg-secondary); color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            padding: 10px 15px; /* Slightly more padding */
-            font-size: 0.85rem; border-radius: 4px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            /* position: fixed !important; */ /* Ensures it's relative to viewport */
-            /* top: 10px !important; */ /* Position at the top */
-            /* left: 50% !important; */
-            /* transform: translateX(-50%) !important; */
-            /* width: auto !important; max-width: 400px; */
-            /* bottom: auto !important; */ /* Override CM default bottom positioning */
-        }
-        .CodeMirror-dialog input {
-            background-color: var(--bg-primary); color: var(--text-primary);
-            border: 1px solid var(--border-color); border-radius: 3px;
-            padding: 6px 8px; /* Slightly more padding */
-            outline: none; margin: 0 5px;
-        }
+        .CodeMirror-dialog { background-color: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); padding: 8px 12px; font-size: 0.85rem; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .CodeMirror-dialog input { background-color: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 3px; padding: 4px 6px; outline: none; }
         .CodeMirror-dialog input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4); }
-        .CodeMirror-dialog button {
-            background-color: var(--accent-blue); color: white; border: none;
-            padding: 6px 12px; /* Slightly more padding */
-            border-radius: 3px; cursor: pointer; margin-left: 5px; font-weight: 500;
-        }
+        .CodeMirror-dialog button { background-color: var(--accent-blue); color: white; border: none; padding: 4px 10px; border-radius: 3px; cursor: pointer; margin-left: 5px; font-weight: 500; }
         .CodeMirror-dialog button:hover { background-color: #2563eb; }
 
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -371,19 +291,8 @@
         ::-webkit-scrollbar-thumb:hover { background-color: var(--border-color); }
         * { scrollbar-width: thin; scrollbar-color: var(--bg-tertiary) var(--bg-primary); }
 
-        #file-context-menu {
-            position: absolute; background-color: var(--bg-tertiary);
-            border: 1px solid var(--border-color); border-radius: 0.375rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000;
-            padding: 0.25rem 0; min-width: 160px; /* Slightly wider */
-        }
-        #file-context-menu button {
-            display: block; width: 100%;
-            padding: 0.6rem 1.2rem; /* More touch-friendly */
-            text-align: left; background: none; border: none;
-            color: var(--text-primary); font-size: 0.875rem; cursor: pointer;
-            transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
-        }
+        #file-context-menu { position: absolute; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 0.375rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000; padding: 0.25rem 0; min-width: 150px; }
+        #file-context-menu button { display: block; width: 100%; padding: 0.5rem 1rem; text-align: left; background: none; border: none; color: var(--text-primary); font-size: 0.875rem; cursor: pointer; }
         #file-context-menu button:hover { background-color: var(--accent-blue); color: white; }
         #file-context-menu button ion-icon { margin-right: 0.5rem; vertical-align: middle; }
 
@@ -508,18 +417,18 @@
                          <ion-icon name="settings-outline"></ion-icon>
                      </button>
                      <div id="settings-dropdown-content" class="settings-dropdown-content">
-                         <div class="settings-item px-4 py-2"> <!-- Use Tailwind padding for consistency, or use the class rules -->
-                             <label for="theme-select" class="text-sm text-gray-400">Theme:</label>
-                             <select id="theme-select" class="ml-auto text-sm">
+                         <div class="settings-item">
+                             <label for="theme-select">Theme:</label>
+                             <select id="theme-select">
                                  <option value="dracula">Dracula</option>
                                  <option value="material-darker">Material Darker</option>
                                  <option value="eclipse">Eclipse (Light)</option>
                                  <option value="neat">Neat (Light)</option>
                              </select>
                          </div>
-                         <div class="settings-item px-4 py-2">
-                             <label for="font-size-input" class="text-sm text-gray-400">Font Size:</label>
-                             <input type="number" id="font-size-input" min="8" max="24" step="1" class="ml-auto text-sm w-20">
+                         <div class="settings-item">
+                             <label for="font-size-input">Font Size:</label>
+                             <input type="number" id="font-size-input" min="8" max="24" step="1">
                          </div>
                          <div class="settings-separator"></div>
                          <button id="trigger-import-button" class="import-button-color">
@@ -563,7 +472,7 @@
             <div id="file-explorer-resizer" title="Resize File Explorer"></div>
 
             <div class="editor-preview-area" id="editor-preview-area-main"> <div class="editor-area-wrapper" id="editor-area-wrapper">
-                     <textarea id="code-editor-area" placeholder="Welcome! Select or create a file to begin."></textarea>
+                     <textarea id="code-editor-area" placeholder="Select or create a file to start coding..."></textarea>
                 </div>
                 <div id="split-container">
                     <div id="split-editor-pane"></div>
@@ -692,8 +601,8 @@
             const ctxDeleteButton = document.getElementById('ctx-delete');
             const ctxNewFileInFolderButton = document.getElementById('ctx-new-file-in-folder');
             const toggleSidebarButton = document.getElementById('toggle-sidebar-button');
-            const scrollToTopButton = document.getElementById('scroll-to-top-button');
-            const editorPreviewAreaMain = document.getElementById('editor-preview-area-main');
+            const scrollToTopButton = document.getElementById('scroll-to-top-button'); // Get the new button
+            const editorPreviewAreaMain = document.getElementById('editor-preview-area-main'); // Scroll target
 
             const LS_PREFIX = 'vibeEditorProFM_';
             const LS_KEY_FILESYSTEM = LS_PREFIX + 'fileSystem_v2';
@@ -764,7 +673,7 @@
                     mode: 'htmlmixed', theme: currentTheme, lineNumbers: true, lineWrapping: true,
                     autoCloseTags: true, matchBrackets: true, tabSize: 2, indentUnit: 2,
                     scrollbarStyle: "native", placeholder: editorArea.placeholder, styleActiveLine: true,
-                    viewportMargin: Infinity, 
+                    viewportMargin: Infinity, // Important for CodeMirror height to be correct
                     extraKeys: {
                         "Ctrl-S": showModalPreview, "Cmd-S": showModalPreview,
                         "Ctrl-F": "findPersistent", "Cmd-F": "findPersistent",
@@ -779,18 +688,26 @@
 
                 setEditorFontSize(currentFontSize, true);
                 editorAreaWrapper.appendChild(editor.getWrapperElement());
+                 // Make sure CodeMirror's own scroller takes precedence if present,
+                 // otherwise use the editorPreviewAreaMain for scroll events for the "to top" button.
                 const scrollTarget = editor.getScrollerElement() || editorPreviewAreaMain;
 
+                // Scroll to Top Button Logic
                 if (scrollToTopButton && scrollTarget) {
                     scrollTarget.addEventListener('scroll', () => {
-                        if (scrollTarget.scrollTop > 200) {
+                        if (scrollTarget.scrollTop > 200) { // Show button after scrolling 200px
                             scrollToTopButton.style.display = 'flex';
                         } else {
                             scrollToTopButton.style.display = 'none';
                         }
                     });
+
                     scrollToTopButton.addEventListener('click', () => {
                         scrollTarget.scrollTo({ top: 0, behavior: 'smooth' });
+                        // If CodeMirror's scroller is the target, this is sufficient.
+                        // If editorPreviewAreaMain is the target and CodeMirror has its own internal scroll,
+                        // you might need to also scroll CodeMirror's internal view if that's intended.
+                        // For simplicity, we assume the main scroll target handles the visual scroll.
                     });
                 }
 
@@ -815,7 +732,7 @@
                 editor.on('cursorActivity', updateLineColIndicator);
                 initSplitResizer();
                 initExplorerResizer();
-                setTimeout(() => editor.refresh(), 350); // Increased delay slightly for complex startup
+                setTimeout(() => editor.refresh(), 350);
                 console.log("Vibe Editor Pro with FM (Enhanced) Initialized.");
             } catch (e) {
                 console.error("Initialization Error:", e);
@@ -939,33 +856,29 @@
                 if (item.type === 'folder') li.classList.add(expandedFolders.has(item.id) ? 'expanded' : 'collapsed');
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'tree-item group'; itemDiv.dataset.id = item.id; itemDiv.dataset.type = item.type;
-                // itemDiv.style.paddingLeft = `${depth * 0.75 + 0.6}rem`; // Adjusted paddingLeft for depth + base
-                itemDiv.style.paddingLeft = `${depth * 1.25 + (item.type === 'folder' ? 0 : 0.6) }rem`; // Dynamic padding for folder/file alignment
-
-
+                itemDiv.style.paddingLeft = `${depth * 0.75}rem`;
+                let iconName = item.type === 'file' ? 'document-text-outline' : (expandedFolders.has(item.id) ? 'folder-open-outline' : 'folder-outline');
                 if (item.type === 'folder') {
                     const toggleIcon = document.createElement('ion-icon');
                     toggleIcon.setAttribute('name', 'chevron-forward-outline');
-                    toggleIcon.className = 'item-icon toggle-icon shrink-0'; // Removed mr-1 to control with paddingLeft
+                    toggleIcon.className = 'item-icon toggle-icon mr-1 text-xs transition-transform shrink-0';
+                    if (expandedFolders.has(item.id)) toggleIcon.style.transform = 'rotate(90deg)';
                     itemDiv.appendChild(toggleIcon);
                 }
-                const icon = document.createElement('ion-icon');
-                icon.setAttribute('name', item.type === 'file' ? 'document-text-outline' : (expandedFolders.has(item.id) ? 'folder-open-outline' : 'folder-outline'));
-                icon.className = 'item-icon shrink-0';
+                const icon = document.createElement('ion-icon'); icon.setAttribute('name', iconName); icon.className = 'item-icon shrink-0';
                 if (item.type === 'folder') icon.classList.add('text-yellow-400'); else icon.classList.add('text-blue-300');
-
                 const nameSpan = document.createElement('span'); nameSpan.className = 'item-name'; nameSpan.textContent = item.name;
                 const actionsDiv = document.createElement('div'); actionsDiv.className = 'item-actions';
                 const renameBtn = document.createElement('button'); renameBtn.title = "Rename"; renameBtn.innerHTML = '<ion-icon name="pencil-outline"></ion-icon>'; renameBtn.onclick = (e) => { e.stopPropagation(); renameItem(item.id); };
                 const deleteBtn = document.createElement('button'); deleteBtn.title = "Delete"; deleteBtn.innerHTML = '<ion-icon name="trash-outline"></ion-icon>'; deleteBtn.onclick = (e) => { e.stopPropagation(); deleteItem(item.id); };
                 actionsDiv.appendChild(renameBtn); actionsDiv.appendChild(deleteBtn);
-
                 itemDiv.appendChild(icon); itemDiv.appendChild(nameSpan); itemDiv.appendChild(actionsDiv);
                 itemDiv.addEventListener('click', (e) => { e.stopPropagation(); if (item.type === 'file') { openFileInEditor(item.id); } else if (item.type === 'folder') { toggleFolder(item.id); } });
                 itemDiv.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); showContextMenu(e, item.id); });
                 li.appendChild(itemDiv);
                 if (item.type === 'folder') {
                     const childrenUl = document.createElement('ul'); childrenUl.className = 'folder-content';
+                    childrenUl.style.paddingLeft = '0.5rem';
                     if (expandedFolders.has(item.id)) { childrenUl.style.display = 'block'; const children = getChildrenOf(item.id); children.forEach(child => childrenUl.appendChild(createTreeElement(child, depth + 1))); }
                     else { childrenUl.style.display = 'none'; }
                     li.appendChild(childrenUl);
@@ -1002,12 +915,8 @@
                 setTimeout(() => {
                     if(editor) {
                         editor.refresh();
-                         if (currentSplitMode !== 'none') { // Refresh split view editor as well
-                            const splitEditorInstance = splitEditorPane.querySelector('.CodeMirror') ? CodeMirror. élèves(splitEditorPane.querySelector('.CodeMirror')) : null;
-                            if (splitEditorInstance) splitEditorInstance.refresh();
-                        }
                     }
-                }, 350); // Delay to allow transition
+                }, 350);
             }
 
             function applySidebarState() {
@@ -1133,16 +1042,16 @@
             if(settingsButton) settingsButton.addEventListener('click', toggleSettingsDropdown);
             if(themeSelect) themeSelect.addEventListener('change', (e) => setEditorTheme(e.target.value));
             if(fontSizeInput) fontSizeInput.addEventListener('change', (e) => setEditorFontSize(e.target.value));
-            if(fontSizeInput) fontSizeInput.addEventListener('input', (e) => setEditorFontSize(e.target.value)); // For live updates on number input
+            if(fontSizeInput) fontSizeInput.addEventListener('input', (e) => setEditorFontSize(e.target.value));
             if(shortcutsLink) shortcutsLink.addEventListener('click', showShortcutsModal);
             if(closeModalButton) closeModalButton.addEventListener('click', hideModalPreview);
             if(previewModalOverlay) previewModalOverlay.addEventListener('click', hideModalPreview);
             if(closeShortcutsButton) closeShortcutsButton.addEventListener('click', hideShortcutsModal);
             if(shortcutsModalOverlay) shortcutsModalOverlay.addEventListener('click', hideShortcutsModal);
             document.addEventListener('keydown', (event) => { if (event.key === 'Escape') { if (previewModal.classList.contains('active')) { hideModalPreview(); } else if (shortcutsModal.classList.contains('active')) { hideShortcutsModal(); } else if (settingsDropdownContent.classList.contains('show')) { settingsDropdownContent.classList.remove('show'); } else if (!fileContextMenu.classList.contains('hidden')) { hideContextMenu(); } event.stopPropagation(); } });
-            [previewModal, shortcutsModal, fileContextMenu, settingsDropdownContent].forEach(el => el?.addEventListener('click', e => e.stopPropagation())); // Prevent closing dropdown when clicking inside
+            [previewModal, shortcutsModal, fileContextMenu].forEach(el => el?.addEventListener('click', e => e.stopPropagation()));
 
-            let winResizeDebounce; window.addEventListener('resize', () => { clearTimeout(winResizeDebounce); winResizeDebounce = setTimeout(() => { if (editor) { editor.refresh(); } updateSplitButtonUI(); /* updateSettingsUI(); Re-evaluate if needed for settings UI that changes on resize */ }, 250); });
+            let winResizeDebounce; window.addEventListener('resize', () => { clearTimeout(winResizeDebounce); winResizeDebounce = setTimeout(() => { if (editor) { editor.refresh(); } updateSplitButtonUI(); updateSettingsUI(); }, 250); });
             window.addEventListener('beforeunload', (event) => { if (statusText?.textContent?.includes('Unsaved') || statusDot?.classList.contains('unsaved') || statusDot?.classList.contains('saving')) { event.preventDefault(); event.returnValue = ''; return ''; } });
         });
     </script>
