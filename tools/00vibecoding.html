@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vibe Code Editor - Advanced Split View</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/htmlmixed/htmlmixed.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/closetag.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/display/placeholder.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/selection/active-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/search/search.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/search/searchcursor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/search/jump-to-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/dialog/dialog.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/dialog/dialog.min.css">
+
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.11/beautify-html.min.js"></script>
+
+    <style>
+        :root {
+            --header-height: 55px; --footer-height: 40px;
+            --bg-primary: #111827; --bg-secondary: #1f2937; --bg-tertiary: #374151;
+            --border-color: #4b5563; --text-primary: #f3f4f6; --text-secondary: #9ca3af;
+            --accent-blue: #3b82f6; --accent-green: #10b981; --accent-purple: #a855f7;
+            --accent-orange: #f97316; --accent-cyan: #0ea5e9; --accent-yellow: #facc15;
+            --accent-red: #ef4444; --accent-indigo: #6366f1; --accent-gray: #6b7280;
+            --divider-color: #4b5563; --divider-hover-color: #9ca3af; --divider-active-color: var(--accent-blue);
+            --min-pane-size: 50px; /* Minimum width/height for panes */
+        }
+        html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; background-color: var(--bg-primary); color: var(--text-primary); -webkit-tap-highlight-color: transparent; }
+        .main-container { display: flex; flex-direction: column; height: 100vh; }
+        .main-header { height: var(--header-height); flex-shrink: 0; z-index: 20; }
+        .main-footer { height: var(--footer-height); flex-shrink: 0; background-color: var(--bg-secondary); border-top: 1px solid var(--border-color); padding: 0 0.75rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); z-index: 10; }
+
+        /* Editor/Split Area Container */
+        .content-area { flex-grow: 1; height: calc(100vh - var(--header-height) - var(--footer-height)); overflow: hidden; position: relative; }
+
+        /* Default Editor Wrapper (Visible when split is off) */
+        .editor-area-wrapper { height: 100%; padding: 0.5rem; display: block; } /* Default display */
+
+        /* Split View Container (Hidden initially, handles layout) */
+        #split-container {
+            display: none; /* Managed by JS */
+            width: 100%; height: 100%;
+            overflow: hidden;
+            position: absolute; top: 0; left: 0;
+        }
+        #split-container.split-horizontal { flex-direction: row; }
+        #split-container.split-vertical { flex-direction: column; }
+
+        /* Split Panes */
+        #split-editor-pane, #split-preview-pane {
+            overflow: hidden;
+            position: relative; /* Needed for absolute positioning inside if any */
+            /* Use flex-basis for resizable panes */
+             /* Default to 50% if no saved size */
+        }
+         /* Remove padding from pane itself, apply to inner content or CM */
+        #split-editor-pane { background-color: var(--bg-secondary); /* Match CM background parent */ }
+        #split-preview-pane { background-color: white; } /* Preview background */
+
+        /* Resizable Divider */
+        .split-divider {
+            flex-shrink: 0; /* Prevent divider from shrinking */
+            background-color: var(--divider-color);
+            position: relative;
+            z-index: 10; /* Above panes */
+            transition: background-color 0.2s ease;
+        }
+        .split-divider:hover { background-color: var(--divider-hover-color); }
+        .split-divider.resizing, .split-divider:active { background-color: var(--divider-active-color); }
+
+        /* Divider orientation */
+        #split-container.split-horizontal > .split-divider {
+            width: 6px; height: 100%;
+            cursor: col-resize; margin: 0 1px; /* Tiny margin for better separation */
+        }
+        #split-container.split-vertical > .split-divider {
+            height: 6px; width: 100%;
+            cursor: row-resize; margin: 1px 0;
+        }
+
+         /* Prevent text selection during resize */
+        body.resizing { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; }
+        body.resizing-horizontal { cursor: col-resize; }
+        body.resizing-vertical { cursor: row-resize; }
+        /* Ensure iframes don't capture mouse events during resize */
+        body.resizing iframe { pointer-events: none; }
+
+        /* --- Dynamic Body Classes for Layout --- */
+        /* Default: Split off */
+        body:not(.split-active) .editor-area-wrapper { display: block; }
+        body:not(.split-active) #split-container { display: none; }
+        /* Split Active */
+        body.split-active .editor-area-wrapper { display: none; }
+        body.split-active #split-container { display: flex; }
+
+        /* CodeMirror Styling */
+        .CodeMirror { border: none; font-size: 0.9rem; line-height: 1.6; height: 100% !important; background-color: #282a36; } /* Remove border, should fill pane */
+        /* Apply padding INSIDE the editor pane for CM */
+        #split-editor-pane .CodeMirror { border-radius: 0; }
+        #split-editor-pane { padding: 0.5rem; box-sizing: border-box; } /* Add padding back to pane */
+        .CodeMirror-gutters { background-color: var(--bg-secondary) !important; border-right: 1px solid var(--border-color) !important; }
+        .CodeMirror-placeholder { color: #6b7280 !important; font-style: italic; }
+        .CodeMirror-activeline-background { background: #374151 !important; }
+        .cm-matchhighlight { background-color: #555; }
+
+        /* Action Buttons (Keep as is) */
+        .action-button { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 0.6rem; border-radius: 0.375rem; font-weight: 600; font-size: 0.8rem; transition: all 0.2s ease-in-out; cursor: pointer; border: none; outline: none; color: white; -webkit-tap-highlight-color: rgba(255, 255, 255, 0.2); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .action-button:focus-visible { box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5); }
+        .action-button:active:not(:disabled) { transform: translateY(1px) scale(0.97); box-shadow: none; }
+        .action-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .action-button ion-icon { font-size: 1rem; margin-right: 0.25rem; }
+        .action-button span { display: none; }
+        /* Specific style for active split button modes */
+        .split-button.active-horizontal, .split-button.active-vertical { background-color: var(--accent-indigo); box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+
+        /* Tooltips (Keep as is) */
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltiptext { visibility: hidden; width: max-content; max-width: 170px; /* Increased max-width */ background-color: var(--bg-secondary); color: #fff; text-align: center; border-radius: 0.375rem; padding: 6px 10px; position: absolute; z-index: 100; bottom: 140%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out; font-size: 0.75rem; font-weight: 500; pointer-events: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: var(--bg-secondary) transparent transparent transparent; }
+        .tooltip:hover .tooltiptext, .tooltip:focus-within .tooltiptext { visibility: visible; opacity: 1; transition-delay: 0.4s; }
+
+        /* Responsive (Keep as is) */
+        @media (min-width: 640px) { .action-button { padding: 0.5rem 0.75rem; font-size: 0.875rem; } .action-button ion-icon { font-size: 1.1rem; margin-right: 0.375rem; } .action-button span { display: inline; } }
+        @media (max-width: 420px) { .action-button { padding: 0.5rem; } .action-button ion-icon { margin-right: 0; font-size: 1.1rem; } .action-button span { display: none !important; } .main-header h1 { font-size: 1rem; } .main-header h1 ion-icon { font-size: 1.25rem; } .main-header .flex-wrap { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; } .main-header .flex-wrap::-webkit-scrollbar { display: none; } }
+
+        /* Button Colors */
+        .run-button { background-color: var(--accent-blue); } .run-button:hover:not(:disabled) { background-color: #2563eb; }
+        .new-tab-button { background-color: var(--accent-green); } .new-tab-button:hover:not(:disabled) { background-color: #059669; }
+        .import-button { background-color: var(--accent-purple); } .import-button:hover:not(:disabled) { background-color: #9333ea; }
+        .export-button { background-color: var(--accent-orange); } .export-button:hover:not(:disabled) { background-color: #ea580c; }
+        .copy-button { background-color: var(--accent-cyan); } .copy-button:hover:not(:disabled) { background-color: #0284c7; }
+        .paste-button { background-color: var(--accent-yellow); color: #422006; } .paste-button:hover:not(:disabled) { background-color: #eab308; }
+        .format-button { background-color: var(--accent-indigo); } .format-button:hover:not(:disabled) { background-color: #4f46e5; }
+        .search-button { background-color: var(--accent-gray); } .search-button:hover:not(:disabled) { background-color: #4b5563; }
+        .clear-button { background-color: var(--accent-red); } .clear-button:hover:not(:disabled) { background-color: #dc2626; }
+        .split-button { background-color: var(--accent-gray); } .split-button:hover:not(:disabled) { background-color: #4b5563; }
+
+        /* Preview Modal (Keep as is) */
+        .preview-modal-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 40; transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; pointer-events: none; }
+        .preview-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95); width: 90vw; height: 85vh; max-width: 1200px; max-height: 800px; background-color: #ffffff; color: #1f2937; border-radius: 0.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); z-index: 50; display: flex; flex-direction: column; overflow: hidden; transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; pointer-events: none; }
+        .preview-modal-overlay.active, .preview-modal.active { opacity: 1; pointer-events: auto; }
+        .preview-modal.active { transform: translate(-50%, -50%) scale(1); }
+        .preview-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; background-color: #f9fafb; }
+        .preview-modal-title { font-size: 1.125rem; font-weight: 600; color: #374151; }
+        .preview-modal-close-button { background: none; border: none; color: #6b7280; font-size: 1.75rem; cursor: pointer; padding: 0.25rem; line-height: 1; border-radius: 9999px; transition: background-color 0.2s, color 0.2s, transform 0.1s; }
+        .preview-modal-close-button:hover { background-color: #e5e7eb; color: #1f2937; }
+        .preview-modal-close-button:active { transform: scale(0.9); }
+        .preview-modal-content { flex-grow: 1; overflow: hidden; padding: 0; background-color: white; }
+        #modal-preview-frame { width: 100%; height: 100%; border: none; } /* Renamed */
+        #split-preview-frame { width: 100%; height: 100%; border: none; }
+        .hidden { display: none !important; }
+
+        /* Toast Notifications (Keep as is) */
+        #toast-container { position: fixed; bottom: var(--footer-height); margin-bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .toast { background-color: var(--accent-green); color: white; padding: 10px 20px; border-radius: 0.375rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-size: 0.875rem; opacity: 0; transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { background-color: var(--accent-red); }
+        .toast.warning { background-color: var(--accent-orange); }
+        .toast.info { background-color: var(--accent-blue); }
+
+        /* Status Bar (Keep as is) */
+        .status-indicator { display: flex; align-items: center; gap: 0.5rem; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--text-secondary); transition: background-color 0.3s ease; }
+        .status-dot.saved { background-color: var(--accent-green); }
+        .status-dot.saving { background-color: var(--accent-yellow); animation: pulse 1.5s infinite ease-in-out; }
+        .status-dot.error { background-color: var(--accent-red); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* CodeMirror Dialog (Keep as is) */
+        .CodeMirror-dialog { background-color: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); padding: 8px 12px; font-size: 0.85rem; }
+        .CodeMirror-dialog input { background-color: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 3px; padding: 4px 6px; }
+        .CodeMirror-dialog button { background-color: var(--accent-blue); color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; margin-left: 5px; }
+        .CodeMirror-dialog button:hover { background-color: #2563eb; }
+    </style>
+</head>
+<body> <div class="main-container">
+        <header class="main-header bg-gray-800 shadow-md p-2 sm:px-3 flex justify-between items-center">
+             <h1 class="text-md sm:text-lg font-semibold text-white flex items-center whitespace-nowrap shrink-0 mr-2">
+                 <ion-icon name="color-palette-outline" class="text-xl sm:text-2xl mr-1 sm:mr-2 text-blue-400"></ion-icon>
+                 <span class="hidden sm:inline">Vibe Editor</span>
+                 <span class="sm:hidden">Vibe</span>
+             </h1>
+             <div class="flex space-x-1 sm:space-x-1.5 items-center overflow-x-auto pb-1 scrollbar-hide flex-wrap">
+                <div class="tooltip"> <button id="import-button" class="action-button import-button"> <ion-icon name="cloud-upload-outline"></ion-icon> <span>Import</span> </button> <span class="tooltiptext">Import File</span> </div>
+                 <input type="file" id="file-input" class="hidden" accept=".html, text/plain, .txt, .css, .js">
+                <div class="tooltip"> <button id="export-button" class="action-button export-button"> <ion-icon name="cloud-download-outline"></ion-icon> <span>Export</span> </button> <span class="tooltiptext">Export as HTML</span> </div>
+                <div class="h-5 w-px bg-gray-600 mx-1"></div>
+                <div class="tooltip"> <button id="copy-button" class="action-button copy-button"> <ion-icon name="copy-outline"></ion-icon> <span>Copy</span> </button> <span class="tooltiptext">Copy (Ctrl+C)</span> </div>
+                <div class="tooltip"> <button id="paste-button" class="action-button paste-button"> <ion-icon name="clipboard-outline"></ion-icon> <span>Paste</span> </button> <span class="tooltiptext">Paste (Ctrl+V)</span> </div>
+                <div class="tooltip"> <button id="format-button" class="action-button format-button"> <ion-icon name="sparkles-outline"></ion-icon> <span>Format</span> </button> <span class="tooltiptext">Format Code</span> </div>
+                <div class="tooltip"> <button id="search-button" class="action-button search-button"> <ion-icon name="search-outline"></ion-icon> <span>Search</span> </button> <span class="tooltiptext">Search (Ctrl+F)</span> </div>
+                <div class="tooltip"> <button id="clear-button" class="action-button clear-button"> <ion-icon name="trash-bin-outline"></ion-icon> <span>Clear</span> </button> <span class="tooltiptext">Clear Editor & Storage</span> </div>
+                <div class="h-5 w-px bg-gray-600 mx-1"></div>
+                 <div class="tooltip">
+                     <button id="split-button" class="action-button split-button">
+                         <ion-icon id="split-icon" name="browsers-outline"></ion-icon>
+                         <span id="split-text">Split</span>
+                     </button>
+                     <span id="split-tooltip" class="tooltiptext">Toggle Split View (Off)</span>
+                 </div>
+                <div class="tooltip"> <button id="run-button" class="action-button run-button"> <ion-icon name="play-outline"></ion-icon> <span>Modal</span> </button> <span class="tooltiptext">Preview in Modal (Ctrl+S)</span> </div>
+                <div class="tooltip"> <button id="new-tab-button" class="action-button new-tab-button"> <ion-icon name="open-outline"></ion-icon> <span>New Tab</span> </button> <span class="tooltiptext">Preview in New Tab</span> </div>
+             </div>
+        </header>
+
+        <div class="content-area">
+            <div class="editor-area-wrapper" id="editor-area-wrapper">
+                 <textarea id="code-editor-area" placeholder=""></textarea>
+            </div>
+
+            <div id="split-container">
+                <div id="split-editor-pane">
+                    </div>
+                <div class="split-divider" id="split-divider"></div>
+                <div id="split-preview-pane">
+                    <iframe id="split-preview-frame" title="Split Live Preview" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox"></iframe>
+                </div>
+            </div>
+        </div>
+
+
+        <footer class="main-footer">
+            <div class="status-indicator">
+                <div id="status-dot" class="status-dot" title="Save Status"></div>
+                <span id="status-text">Ready</span>
+            </div>
+            <div class="cursor-position">
+                <span id="line-col-indicator">Ln 1, Col 1</span>
+            </div>
+        </footer>
+    </div>
+
+    <div id="preview-modal-overlay" class="preview-modal-overlay" aria-hidden="true"></div>
+    <div id="preview-modal" class="preview-modal" role="dialog" aria-modal="true" aria-labelledby="preview-modal-title" aria-hidden="true">
+        <div class="preview-modal-header">
+            <h2 id="preview-modal-title" class="preview-modal-title flex items-center"> <ion-icon name="tv-outline" class="inline-block align-middle mr-2 -mt-1"></ion-icon>Modal Preview </h2>
+            <button id="preview-modal-close-button" class="preview-modal-close-button" aria-label="Close Preview"> <ion-icon name="close-outline" class="block align-middle"></ion-icon> </button>
+        </div>
+        <div class="preview-modal-content">
+            <iframe id="modal-preview-frame" title="Modal Live Preview" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox"></iframe>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script defer>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const editorArea = document.getElementById('code-editor-area');
+            const editorAreaWrapper = document.getElementById('editor-area-wrapper');
+            const runButton = document.getElementById('run-button');
+            const newTabButton = document.getElementById('new-tab-button');
+            const importButton = document.getElementById('import-button');
+            const fileInput = document.getElementById('file-input');
+            const exportButton = document.getElementById('export-button');
+            const clearButton = document.getElementById('clear-button');
+            const copyButton = document.getElementById('copy-button');
+            const pasteButton = document.getElementById('paste-button');
+            const formatButton = document.getElementById('format-button');
+            const searchButton = document.getElementById('search-button');
+            const toastContainer = document.getElementById('toast-container');
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+            const lineColIndicator = document.getElementById('line-col-indicator');
+
+            // Modal Preview Elements
+            const previewModalOverlay = document.getElementById('preview-modal-overlay');
+            const previewModal = document.getElementById('preview-modal');
+            const modalPreviewFrame = document.getElementById('modal-preview-frame'); // Renamed
+            const closeModalButton = document.getElementById('preview-modal-close-button');
+
+            // Split View Elements
+            const splitButton = document.getElementById('split-button');
+            const splitIcon = document.getElementById('split-icon');
+            const splitText = document.getElementById('split-text');
+            const splitTooltip = document.getElementById('split-tooltip');
+            const splitContainer = document.getElementById('split-container');
+            const splitEditorPane = document.getElementById('split-editor-pane');
+            const splitPreviewPane = document.getElementById('split-preview-pane');
+            const splitPreviewFrame = document.getElementById('split-preview-frame');
+            const splitDivider = document.getElementById('split-divider');
+
+            // --- Constants & State ---
+            const LS_KEY_CONTENT = 'vibeCodeEditorContent_v5_split_resize';
+            const LS_KEY_SPLIT_MODE = 'vibeCodeEditorSplitMode_v5';
+            const LS_KEY_SPLIT_SIZE = 'vibeCodeEditorSplitSize_v5'; // Store editor pane flex-basis %
+            const SAVE_DEBOUNCE_DELAY = 800;
+            const PREVIEW_UPDATE_DEBOUNCE = 300;
+            const RESIZE_DEBOUNCE = 50; // Debounce for CM refresh during resize
+            const MIN_PANE_SIZE_PX = 50; // Minimum size for panes in pixels
+
+            let editor = null;
+            let saveTimeout;
+            let previewTimeout;
+            let resizeTimeout;
+            let currentFileName = 'untitled.html';
+            let currentSplitMode = 'none'; // 'none', 'horizontal', 'vertical'
+            let isResizing = false;
+            let initialEditorBasis = 50; // Default size percentage
+
+            const defaultContent = `<!DOCTYPE html>
+<html lang="en">
+<head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Resizable Split!</title> <style> body { font-family: 'Comic Sans MS', cursive, sans-serif; padding: 20px; background: linear-gradient(to right, #ffecd2 0%, #fcb69f 100%); color: #a0522d; text-align: center; min-height: calc(100vh - 40px); display: flex; flex-direction: column; justify-content: center; align-items: center; } h1 { color: #d2691e; text-shadow: 1px 1px #fff; } p { font-size: 1.1em; } .draggable { width: 50px; height: 50px; background-color: #ff7f50; border: 2px solid #a0522d; border-radius: 50%; display: inline-block; cursor: grab; position: absolute; top: 60%; left: 45%; touch-action: none; user-select: none; } .draggable:active { cursor: grabbing; background-color: #ff6347; } </style> </head>
+<body> <h1>Resizable Split View! 🍕</h1> <p>Drag the divider between editor and preview!</p> <div class="draggable" id="handle">Drag!</div> <script> const handle = document.getElementById('handle'); let offsetX, offsetY, isDragging = false; function startDrag(e) { isDragging = true; handle.style.cursor = 'grabbing'; const event = e.touches ? e.touches[0] : e; offsetX = event.clientX - handle.offsetLeft; offsetY = event.clientY - handle.offsetTop; document.addEventListener('mousemove', drag); document.addEventListener('touchmove', drag, { passive: false }); document.addEventListener('mouseup', stopDrag); document.addEventListener('touchend', stopDrag); e.preventDefault(); } function drag(e) { if (!isDragging) return; const event = e.touches ? e.touches[0] : e; let x = event.clientX - offsetX; let y = event.clientY - offsetY; handle.style.left = \`\${x}px\`; handle.style.top = \`\${y}px\`; e.preventDefault(); } function stopDrag() { if (!isDragging) return; isDragging = false; handle.style.cursor = 'grab'; document.removeEventListener('mousemove', drag); document.removeEventListener('touchmove', drag); document.removeEventListener('mouseup', stopDrag); document.removeEventListener('touchend', stopDrag); } handle.addEventListener('mousedown', startDrag); handle.addEventListener('touchstart', startDrag, { passive: false }); console.log('Draggable ready!'); <\/script> </body>
+</html>`;
+
+            // --- Initialization ---
+            try {
+                if (typeof CodeMirror === 'undefined') throw new Error("CodeMirror library not loaded.");
+                editor = CodeMirror.fromTextArea(editorArea, { /* Options... */
+                    mode: 'htmlmixed', theme: 'dracula', lineNumbers: true, lineWrapping: true,
+                    autoCloseTags: true, matchBrackets: true, tabSize: 2, indentUnit: 2,
+                    scrollbarStyle: "native", placeholder: editorArea.placeholder,
+                    styleActiveLine: true, viewportMargin: Infinity,
+                    extraKeys: { /* Shortcuts... */
+                        "Ctrl-S": showModalPreview, "Cmd-S": showModalPreview,
+                        "Ctrl-F": "findPersistent", "Cmd-F": "findPersistent",
+                        "Ctrl-Alt-F": formatCode, "Cmd-Alt-F": formatCode,
+                        "Alt-G": "jumpToLine", "Ctrl-G": "jumpToLine"
+                     }
+                });
+                // Append CM initially to the default wrapper
+                editorAreaWrapper.appendChild(editor.getWrapperElement());
+
+                loadCodeFromLocalStorage();
+                loadSplitSettings(); // Load mode and size
+                setSplitMode(currentSplitMode, true); // Apply loaded mode initially without toast/save
+
+                updateStatus('Ready', 'saved');
+                updateLineColIndicator();
+
+                editor.on('change', handleEditorChange);
+                editor.on('cursorActivity', updateLineColIndicator);
+                initResizer(); // Setup divider dragging listeners
+
+                setTimeout(() => editor.refresh(), 150);
+                console.log("Vibe Editor Initialized.");
+
+            } catch (e) {
+                console.error("Initialization Error:", e);
+                if (editorAreaWrapper) editorAreaWrapper.innerHTML = `<div class="p-4 text-red-400 bg-red-900 border border-red-700 rounded h-full">FATAL ERROR: ${e.message}<br><br>Could not initialize editor. Check console (F12).</div>`;
+                disableAllButtons();
+                updateStatus('Editor Failed', 'error');
+            }
+
+            // --- Core Editor & Status Functions ---
+            function getEditorContent() { return editor ? editor.getValue() : ''; }
+            function setEditorContent(content) { if (editor) editor.setValue(content); }
+            function updateStatus(text, state) { if (statusText) statusText.textContent = text; if (statusDot) { statusDot.className = 'status-dot'; if (state === 'saved') statusDot.classList.add('saved'); else if (state === 'saving') statusDot.classList.add('saving'); else if (state === 'error') statusDot.classList.add('error'); statusDot.title = state.charAt(0).toUpperCase() + state.slice(1); } }
+            function updateLineColIndicator() { if (editor && lineColIndicator) { const c = editor.getCursor(); lineColIndicator.textContent = `Ln ${c.line + 1}, Col ${c.ch + 1}`; } }
+
+            // --- Event Handling ---
+            function handleEditorChange(instance, changeObj) {
+                 if (changeObj.origin !== 'setValue' && changeObj.origin !== 'paste' && changeObj.origin !== 'undo' && changeObj.origin !== 'redo' && changeObj.origin !== 'beautify' && changeObj.origin !== 'load') {
+                     updateStatus('Unsaved changes...', 'unsaved');
+                     saveCodeToLocalStorageWithDebounce();
+                     if (currentSplitMode !== 'none') {
+                         updateSplitPreviewWithDebounce();
+                     }
+                 }
+             }
+
+            // --- Local Storage & Settings ---
+            function saveCodeToLocalStorageWithDebounce() { clearTimeout(saveTimeout); updateStatus('Saving...', 'saving'); saveTimeout = setTimeout(() => { if (!editor) return; try { localStorage.setItem(LS_KEY_CONTENT, getEditorContent()); updateStatus('Saved', 'saved'); console.log("Code saved."); } catch (e) { console.error("Save error:", e); showToast("Error saving code.", "error"); updateStatus('Save Error', 'error'); } }, SAVE_DEBOUNCE_DELAY); }
+            function loadCodeFromLocalStorage() { if (!editor) return; try { const savedCode = localStorage.getItem(LS_KEY_CONTENT); if (savedCode !== null) { setEditorContent(savedCode); updateStatus(savedCode.trim() === '' ? 'Empty' : 'Saved', 'saved'); console.log("Code loaded."); } else { setEditorContent(defaultContent); updateStatus('Default Loaded', 'saved'); saveCodeToLocalStorageWithDebounce(); console.log("Default loaded."); } } catch (e) { console.error("Load error:", e); showToast("Error loading saved code.", "error"); setEditorContent(defaultContent); updateStatus('Load Error', 'error'); } }
+            function saveSplitSettings() { try { localStorage.setItem(LS_KEY_SPLIT_MODE, currentSplitMode); localStorage.setItem(LS_KEY_SPLIT_SIZE, initialEditorBasis.toString()); console.log(`Split settings saved: Mode=${currentSplitMode}, Size=${initialEditorBasis}%`); } catch (e) { console.warn("Could not save split settings to localStorage", e); } }
+            function loadSplitSettings() { try { const savedMode = localStorage.getItem(LS_KEY_SPLIT_MODE); const savedSize = localStorage.getItem(LS_KEY_SPLIT_SIZE); if (savedMode && ['none', 'horizontal', 'vertical'].includes(savedMode)) { currentSplitMode = savedMode; } else { currentSplitMode = 'none'; } if (savedSize) { const size = parseFloat(savedSize); if (!isNaN(size) && size >= 5 && size <= 95) { // Basic validation
+                         initialEditorBasis = size; } } console.log(`Split settings loaded: Mode=${currentSplitMode}, Size=${initialEditorBasis}%`); } catch (e) { console.warn("Could not load split settings from localStorage", e); currentSplitMode = 'none'; initialEditorBasis = 50; } }
+
+            // --- Button Actions (Existing) ---
+            function clearCode() { if (!editor) return; if (confirm("⚠️ WARNING! ⚠️\n\nErase editor content AND saved data? CANNOT BE UNDONE.")) { console.log("Clearing..."); setEditorContent(''); clearTimeout(saveTimeout); clearTimeout(previewTimeout); try { localStorage.removeItem(LS_KEY_CONTENT); showToast("Editor and storage cleared.", "info"); updateStatus('Cleared', 'saved'); if(currentSplitMode !== 'none') updateSplitPreview(); } catch (e) { console.error("Clear error:", e); showToast("Failed to clear storage.", "error"); updateStatus('Clear Error', 'error'); } } }
+            function importCode() { if(fileInput) fileInput.click(); }
+            function handleFileImport(event) { /* ... (Keep existing import logic) ... */ const file=event.target.files[0];if(!file)return;const allowed=['text/html','text/plain','text/css','text/javascript','application/javascript'];const extOk=['.html','.txt','.css','.js'].some(ext=>file.name.toLowerCase().endsWith(ext));if(!allowed.includes(file.type)&&!extOk&&file.type!==''){showToast(`Unsupported file: ${file.type||'Unknown'}`,"error");event.target.value=null;return}const reader=new FileReader();reader.onload=(e)=>{const content=e.target.result;if(editor&&confirm(`Import "${file.name}"? This will replace current content.`)){setEditorContent(content,'load');currentFileName=file.name;console.log(`Imported: ${file.name}`);showToast(`Imported ${file.name}`,"success");saveCodeToLocalStorageWithDebounce();if(currentSplitMode!=='none')updateSplitPreview();updateStatus('Imported','saved')}else{console.log("Import cancelled.")}};reader.onerror=(e)=>{console.error("Read error:",e);showToast(`Error reading file: ${e.target.error?.name||'Unknown'}`,"error")};reader.readAsText(file);event.target.value=null }
+            function exportCode() { /* ... (Keep existing export logic) ... */ const content=getEditorContent();const blob=new Blob([content],{type:'text/html;charset=utf-8'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;const suggested=currentFileName!=='untitled.html'?currentFileName.replace(/(\.[\w\d_-]+)$/i,'.html'):'vibe-export.html';const filename=prompt("Export filename:",suggested);if(filename===null){URL.revokeObjectURL(url);return}link.download=(filename.trim().replace(/[<>:"/\\|?*]+/g,'_')||'vibe-export')+'.html';document.body.appendChild(link);link.click();document.body.removeChild(link);URL.revokeObjectURL(url);showToast(`Exported as ${link.download}`,"success") }
+            async function copyCode() { /* ... (Keep existing copy logic) ... */ const code=getEditorContent();if(!code){showToast("Nothing to copy!","warning");return}try{if(!navigator.clipboard)throw new Error('No Clipboard API');await navigator.clipboard.writeText(code);showToast("Code copied!","success")}catch(err){console.warn('Copy API failed:',err);const ta=document.createElement("textarea");ta.value=code;ta.style.position="fixed";ta.style.opacity=0;document.body.appendChild(ta);ta.select();try{if(document.execCommand('copy'))showToast("Copied (fallback).","success");else throw new Error('execCommand failed')}catch(fallErr){showToast("Auto-copy failed. Use Ctrl+C.","error")}finally{document.body.removeChild(ta)}} }
+            async function pasteCode() { /* ... (Keep existing paste logic) ... */ if(!editor)return;try{if(!navigator.clipboard||!navigator.clipboard.readText||!window.isSecureContext)throw new Error('Clipboard read API unavailable/insecure.');const text=await navigator.clipboard.readText();if(text){editor.replaceSelection(text,'around');editor.focus();showToast("Pasted.","success");saveCodeToLocalStorageWithDebounce();if(currentSplitMode!=='none')updateSplitPreview()}else showToast("Clipboard empty?","warning")}catch(err){console.error('Paste failed:',err);let msg="Could not paste. Try Ctrl+V.";if(err.name==='NotAllowedError')msg="Permission denied. Use Ctrl+V.";else if(!window.isSecureContext)msg="Paste requires HTTPS. Use Ctrl+V.";showToast(msg,"error");editor.focus()} }
+            function formatCode() { /* ... (Keep existing format logic) ... */ if(!editor||typeof html_beautify==='undefined'){showToast("Cannot format code.","error");return}try{const current=getEditorContent();const formatted=html_beautify(current,{indent_size:editor.getOption("indentUnit"),indent_char:' ',max_preserve_newlines:1,preserve_newlines:true,indent_scripts:'keep',brace_style:'collapse',end_with_newline:true,wrap_line_length:0,indent_inner_html:true});if(current!==formatted){const cursor=editor.getCursor();editor.setValue(formatted);try{editor.setCursor(cursor)}catch(e){}editor.refresh();saveCodeToLocalStorageWithDebounce();if(currentSplitMode!=='none')updateSplitPreview();showToast("Code formatted!","success");updateStatus('Formatted','saved')}else showToast("Code already formatted.","info")}catch(e){console.error("Format error:",e);showToast("Formatting error occurred.","error");updateStatus('Format Error','error')} }
+            function openInNewTab() { /* ... (Keep existing new tab logic) ... */ const source=getEditorContent();try{const blob=new Blob([source],{type:'text/html'});const url=URL.createObjectURL(blob);const win=window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),10000);if(!win)showToast('Popup blocked!', 'warning')}catch(e){console.error("New tab error:",e);showToast("Could not open in new tab.","error")} }
+            function disableAllButtons() { document.querySelectorAll('.action-button').forEach(b => { b.disabled = true; const tt = b.closest('.tooltip')?.querySelector('.tooltiptext'); if (tt) tt.textContent = 'Editor Error'; else b.title = 'Editor Error'; }); }
+
+            // --- Modal Preview Functions ---
+            function showModalPreview() { if (!editor) return; updateStatus('Running preview...', 'saving'); const source = getEditorContent(); try { modalPreviewFrame.srcdoc = source; } catch (e) { console.error("Modal preview error:", e); modalPreviewFrame.srcdoc = `<html><body><h1>Preview Error</h1><p>${e.message.replace(/</g, "&lt;")}</p></body></html>`; showToast("Error generating modal preview.", "error"); } previewModalOverlay.classList.add('active'); previewModal.classList.add('active'); previewModalOverlay.setAttribute('aria-hidden', 'false'); previewModal.setAttribute('aria-hidden', 'false'); if (closeModalButton) closeModalButton.focus(); updateStatus('Preview Ready', 'saved'); }
+            function hideModalPreview() { previewModalOverlay.classList.remove('active'); previewModal.classList.remove('active'); previewModalOverlay.setAttribute('aria-hidden', 'true'); previewModal.setAttribute('aria-hidden', 'true'); const onTransitionEnd = () => { if (modalPreviewFrame) modalPreviewFrame.srcdoc = 'about:blank'; previewModal.removeEventListener('transitionend', onTransitionEnd); }; previewModal.addEventListener('transitionend', onTransitionEnd, { once: true }); setTimeout(() => { if (previewModal.classList.contains('active')) { if (modalPreviewFrame) modalPreviewFrame.srcdoc = 'about:blank'; } }, 350); }
+
+            // --- Split View Functions ---
+            function updateSplitPreview() { if (!editor || currentSplitMode === 'none') return; const source = getEditorContent(); try { splitPreviewFrame.srcdoc = source; } catch (e) { console.error("Split preview error:", e); splitPreviewFrame.srcdoc = `<html><body style="color:red; padding:10px;font-family:sans-serif;">Error: ${e.message}</body></html>`; } }
+            function updateSplitPreviewWithDebounce() { clearTimeout(previewTimeout); previewTimeout = setTimeout(updateSplitPreview, PREVIEW_UPDATE_DEBOUNCE); }
+
+            function cycleSplitMode() {
+                let nextMode = 'none';
+                switch (currentSplitMode) {
+                    case 'none': nextMode = 'horizontal'; break;
+                    case 'horizontal': nextMode = 'vertical'; break;
+                    case 'vertical': nextMode = 'none'; break;
+                }
+                setSplitMode(nextMode);
+            }
+
+            function setSplitMode(mode, isInitial = false) {
+                if (!editor) return;
+                const previousMode = currentSplitMode;
+                currentSplitMode = mode; // Update state
+
+                // Update Body Class for Layout Control
+                document.body.classList.toggle('split-active', mode !== 'none');
+
+                // Update Split Container Classes and Styles
+                splitContainer.classList.remove('split-horizontal', 'split-vertical');
+                if (mode === 'horizontal') {
+                    splitContainer.classList.add('split-horizontal');
+                    // Apply saved or default size
+                    splitEditorPane.style.flexBasis = `${initialEditorBasis}%`;
+                    splitPreviewPane.style.flexBasis = `${100 - initialEditorBasis}%`;
+                    // Reset height basis if switching from vertical
+                    splitEditorPane.style.height = '';
+                    splitPreviewPane.style.height = '';
+                } else if (mode === 'vertical') {
+                    splitContainer.classList.add('split-vertical');
+                     // Apply saved or default size (might need separate storage for vertical if desired)
+                    splitEditorPane.style.flexBasis = `${initialEditorBasis}%`;
+                    splitPreviewPane.style.flexBasis = `${100 - initialEditorBasis}%`;
+                     // Reset width basis if switching from horizontal
+                     splitEditorPane.style.width = '';
+                     splitPreviewPane.style.width = '';
+                }
+
+                // Move Editor Element
+                if (mode !== 'none' && previousMode === 'none') {
+                    // Activating split view: move CM to split pane
+                    splitEditorPane.appendChild(editor.getWrapperElement());
+                } else if (mode === 'none' && previousMode !== 'none') {
+                    // Deactivating split view: move CM back to default wrapper
+                    editorAreaWrapper.appendChild(editor.getWrapperElement());
+                }
+                // If switching between horizontal/vertical, CM stays in split pane
+
+                // Update Button Appearance & Tooltip
+                updateSplitButtonUI();
+
+                // Refresh editor and update preview if activating or changing mode
+                if (mode !== 'none') {
+                     setTimeout(() => editor.refresh(), 50); // Refresh needed after move/resize
+                     updateSplitPreview();
+                 }
+
+                 // Save settings unless it's the initial load
+                 if (!isInitial) {
+                     saveSplitSettings();
+                     if (mode !== 'none' && previousMode === 'none') showToast(`Split view: ${mode}`, "info");
+                     else if (mode === 'none' && previousMode !== 'none') showToast("Split view off", "info");
+                     else if (mode !== 'none') showToast(`Switched to ${mode} split`, "info");
+                 }
+
+                 console.log(`Split mode set to: ${mode}`);
+             }
+
+            function updateSplitButtonUI() {
+                splitButton.classList.remove('active-horizontal', 'active-vertical');
+                let iconName = 'browsers-outline';
+                let text = 'Split';
+                let tooltipText = 'Toggle Split View (Off)';
+
+                if (currentSplitMode === 'horizontal') {
+                    splitButton.classList.add('active-horizontal');
+                    iconName = 'remove-outline'; // Icon indicating vertical split next
+                    text = 'Split H';
+                    tooltipText = 'Switch to Vertical Split';
+                } else if (currentSplitMode === 'vertical') {
+                    splitButton.classList.add('active-vertical');
+                    iconName = 'close-outline'; // Icon indicating Off next
+                    text = 'Split V';
+                    tooltipText = 'Turn Off Split View';
+                } else {
+                     // Mode is 'none', next is horizontal
+                     iconName = 'browsers-outline'; // Icon indicating horizontal split next
+                     tooltipText = 'Toggle Split View (Horizontal)';
+                }
+
+                splitIcon.setAttribute('name', iconName);
+                // Only update text if span exists (for larger screens)
+                if (splitText && window.getComputedStyle(splitText).display !== 'none') {
+                    splitText.textContent = text;
+                } else {
+                    splitText.textContent = 'Split'; // Default for small screens
+                }
+                splitTooltip.textContent = tooltipText;
+            }
+
+
+            // --- Resizer Logic ---
+            function initResizer() {
+                let startX, startY, initialEditorSize;
+
+                function startResize(e) {
+                    e.preventDefault(); // Prevent text selection, etc.
+                    isResizing = true;
+                    splitDivider.classList.add('resizing');
+
+                    const event = e.touches ? e.touches[0] : e;
+                    startX = event.clientX;
+                    startY = event.clientY;
+
+                    if (currentSplitMode === 'horizontal') {
+                        initialEditorSize = splitEditorPane.offsetWidth;
+                        document.body.classList.add('resizing', 'resizing-horizontal');
+                    } else { // vertical
+                        initialEditorSize = splitEditorPane.offsetHeight;
+                         document.body.classList.add('resizing', 'resizing-vertical');
+                    }
+
+                    // Add listeners to the window to capture mouse movements everywhere
+                    window.addEventListener('mousemove', doResize);
+                    window.addEventListener('touchmove', doResize, { passive: false }); // Need preventDefault
+                    window.addEventListener('mouseup', stopResize);
+                    window.addEventListener('touchend', stopResize);
+                }
+
+                function doResize(e) {
+                    if (!isResizing) return;
+                    e.preventDefault();
+
+                    const event = e.touches ? e.touches[0] : e;
+                    let newEditorSize;
+                    const containerRect = splitContainer.getBoundingClientRect();
+
+                    if (currentSplitMode === 'horizontal') {
+                        const deltaX = event.clientX - startX;
+                        newEditorSize = Math.max(MIN_PANE_SIZE_PX, Math.min(initialEditorSize + deltaX, containerRect.width - MIN_PANE_SIZE_PX - splitDivider.offsetWidth));
+                        // Calculate percentage for flex-basis
+                        initialEditorBasis = (newEditorSize / containerRect.width) * 100;
+                        splitEditorPane.style.flexBasis = `${initialEditorBasis}%`;
+                        splitPreviewPane.style.flexBasis = `${100 - initialEditorBasis}%`;
+                    } else { // vertical
+                        const deltaY = event.clientY - startY;
+                        newEditorSize = Math.max(MIN_PANE_SIZE_PX, Math.min(initialEditorSize + deltaY, containerRect.height - MIN_PANE_SIZE_PX - splitDivider.offsetHeight));
+                         // Calculate percentage for flex-basis
+                         initialEditorBasis = (newEditorSize / containerRect.height) * 100;
+                         splitEditorPane.style.flexBasis = `${initialEditorBasis}%`;
+                         splitPreviewPane.style.flexBasis = `${100 - initialEditorBasis}%`;
+                    }
+
+                     // Debounce CodeMirror refresh during resize
+                     clearTimeout(resizeTimeout);
+                     resizeTimeout = setTimeout(() => {
+                         if (editor) editor.refresh();
+                     }, RESIZE_DEBOUNCE);
+                }
+
+                function stopResize() {
+                    if (!isResizing) return;
+                    isResizing = false;
+                    splitDivider.classList.remove('resizing');
+                     document.body.classList.remove('resizing', 'resizing-horizontal', 'resizing-vertical');
+
+                    // Remove window listeners
+                    window.removeEventListener('mousemove', doResize);
+                    window.removeEventListener('touchmove', doResize);
+                    window.removeEventListener('mouseup', stopResize);
+                    window.removeEventListener('touchend', stopResize);
+
+                    // Save the final size
+                    saveSplitSettings();
+                    // Final refresh just in case
+                    if (editor) editor.refresh();
+                    console.log(`Resize ended. Editor Pane Basis: ${initialEditorBasis.toFixed(2)}%`);
+                }
+
+                // Attach listeners to the divider
+                splitDivider.addEventListener('mousedown', startResize);
+                splitDivider.addEventListener('touchstart', startResize, { passive: false });
+            }
+
+
+            // --- Event Listeners ---
+            if(runButton) runButton.addEventListener('click', showModalPreview);
+            if(newTabButton) newTabButton.addEventListener('click', openInNewTab);
+            if(closeModalButton) closeModalButton.addEventListener('click', hideModalPreview);
+            if(previewModalOverlay) previewModalOverlay.addEventListener('click', hideModalPreview);
+            if(importButton) importButton.addEventListener('click', importCode);
+            if(fileInput) fileInput.addEventListener('change', handleFileImport);
+            if(exportButton) exportButton.addEventListener('click', exportCode);
+            if(clearButton) clearButton.addEventListener('click', clearCode);
+            if(copyButton) copyButton.addEventListener('click', copyCode);
+            if(pasteButton) pasteButton.addEventListener('click', pasteCode);
+            if(formatButton) formatButton.addEventListener('click', formatCode);
+            if(searchButton) searchButton.addEventListener('click', () => editor && CodeMirror.commands.findPersistent(editor));
+            if(splitButton) splitButton.addEventListener('click', cycleSplitMode); // Use cycle function
+
+            // Keyboard & Global Events
+            document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && previewModal.classList.contains('active')) { event.stopPropagation(); hideModalPreview(); } });
+            if(previewModal) previewModal.addEventListener('click', (event) => event.stopPropagation());
+
+            let windowResizeDebounce;
+            window.addEventListener('resize', () => {
+                clearTimeout(windowResizeDebounce);
+                windowResizeDebounce = setTimeout(() => {
+                     if (editor) { editor.refresh(); console.log("Editor refreshed on window resize."); }
+                     // Update button UI in case text visibility changes
+                     updateSplitButtonUI();
+                }, 250);
+            });
+            window.addEventListener('beforeunload', (event) => { if (statusDot && (statusDot.classList.contains('saving') || statusText.textContent.includes('Unsaved'))) { event.preventDefault(); event.returnValue = ''; return ''; } });
+
+        }); // End DOMContentLoaded
+    </script>
+
+</body>
+</html>
