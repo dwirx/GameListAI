@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Article Converter | Access Content Freely</title>
+    <meta name="description" content="Bypass paywalls and access articles from Medium (via Freedium) and other sites (via RemovePaywalls.com). Features history, dark mode, mobile-friendly UI, and PWA support.">
+    <meta name="keywords" content="paywall bypass, medium, freedium, removepaywalls, article converter, read articles free, link converter, PWA, mobile friendly">
+
+    <link rel="manifest" href="data:application/manifest+json,{
+        &quot;name&quot;: &quot;Universal Article Converter&quot;,
+        &quot;short_name&quot;: &quot;Converter&quot;,
+        &quot;description&quot;: &quot;Bypass paywalls on Medium (Freedium) and other sites (RemovePaywalls.com).&quot;,
+        &quot;start_url&quot;: &quot;./index.html&quot;,
+        &quot;display&quot;: &quot;standalone&quot;,
+        &quot;background_color&quot;: &quot;#f9fafb&quot;,
+        &quot;theme_color&quot;: &quot;#0ea5e9&quot;,
+        &quot;icons&quot;: [
+            {&quot;src&quot;: &quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🔗%3C/text%3E%3C/svg%3E&quot;, &quot;sizes&quot;: &quot;192x192&quot;, &quot;type&quot;: &quot;image/svg+xml&quot;},
+            {&quot;src&quot;: &quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🔗%3C/text%3E%3C/svg%3E&quot;, &quot;sizes&quot;: &quot;512x512&quot;, &quot;type&quot;: &quot;image/svg+xml&quot;}
+        ]
+    }">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🔗%3C/text%3E%3C/svg%3E">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔗</text></svg>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a' },
+                        freedium: { DEFAULT: '#3b82f6', light: '#dbeafe', dark: '#1e40af' }, // Using primary colors
+                        removepaywalls: { DEFAULT: '#8b5cf6', light: '#ede9fe', dark: '#5b21b6' }
+                    },
+                    animation: { 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite', 'spin-slow': 'spin 1.5s linear infinite' },
+                    boxShadow: {
+                        'input-focus': '0 0 0 3px rgba(59, 130, 246, 0.5)', // primary-500 with opacity
+                        'btn': '0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06)',
+                        'btn-hover': '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .history-badge { font-size: 0.65rem; padding: 0.1rem 0.35rem; vertical-align: middle; line-height: 1; }
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #4b5563; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-200 transition-colors duration-300 font-sans antialiased">
+    <div class="container mx-auto px-4 py-6 sm:py-8 max-w-2xl">
+        <main class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-5 sm:p-8 transition-colors duration-300">
+            <header class="flex justify-between items-start mb-8">
+                <div class="text-center flex-1">
+                    <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-primary-600 dark:text-primary-400">Universal Article Converter</h1>
+                    <p class="text-gray-600 dark:text-gray-400 mt-2 text-sm sm:text-base">
+                        Access articles seamlessly. Uses <strong class="text-freedium-DEFAULT">Freedium</strong> for Medium and <strong class="text-removepaywalls-DEFAULT">RemovePaywalls</strong> for others.
+                    </p>
+                </div>
+                <button id="darkModeToggle" class="p-2.5 bg-gray-200 dark:bg-gray-700 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-all duration-200 ml-3 sm:ml-4" aria-label="Toggle dark mode">
+                    <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" /></svg>
+                    <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" /></svg>
+                </button>
+            </header>
+
+            <section class="space-y-5">
+                <div>
+                    <label for="articleLinkInput" class="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1.5">Enter Article URL</label>
+                    <div class="relative flex items-center">
+                        <input type="url" id="articleLinkInput" placeholder="e.g., https://medium.com/your-article" class="w-full pl-3 pr-20 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-800 dark:text-white transition-all duration-200 shadow-sm focus:shadow-input-focus text-sm sm:text-base">
+                        <div class="absolute right-1.5 top-1/2 transform -translate-y-1/2 flex space-x-1">
+                            <button id="pasteButton" title="Paste from clipboard" aria-label="Paste from clipboard" class="p-2 text-gray-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors rounded-md"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a8.25 8.25 0 0 1-8.25 8.25H4.5A2.25 2.25 0 0 1 2.25 9.75V7.5A2.25 2.25 0 0 1 4.5 5.25h1.034c.256-1.113 1.087-2.064 2.182-2.574m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5A2.25 2.25 0 0 1 16.5 21.75h-6A2.25 2.25 0 0 1 8.25 19.5V11.485c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" /></svg></button>
+                            <button id="clearInputButton" title="Clear input" aria-label="Clear input" class="p-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors rounded-md"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></button>
+                        </div>
+                    </div>
+                    <p id="urlError" class="text-red-500 dark:text-red-400 text-xs mt-1.5 ml-1 hidden animate-pulse"></p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <button id="convertAndOpenButton" class="action-button bg-primary-600 hover:bg-primary-700 focus:ring-primary-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.31 2.23a1 1 0 00-1.62-.76L3 9V7a1 1 0 00-2 0v4a1 1 0 001 1h4a1 1 0 100-2H4.414l5.293-5.293a1 1 0 00.603-1.474zM17 9h-4a1 1 0 100 2h1.586l-5.293 5.293a1 1 0 00-.603 1.474 1 1 0 001.62.76L17 11V13a1 1 0 102 0V9a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        Convert & Open
+                    </button>
+                    <button id="convertOnlyButton" class="action-button bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                        Convert Only
+                    </button>
+                </div>
+            </section>
+
+            <div id="loader" class="hidden text-center py-6 transition-opacity duration-300">
+                <div class="inline-flex items-center bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-lg shadow">
+                    <div class="animate-spin-slow rounded-full h-6 w-6 border-b-2 border-t-2 border-primary-500 mr-3"></div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Processing link...</p>
+                </div>
+            </div>
+
+            <section id="resultSection" class="hidden mt-6 bg-gray-50 dark:bg-gray-700/40 border border-gray-200 dark:border-gray-600/30 rounded-lg p-4 sm:p-5 transition-all duration-300 shadow-md opacity-0 transform translate-y-2">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 id="resultHeaderText" class="font-semibold text-md sm:text-lg text-gray-700 dark:text-gray-100">Converted Link:</h3>
+                    <button onclick="closeResult()" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors rounded-full" title="Close Result" aria-label="Close result section"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+                    <input type="text" id="convertedLinkOutput" readonly class="w-full bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-md py-2 px-3 text-gray-700 dark:text-white focus:outline-none text-sm sm:text-base">
+                    <div class="flex space-x-1.5 w-full sm:w-auto mt-2 sm:mt-0">
+                        <button id="copyButton" class="result-action-button bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200" title="Copy to clipboard" aria-label="Copy to clipboard"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" /><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" /></svg></button>
+                        <button id="shareConvertedButton" class="result-action-button bg-green-100 dark:bg-green-700/50 hover:bg-green-200 dark:hover:bg-green-600/50 text-green-700 dark:text-green-200" title="Share link" aria-label="Share link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" /></svg></button>
+                        <button id="openConvertedButton" class="result-action-button bg-primary-100 dark:bg-primary-700/50 hover:bg-primary-200 dark:hover:bg-primary-600/50 text-primary-700 dark:text-primary-200" title="Open link" aria-label="Open link"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" /><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" /></svg></button>
+                        <button id="previewButton" class="result-action-button bg-purple-100 dark:bg-purple-700/50 hover:bg-purple-200 dark:hover:bg-purple-600/50 text-purple-700 dark:text-purple-200" title="Preview" aria-label="Preview"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg></button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="historySection" class="hidden mt-10 pt-6 border-t border-gray-200 dark:border-gray-700 opacity-0 transform translate-y-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-700 dark:text-gray-100">Conversion History</h3>
+                    <button id="clearHistoryButton" class="text-xs sm:text-sm text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 focus:outline-none transition-colors font-medium hover:underline">Clear All</button>
+                </div>
+                <div class="bg-white dark:bg-gray-800/70 border border-gray-200 dark:border-gray-700/50 rounded-lg transition-colors duration-300 shadow-sm max-h-80 sm:max-h-96 overflow-y-auto">
+                    <ul id="historyList" class="divide-y divide-gray-100 dark:divide-gray-700"></ul>
+                    <p id="noHistoryText" class="p-4 text-center text-sm text-gray-500 dark:text-gray-400 hidden">No history yet. Start converting links!</p>
+                </div>
+            </section>
+        </main>
+
+        <footer class="text-center mt-8 mb-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">
+            <p>Universal Article Converter &copy; <span id="currentYear"></span>. Read Freely.</p>
+        </footer>
+    </div>
+
+    <div id="toast" class="fixed bottom-5 right-5 left-5 sm:left-auto text-white px-4 py-3 rounded-lg shadow-xl transform translate-y-16 opacity-0 transition-all duration-300 z-50 max-w-md text-sm">
+        <span id="toastMessage"></span>
+    </div>
+
+    <div id="previewContainer" class="fixed inset-0 bg-black/70 dark:bg-black/80 z-40 flex items-center justify-center p-4 transition-opacity duration-300 opacity-0 hidden">
+        <div id="previewPanel" class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform scale-95 transition-all duration-300">
+            <header class="flex items-center justify-between px-5 py-3.5 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center">
+                    <svg id="previewHeaderIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary-500 dark:text-primary-400 mr-2.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>
+                    <h3 class="font-semibold text-md sm:text-lg text-gray-800 dark:text-white">Link Preview</h3>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                    <button id="previewOpenNewTabButton" class="modal-action-button bg-primary-100 dark:bg-primary-500/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-500/40" title="Open in new tab"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" /><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" /></svg></button>
+                    <button id="previewCloseButton" class="modal-action-button bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500" title="Close preview"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
+                </div>
+            </header>
+            <main class="flex-1 overflow-y-auto p-5 sm:p-6">
+                <div class="space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                        <h4 class="text-md sm:text-lg font-semibold text-gray-700 dark:text-gray-100 mb-1 sm:mb-0">Conversion Details</h4>
+                        <div id="previewLinkTypeBadge" class="px-2.5 py-1 rounded-full text-xs font-medium self-start sm:self-center">Badge</div>
+                    </div>
+                    <p id="previewLinkDescription" class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed"></p>
+                    <div class="bg-gray-100 dark:bg-gray-700/70 p-3.5 rounded-lg border border-gray-200 dark:border-gray-600/70">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Original URL:</p>
+                        <div id="previewOriginalUrlDisplay" class="text-gray-700 dark:text-gray-300 break-all text-xs font-mono"></div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 mb-0.5">Converted URL:</p>
+                        <div id="previewConvertedUrlDisplay" class="text-primary-600 dark:text-primary-400 break-all text-sm font-mono font-semibold"></div>
+                    </div>
+                    <div class="bg-yellow-50 dark:bg-yellow-700/20 p-3.5 rounded-lg border border-yellow-300 dark:border-yellow-600/40 text-yellow-700 dark:text-yellow-200 text-xs sm:text-sm">
+                        <div class="flex items-start"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                            <span><strong>Note:</strong> This preview shows link details. Use "Open in new tab" to view the actual article.</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button id="previewModalOpenButton" class="action-button bg-primary-600 hover:bg-primary-700 focus:ring-primary-500 w-full sm:w-auto flex-1">Open Article</button>
+                        <button id="previewModalCloseButton" class="action-button bg-gray-500 hover:bg-gray-600 focus:ring-gray-400 text-white w-full sm:w-auto sm:flex-none">Close</button>
+                    </div>
+                </div>
+            </main>
+            <div id="previewLoader" class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-800/80 rounded-xl hidden"><div class="animate-spin-slow rounded-full h-10 w-10 border-b-2 border-t-2 border-primary-500"></div></div>
+        </div>
+    </div>
+
+    <script defer>
+        // Constants
+        const THEME_STORAGE_KEY = 'universalConverterTheme_v1';
+        const HISTORY_STORAGE_KEY = 'universalConverterHistory_v1';
+        const MAX_HISTORY_ITEMS = 30;
+
+        // DOM Element Cache
+        let darkModeToggle, sunIcon, moonIcon, articleLinkInput, pasteButton, clearInputButton, urlErrorEl,
+            convertAndOpenButton, convertOnlyButton, loaderEl, resultSection, resultHeaderTextEl,
+            convertedLinkOutput, copyButton, shareConvertedButton, openConvertedButton, previewButton,
+            historySection, historyList, noHistoryText, clearHistoryButton, toastEl, toastMessageEl,
+            previewContainer, previewPanel, previewHeaderIcon, previewLoader, previewOriginalUrlDisplay,
+            previewConvertedUrlDisplay, previewLinkTypeBadge, previewLinkDescription,
+            previewOpenNewTabButton, previewCloseButton, previewModalOpenButton, previewModalCloseButton,
+            currentYearEl;
+
+        let lastSuccessfulConversion = null; // Store the last conversion object
+
+        // Utility CSS classes - apply to buttons for consistency
+        const ACTION_BUTTON_CLASSES = "flex items-center justify-center px-4 py-2.5 sm:py-3 text-sm sm:text-base font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-all duration-200 shadow-btn hover:shadow-btn-hover transform disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:shadow-none disabled:transform-none";
+        const RESULT_ACTION_BUTTON_CLASSES = "flex-1 sm:flex-none p-2 sm:p-2.5 rounded-lg focus:outline-none transition-colors duration-150 shadow-sm hover:shadow-md";
+        const MODAL_ACTION_BUTTON_CLASSES = "p-2 rounded-lg focus:outline-none transition-colors duration-150 text-sm";
+
+
+        function initializeDOMElements() {
+            darkModeToggle = document.getElementById('darkModeToggle');
+            sunIcon = document.getElementById('sunIcon');
+            moonIcon = document.getElementById('moonIcon');
+            articleLinkInput = document.getElementById('articleLinkInput');
+            pasteButton = document.getElementById('pasteButton');
+            clearInputButton = document.getElementById('clearInputButton');
+            urlErrorEl = document.getElementById('urlError');
+            convertAndOpenButton = document.getElementById('convertAndOpenButton');
+            convertOnlyButton = document.getElementById('convertOnlyButton');
+            loaderEl = document.getElementById('loader');
+            resultSection = document.getElementById('resultSection');
+            resultHeaderTextEl = document.getElementById('resultHeaderText');
+            convertedLinkOutput = document.getElementById('convertedLinkOutput');
+            copyButton = document.getElementById('copyButton');
+            shareConvertedButton = document.getElementById('shareConvertedButton');
+            openConvertedButton = document.getElementById('openConvertedButton');
+            previewButton = document.getElementById('previewButton');
+            historySection = document.getElementById('historySection');
+            historyList = document.getElementById('historyList');
+            noHistoryText = document.getElementById('noHistoryText');
+            clearHistoryButton = document.getElementById('clearHistoryButton');
+            toastEl = document.getElementById('toast');
+            toastMessageEl = document.getElementById('toastMessage');
+            previewContainer = document.getElementById('previewContainer');
+            previewPanel = document.getElementById('previewPanel');
+            previewHeaderIcon = document.getElementById('previewHeaderIcon');
+            previewLoader = document.getElementById('previewLoader');
+            previewOriginalUrlDisplay = document.getElementById('previewOriginalUrlDisplay');
+            previewConvertedUrlDisplay = document.getElementById('previewConvertedUrlDisplay');
+            previewLinkTypeBadge = document.getElementById('previewLinkTypeBadge');
+            previewLinkDescription = document.getElementById('previewLinkDescription');
+            previewOpenNewTabButton = document.getElementById('previewOpenNewTabButton');
+            previewCloseButton = document.getElementById('previewCloseButton');
+            previewModalOpenButton = document.getElementById('previewModalOpenButton');
+            previewModalCloseButton = document.getElementById('previewModalCloseButton');
+            currentYearEl = document.getElementById('currentYear');
+
+            // Apply common button classes
+            [convertAndOpenButton, convertOnlyButton, previewModalOpenButton, previewModalCloseButton].forEach(btn => {
+                if(btn) btn.classList.add(...ACTION_BUTTON_CLASSES.split(' '));
+            });
+            [copyButton, shareConvertedButton, openConvertedButton, previewButton].forEach(btn => {
+                if(btn) btn.classList.add(...RESULT_ACTION_BUTTON_CLASSES.split(' '));
+            });
+             [previewOpenNewTabButton, previewCloseButton].forEach(btn => {
+                if(btn) btn.classList.add(...MODAL_ACTION_BUTTON_CLASSES.split(' '));
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeDOMElements();
+            setupTheme();
+            loadHistory();
+            attachEventListeners();
+            if(currentYearEl) currentYearEl.textContent = new Date().getFullYear();
+        });
+
+        function setupTheme() {
+            const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+            document.documentElement.classList.toggle('dark', isDark);
+            if(sunIcon) sunIcon.classList.toggle('hidden', isDark);
+            if(moonIcon) moonIcon.classList.toggle('hidden', !isDark);
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem(THEME_STORAGE_KEY, isDark ? 'dark' : 'light');
+            if(sunIcon) sunIcon.classList.toggle('hidden', isDark);
+            if(moonIcon) moonIcon.classList.toggle('hidden', !isDark);
+        }
+
+        function isValidURL(string) {
+            try { new URL(string); return true; } catch (_) { return false; }
+        }
+
+        function convertLink(url) {
+            const originalUrlTrimmed = url.trim();
+            if (!originalUrlTrimmed) return { error: true, message: 'URL cannot be empty.' };
+
+            let processedUrl = originalUrlTrimmed;
+            if (!/^https?:\/\//i.test(processedUrl)) processedUrl = 'https://' + processedUrl;
+
+            if (!isValidURL(processedUrl)) return { error: true, message: 'Invalid URL format. Please include http(s)://' };
+
+            let convertedUrl, type;
+            try {
+                const hostname = new URL(processedUrl).hostname;
+                if (hostname.includes('medium.com')) {
+                    convertedUrl = `https://freedium.cfd/${processedUrl}`; type = 'freedium';
+                } else {
+                    convertedUrl = `https://RemovePaywalls.com/${processedUrl}`; type = 'removepaywalls';
+                }
+            } catch (e) { // Should be caught by isValidURL, but as a safeguard
+                return { error: true, message: 'Error parsing URL hostname.' };
+            }
+            return { originalUrl: originalUrlTrimmed, convertedUrl, type, error: false };
+        }
+        
+        function setActionButtonsState(disabled) {
+            [convertAndOpenButton, convertOnlyButton].forEach(btn => {
+                if (btn) btn.disabled = disabled;
+            });
+        }
+
+        function processAndDisplayUI(urlToConvert, openAfter = false) {
+            setActionButtonsState(true);
+            loaderEl.classList.remove('hidden');
+            urlErrorEl.classList.add('hidden'); // Hide previous error
+
+            // Simulate slight delay for loader visibility, then process
+            setTimeout(() => {
+                const conversion = convertLink(urlToConvert);
+
+                if (conversion.error) {
+                    showToast(conversion.message || 'Processing error.', 'error');
+                    urlErrorEl.textContent = conversion.message;
+                    urlErrorEl.classList.remove('hidden');
+                    loaderEl.classList.add('hidden');
+                    setActionButtonsState(false);
+                    return;
+                }
+
+                lastSuccessfulConversion = conversion; // Store for preview
+                updateDynamicUIText(conversion, 'result');
+                resultSection.classList.remove('hidden', 'opacity-0', 'translate-y-2');
+                saveToHistory(conversion.originalUrl, conversion.convertedUrl, conversion.type);
+
+                if (openAfter) {
+                    setTimeout(() => window.open(conversion.convertedUrl, '_blank'), 100); // Brief delay before opening
+                }
+                loaderEl.classList.add('hidden');
+                setActionButtonsState(false);
+            }, 200); // Delay for UX
+        }
+
+        function updateDynamicUIText(conversion, context = 'preview') {
+            let headerText = 'Converted Link:';
+            let badgeText = 'Processed';
+            let badgeClasses = 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200';
+            let descriptionText = 'This tool has processed your article link for easier access.';
+
+            if (conversion.type === 'freedium') {
+                headerText = 'Freedium Link:'; badgeText = 'Freedium';
+                badgeClasses = 'bg-freedium-light text-freedium-dark dark:bg-freedium-dark dark:text-freedium-light';
+                descriptionText = 'Freedium helps access Medium.com articles without paywall limits.';
+            } else if (conversion.type === 'removepaywalls') {
+                headerText = 'RemovePaywalls Link:'; badgeText = 'RemovePaywalls';
+                badgeClasses = 'bg-removepaywalls-light text-removepaywalls-dark dark:bg-removepaywalls-dark dark:text-removepaywalls-light';
+                descriptionText = 'RemovePaywalls.com is used to attempt access for this site.';
+            }
+
+            if (context === 'result' || context === 'all') {
+                convertedLinkOutput.value = conversion.convertedUrl;
+                resultHeaderTextEl.textContent = headerText;
+            }
+            if (context === 'preview' || context === 'all') {
+                previewOriginalUrlDisplay.textContent = conversion.originalUrl;
+                previewConvertedUrlDisplay.textContent = conversion.convertedUrl;
+                previewLinkTypeBadge.textContent = badgeText;
+                previewLinkTypeBadge.className = `px-2.5 py-1 rounded-full text-xs font-medium self-start sm:self-center ${badgeClasses}`;
+                previewLinkDescription.textContent = descriptionText;
+            }
+        }
+
+        function clearInput() {
+            articleLinkInput.value = '';
+            urlErrorEl.classList.add('hidden');
+            articleLinkInput.focus();
+            // showToast('Input cleared.', 'info'); // Optional: can be too noisy
+        }
+
+        async function pasteFromClipboard() {
+            try {
+                if (!navigator.clipboard || !navigator.clipboard.readText) { showToast('Clipboard API not supported.', 'warn'); return; }
+                const text = await navigator.clipboard.readText();
+                if (text) { articleLinkInput.value = text; showToast('Pasted from clipboard!', 'success'); urlErrorEl.classList.add('hidden'); }
+                else { showToast('Clipboard is empty.', 'info'); }
+            } catch (err) { showToast('Failed to paste. Permission issue?', 'error'); }
+        }
+
+        function closeResult() { resultSection.classList.add('opacity-0', 'translate-y-2'); setTimeout(()=> resultSection.classList.add('hidden'), 300); }
+
+        function copyToClipboard(textToCopy, successMessage = 'Link copied!') {
+            if (!textToCopy) { showToast('Nothing to copy.', 'warn'); return; }
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => showToast(successMessage, 'success'))
+                .catch(() => { try { const ta = document.createElement('textarea'); ta.value = textToCopy; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); showToast('Copied (fallback).', 'warn'); } catch (e) { showToast('Copy failed.', 'error'); } });
+        }
+        
+        async function shareConvertedLink() {
+            const linkData = { title: 'Converted Article Link', text: `Access this article: ${convertedLinkOutput.value}`, url: convertedLinkOutput.value };
+            if (convertedLinkOutput.value && navigator.share) {
+                try { await navigator.share(linkData); showToast('Link shared!', 'success'); }
+                catch (err) { if (err.name !== 'AbortError') showToast('Share failed.', 'error');}
+            } else if (!convertedLinkOutput.value) { showToast('No link to share.', 'warn');
+            } else { showToast('Web Share not supported. Try copying.', 'info'); }
+        }
+
+
+        function openConvertedLink() {
+            if (convertedLinkOutput.value && isValidURL(convertedLinkOutput.value)) window.open(convertedLinkOutput.value, '_blank');
+            else showToast('No valid link to open.', 'warn');
+        }
+
+        function showPreviewModal() {
+            let targetConversion = null;
+            if (lastSuccessfulConversion && convertedLinkOutput.value === lastSuccessfulConversion.convertedUrl) {
+                targetConversion = lastSuccessfulConversion;
+            } else if (convertedLinkOutput.value) { // Fallback for manually entered/history previewed link
+                let type = 'unknown', originalForPreview = "Link from output";
+                if(convertedLinkOutput.value.startsWith('https://freedium.cfd/')) { type = 'freedium'; originalForPreview = convertedLinkOutput.value.substring('https://freedium.cfd/'.length); if(!isValidURL(originalForPreview)) originalForPreview="Medium Article";}
+                else if (convertedLinkOutput.value.startsWith('https://RemovePaywalls.com/')) { type = 'removepaywalls'; originalForPreview = convertedLinkOutput.value.substring('https://RemovePaywalls.com/'.length); if(!isValidURL(originalForPreview)) originalForPreview="Paywalled Article";}
+                targetConversion = { originalUrl: originalForPreview, convertedUrl: convertedLinkOutput.value, type: type, error: false };
+            }
+
+            if (targetConversion) {
+                updateDynamicUIText(targetConversion, 'preview');
+                previewContainer.classList.remove('hidden');
+                previewLoader.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    previewContainer.classList.remove('opacity-0');
+                    previewPanel.classList.remove('scale-95');
+                    setTimeout(() => previewLoader.classList.add('hidden'), 200);
+                });
+            } else { showToast('No link details to preview.', 'warn'); }
+        }
+
+        function closePreviewModal() {
+            previewContainer.classList.add('opacity-0');
+            previewPanel.classList.add('scale-95');
+            setTimeout(() => previewContainer.classList.add('hidden'), 300);
+        }
+
+        function openPreviewedLinkInNewTab() {
+            const linkToOpen = previewConvertedUrlDisplay.textContent;
+            if (linkToOpen && isValidURL(linkToOpen)) { window.open(linkToOpen, '_blank'); if (isMobile()) closePreviewModal(); }
+            else showToast('No valid link in preview.', 'warn');
+        }
+
+        function saveToHistory(originalLink, convertedLinkVal, type) {
+            let history = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY)) || [];
+            if (!history.some(item => item.original === originalLink && item.converted === convertedLinkVal)) {
+                history.unshift({ original: originalLink, converted: convertedLinkVal, type: type, timestamp: Date.now() });
+                if (history.length > MAX_HISTORY_ITEMS) history = history.slice(0, MAX_HISTORY_ITEMS);
+                localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+                loadHistory();
+            }
+        }
+
+        function formatDate(timestamp) { /* ... (same as before, simplified for brevity here) ... */ 
+            const date = new Date(timestamp); const now = new Date();
+            const diffMs = now - date; const diffSec = Math.floor(diffMs / 1000);
+            const diffMin = Math.floor(diffSec / 60); const diffHour = Math.floor(diffMin / 60);
+            if (diffSec < 60) return 'just now'; if (diffMin < 2) return '1 min ago'; if (diffMin < 60) return `${diffMin} mins ago`;
+            if (diffHour < 2) return '1 hr ago'; if (diffHour < 24) return `${diffHour} hrs ago`;
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY)) || [];
+            historyList.innerHTML = '';
+            noHistoryText.classList.toggle('hidden', history.length > 0);
+            historySection.classList.toggle('hidden', history.length === 0);
+             if (history.length > 0 && historySection.classList.contains('opacity-0')) {
+                requestAnimationFrame(() => { // Animate history section in
+                    historySection.classList.remove('opacity-0', 'translate-y-2');
+                });
+            }
+
+
+            history.forEach((item, index) => {
+                const displayUrl = item.original.length > 40 ? item.original.substring(0, 37) + '...' : item.original;
+                let typeBadge = '', typeColorClass = 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300';
+                if (item.type === 'freedium') { typeBadge = 'Freedium'; typeColorClass = 'bg-freedium-light text-freedium-dark dark:bg-freedium-dark dark:text-freedium-light';}
+                else if (item.type === 'removepaywalls') { typeBadge = 'RemovePaywalls'; typeColorClass = 'bg-removepaywalls-light text-removepaywalls-dark dark:bg-removepaywalls-dark dark:text-removepaywalls-light'; }
+                
+                const li = document.createElement('li');
+                li.className = 'px-3 py-2.5 sm:px-4 sm:py-3 hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-colors duration-150';
+                li.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex-grow min-w-0">
+                            <div class="font-medium text-xs sm:text-sm text-gray-700 dark:text-gray-100 truncate group" title="${item.original}">
+                                ${displayUrl}
+                                ${typeBadge ? `<span class="ml-1.5 history-badge ${typeColorClass} rounded-full group-hover:shadow-sm">${typeBadge}</span>` : ''}
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${formatDate(item.timestamp)}</div>
+                        </div>
+                        <div class="flex space-x-1 sm:space-x-1.5 flex-shrink-0 self-start sm:self-center">
+                            <button data-action="copy-original" data-index="${index}" class="history-btn" title="Copy Original URL"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125T8.25 4.5h5.625c.621 0 1.125.504 1.125 1.125v3.375m0 0v1.125c0 .621-.504 1.125-1.125 1.125h-1.5a1.125 1.125 0 01-1.125-1.125V10.5m6 4.875v-1.125c0-.621-.504-1.125-1.125-1.125h-1.5a1.125 1.125 0 01-1.125-1.125V10.5" /></svg></button>
+                            <button data-action="use" data-index="${index}" class="history-btn" title="Load this URL"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+                            <button data-action="open" data-index="${index}" class="history-btn" title="Open Converted"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" /><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" /></svg></button>
+                            <button data-action="preview" data-index="${index}" class="history-btn" title="Preview Converted"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg></button>
+                            <button data-action="delete" data-index="${index}" class="history-btn !text-red-500 hover:!bg-red-100 dark:!text-red-400 dark:hover:!bg-red-500/30" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+                        </div>
+                    </div>`;
+                // Apply common class to history buttons
+                li.querySelectorAll('.history-btn').forEach(btn => btn.classList.add(...'p-1.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors'.split(' ')));
+                historyList.appendChild(li);
+            });
+        }
+
+        function handleHistoryAction(event) {
+            const button = event.target.closest('button[data-action]');
+            if (!button) return;
+            const { action, index: indexStr } = button.dataset;
+            const index = parseInt(indexStr);
+            const history = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY)) || [];
+            const item = history[index];
+            if (!item) return;
+
+            switch (action) {
+                case 'copy-original': copyToClipboard(item.original, 'Original URL copied!'); break;
+                case 'use':
+                    articleLinkInput.value = item.original;
+                    lastSuccessfulConversion = item; // Assuming history item matches conversion object structure
+                    updateDynamicUIText(item, 'result');
+                    resultSection.classList.remove('hidden', 'opacity-0', 'translate-y-2');
+                    showToast('URL loaded from history.', 'info'); articleLinkInput.focus();
+                    break;
+                case 'open': if (item.converted && isValidURL(item.converted)) window.open(item.converted, '_blank'); else showToast('Invalid link.', 'error'); break;
+                case 'preview':
+                    lastSuccessfulConversion = item; // Use history item for preview context
+                    convertedLinkOutput.value = item.converted; // Ensure output field is also updated for consistency if preview relies on it
+                    showPreviewModal();
+                    break;
+                case 'delete': history.splice(index, 1); localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history)); loadHistory(); showToast('Item removed.', 'info'); break;
+            }
+        }
+
+        function clearAllHistory() {
+            if (confirm('Clear all history? This cannot be undone.')) {
+                localStorage.removeItem(HISTORY_STORAGE_KEY); loadHistory(); showToast('History cleared.', 'success');
+            }
+        }
+
+        let toastTimeout;
+        function showToast(message, type = 'info') {
+            clearTimeout(toastTimeout);
+            toastMessageEl.textContent = message;
+            toastEl.className = 'fixed bottom-5 right-5 left-5 sm:left-auto text-white px-4 py-3 rounded-lg shadow-xl transform transition-all duration-300 z-50 max-w-md text-sm'; // Reset
+            const typeClasses = { success: 'bg-green-500 dark:bg-green-600', error: 'bg-red-600 dark:bg-red-700', warn: 'bg-yellow-500 dark:bg-yellow-600 !text-black', info: 'bg-gray-800 dark:bg-gray-700' };
+            toastEl.classList.add(...(typeClasses[type] || typeClasses.info).split(' '));
+            
+            toastEl.classList.remove('hidden', 'translate-y-16', 'opacity-0'); // Show
+            requestAnimationFrame(() => { // Ensure transition by forcing reflow
+                 toastEl.classList.remove('translate-y-16', 'opacity-0');
+            });
+
+
+            toastTimeout = setTimeout(() => {
+                toastEl.classList.add('translate-y-16', 'opacity-0');
+                setTimeout(() => toastEl.classList.add('hidden'), 300);
+            }, 3500);
+        }
+        
+        function isMobile() { return window.innerWidth < 768; }
+
+        function attachEventListeners() {
+            darkModeToggle.addEventListener('click', toggleDarkMode);
+            pasteButton.addEventListener('click', pasteFromClipboard);
+            clearInputButton.addEventListener('click', clearInput);
+            convertAndOpenButton.addEventListener('click', () => processAndDisplayUI(articleLinkInput.value, true));
+            convertOnlyButton.addEventListener('click', () => processAndDisplayUI(articleLinkInput.value, false));
+            copyButton.addEventListener('click', () => copyToClipboard(convertedLinkOutput.value));
+            shareConvertedButton.addEventListener('click', shareConvertedLink);
+            openConvertedButton.addEventListener('click', openConvertedLink);
+            previewButton.addEventListener('click', showPreviewModal);
+            clearHistoryButton.addEventListener('click', clearAllHistory);
+            historyList.addEventListener('click', handleHistoryAction);
+            [previewOpenNewTabButton, previewModalOpenButton].forEach(btn => btn.addEventListener('click', openPreviewedLinkInNewTab));
+            [previewCloseButton, previewModalCloseButton].forEach(btn => btn.addEventListener('click', closePreviewModal));
+            previewContainer.addEventListener('click', (e) => { if (e.target === previewContainer) closePreviewModal(); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !previewContainer.classList.contains('hidden')) closePreviewModal(); });
+            articleLinkInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); processAndDisplayUI(articleLinkInput.value, true); }});
+            articleLinkInput.addEventListener('input', () => { if(urlErrorEl && !urlErrorEl.classList.contains('hidden')) urlErrorEl.classList.add('hidden'); }); // Hide error on input
+        }
+    </script>
+</body>
+</html>
