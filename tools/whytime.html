@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopwatch and Timer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3B82F6;
+            --accent-color: #F97316;
+            --bg-color: #FAFAFA;
+            --text-color: #1F2937;
+            --card-bg: #FFFFFF;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --border-color: #E5E7EB;
+            --rest-color: #10B981; /* Green for rest time */
+        }
+        
+        .dark-mode {
+            --primary-color: #60A5FA;
+            --accent-color: #F97316;
+            --bg-color: #111827;
+            --text-color: #F9FAFB;
+            --card-bg: #1F2937;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --border-color: #374151;
+            --rest-color: #34D399;
+        }
+        
+        body {
+            font-family: 'Inter', 'Roboto', 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .timer-container {
+            max-width: 700px;
+            margin: 0 auto;
+            box-shadow: var(--card-shadow);
+            border-radius: 16px;
+            padding: 2rem;
+            background-color: var(--card-bg);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .time-display {
+            font-size: clamp(3.5rem, 12vw, 9rem);
+            line-height: 1;
+            font-weight: 800;
+            letter-spacing: -1px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .time-separator {
+            opacity: 0.5;
+            margin: 0 0.05em;
+            animation: pulse 1s infinite;
+        }
+        
+        .time-unit {
+            color: var(--accent-color);
+            font-weight: 500;
+            font-size: 0.4em;
+            margin-right: 0.1em;
+            vertical-align: top;
+            position: relative;
+            top: 0.6em;
+        }
+        
+        .milliseconds {
+            font-size: 0.6em;
+            vertical-align: top;
+            line-height: 1.7;
+            position: relative;
+            top: 0.2em;
+            margin-left: 0.1em;
+            opacity: 0.9;
+            color: var(--primary-color);
+        }
+
+        .rest-time-display {
+            font-size: 1.5rem; /* Smaller than main display */
+            font-weight: 600;
+            text-align: center;
+            margin-top: 0.5rem;
+            color: var(--rest-color);
+        }
+
+        .rest-time-unit {
+            font-size: 0.7em;
+            opacity: 0.8;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 10px;
+        }
+        
+        .timer-button {
+            transition: all 0.2s;
+            font-weight: 600;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 0.75rem 1rem;
+        }
+        
+        .timer-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .timer-button:active {
+            transform: translateY(0);
+        }
+        
+        .primary-button {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .secondary-button {
+            background-color: rgba(156, 163, 175, 0.2);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+        
+        .accent-button {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .danger-button {
+            background-color: #EF4444;
+            color: white;
+        }
+        
+        .laps-container {
+            max-height: 300px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.3s;
+        }
+        
+        .laps-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .laps-container::-webkit-scrollbar-track {
+            background: rgba(156, 163, 175, 0.1);
+            border-radius: 10px;
+        }
+        
+        .laps-container::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 10px;
+        }
+        
+        .laps-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.7);
+        }
+        
+        .lap-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+        }
+        
+        .lap-item:hover {
+            background-color: rgba(156, 163, 175, 0.1);
+        }
+        
+        .lap-item:last-child {
+            border-bottom: none;
+        }
+        
+        .lap-item.highlight {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        
+        .time-progress {
+            height: 4px;
+            background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+            border-radius: 4px;
+            margin: 1.5rem 0;
+            transition: width 0.1s linear;
+        }
+        
+        .dark-mode-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 100;
+        }
+        
+        .fullscreen-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 4rem;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 100;
+        }
+        
+        .mode-switch {
+            margin-top: 1rem;
+            display: flex;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.3s;
+        }
+        
+        .mode-switch button {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            background-color: transparent;
+            color: var(--text-color);
+            font-weight: 600;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .mode-switch button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .timer-input-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 1rem;
+            align-items: center;
+        }
+        
+        .timer-input {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 8px;
+            background-color: rgba(156, 163, 175, 0.1);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            text-align: center;
+            font-size: 1.25rem;
+            transition: border-color 0.3s;
+        }
+        
+        .timer-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .timer-input::-webkit-inner-spin-button,
+        .timer-input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .timer-input-label {
+            display: block;
+            text-align: center;
+            margin-top: 0.25rem;
+            font-size: 0.8rem;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+        
+        .history-toggle {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            color: var(--text-color);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .history-toggle i {
+            transition: transform 0.3s;
+        }
+        
+        .history-toggle.open i {
+            transform: rotate(180deg);
+        }
+        
+        @media (max-width: 640px) {
+            .time-display {
+                font-size: clamp(2.5rem, 10vw, 5rem);
+            }
+            .rest-time-display {
+                font-size: 1.2rem;
+            }
+            .button-grid {
+                grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+                gap: 8px;
+            }
+            
+            .timer-button {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            
+            .timer-container {
+                padding: 1.5rem 1rem;
+                border-radius: 12px;
+                margin: 0.5rem;
+            }
+            
+            .timer-input-container {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+        
+        /* Fullscreen styles */
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-color);
+        }
+        
+        .fullscreen .timer-container {
+            width: 90%;
+            height: 90%;
+            max-width: none;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .fullscreen .time-display {
+            font-size: clamp(5rem, 20vw, 15rem);
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* PiP Styles */
+        .pip-bg-gradient {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            opacity: 0.15;
+            position: absolute;
+            border-radius: 50%;
+        }
+        
+        /* Notification sound */
+        .audio-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4 relative">
+    <button id="darkModeToggle" class="dark-mode-toggle">
+        <i class="fas fa-moon"></i>
+    </button>
+    <button id="fullscreenToggle" class="fullscreen-toggle">
+        <i class="fas fa-expand"></i>
+    </button>
+    
+    <div class="timer-container w-full">
+        <h1 class="text-4xl font-bold text-center mb-4">Stopwatch and Timer</h1>
+        
+        <div class="mode-switch">
+            <button id="stopwatchMode" class="active">Stopwatch</button>
+            <button id="timerMode">Timer</button>
+        </div>
+        
+        <div id="stopwatchDisplay" class="mt-6">
+            <div class="time-display flex justify-center items-baseline flex-wrap">
+                <span id="hours" class="time-value">00</span><span class="time-unit">h</span>
+                <span class="time-separator">:</span>
+                <span id="minutes" class="time-value">00</span><span class="time-unit">m</span>
+                <span class="time-separator">:</span>
+                <span id="seconds" class="time-value">00</span><span class="time-unit">s</span>
+                <span id="milliseconds" class="milliseconds">00</span>
+            </div>
+            <div id="currentRestTimeDisplay" class="rest-time-display hidden">
+                Istirahat: 
+                <span id="restHours">00</span><span class="rest-time-unit">h</span>
+                <span id="restMinutes">00</span><span class="rest-time-unit">m</span>
+                <span id="restSeconds">00</span><span class="rest-time-unit">s</span>
+            </div>
+            
+            <div class="w-full time-progress" id="timeProgress"></div>
+            
+            <div class="button-grid mt-8">
+                <button id="splitBtn" class="timer-button secondary-button">
+                    <i class="fas fa-flag"></i> Split
+                </button>
+                <button id="pipBtn" class="timer-button secondary-button">
+                    <i class="fas fa-external-link-alt"></i> PiP
+                </button>
+                <button id="startBtn" class="timer-button primary-button">
+                    <i class="fas fa-play"></i> Start
+                </button>
+                <button id="resetBtn" class="timer-button secondary-button">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+            </div>
+            
+            <button id="historyToggle" class="history-toggle">
+                <i class="fas fa-history"></i> Riwayat Stopwatch
+                <i class="fas fa-chevron-down ml-auto"></i>
+            </button>
+        </div>
+        
+        <div id="timerDisplay" class="mt-6 hidden">
+            <div class="time-display flex justify-center items-baseline flex-wrap">
+                <span id="timerHours" class="time-value">00</span><span class="time-unit">h</span>
+                <span class="time-separator">:</span>
+                <span id="timerMinutes" class="time-value">00</span><span class="time-unit">m</span>
+                <span class="time-separator">:</span>
+                <span id="timerSeconds" class="time-value">00</span><span class="time-unit">s</span>
+                <span id="timerMilliseconds" class="milliseconds">00</span>
+            </div>
+            
+            <div class="w-full time-progress" id="timerProgress"></div>
+            
+            <div class="timer-input-container">
+                <div class="flex-1">
+                    <input type="number" id="hourInput" class="timer-input" min="0" max="99" placeholder="00">
+                    <label class="timer-input-label">Jam</label>
+                </div>
+                <div class="flex-1">
+                    <input type="number" id="minuteInput" class="timer-input" min="0" max="59" placeholder="00">
+                    <label class="timer-input-label">Menit</label>
+                </div>
+                <div class="flex-1">
+                    <input type="number" id="secondInput" class="timer-input" min="0" max="59" placeholder="00">
+                    <label class="timer-input-label">Detik</label>
+                </div>
+                <button id="setTimerBtn" class="timer-button primary-button">
+                    <i class="fas fa-check"></i> Set
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-5 gap-2 mt-4">
+                <button class="timer-button secondary-button" data-preset="0.1">0.1d</button>
+                <button class="timer-button secondary-button" data-preset="1">1d</button>
+                <button class="timer-button secondary-button" data-preset="5">5d</button>
+                <button class="timer-button secondary-button" data-preset="10">10d</button>
+                <button class="timer-button secondary-button" data-preset="30">30d</button>
+                <button class="timer-button secondary-button" data-preset="60">1m</button>
+                <button class="timer-button secondary-button" data-preset="300">5m</button>
+                <button class="timer-button secondary-button" data-preset="600">10m</button>
+                <button class="timer-button secondary-button" data-preset="1800">30m</button>
+                <button class="timer-button secondary-button" data-preset="3600">1j</button>
+            </div>
+            
+            <div class="button-grid mt-4">
+                <button id="timerStartBtn" class="timer-button primary-button">
+                    <i class="fas fa-play"></i> Start
+                </button>
+                <button id="timerResetBtn" class="timer-button secondary-button">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+            </div>
+            
+            <div class="audio-control">
+                <input type="checkbox" id="enableSound" checked>
+                <label for="enableSound">Aktifkan suara saat timer selesai</label>
+            </div>
+        </div>
+        
+        <div id="lapsSection" class="mt-8 hidden">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-xl font-semibold">Riwayat Split</h3>
+                <button id="clearLapsBtn" class="timer-button danger-button py-1 px-3 text-sm">
+                    <i class="fas fa-trash-alt"></i> Hapus Semua
+                </button>
+            </div>
+            <div id="lapsContainer" class="laps-container">
+                </div>
+        </div>
+        
+        <div id="historySection" class="mt-4 hidden">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-xl font-semibold">Riwayat Stopwatch</h3>
+                <button id="clearHistoryBtn" class="timer-button danger-button py-1 px-3 text-sm">
+                    <i class="fas fa-trash-alt"></i> Hapus Semua
+                </button>
+            </div>
+            <div id="historyContainer" class="laps-container">
+                </div>
+        </div>
+    </div>
+
+    <video id="pipVideo" class="hidden" width="400" height="300" muted></video>
+    <canvas id="pipCanvas" class="hidden" width="400" height="300"></canvas>
+    
+    <audio id="timerSound" src="data:audio/mp3;base64,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"
+      preload="auto"></audio>
+
+    <script>
+        // Timer variables
+        let startTime; // Reference for main stopwatch's current running segment
+        let elapsedTime = 0; // Accumulated active time for stopwatch
+        let timerInterval; // Interval for main stopwatch
+        let isRunning = false; // True if main stopwatch is active
+        let pipActive = false;
+        let lapCount = 0;
+        let laps = [];
+        let currentMode = 'stopwatch'; // 'stopwatch' or 'timer'
+        let timerDuration = 0;
+        let timerRemaining = 0;
+        let isFullscreen = false;
+        let isTimerCompleted = false;
+        let stopwatchHistory = [];
+        let historyVisible = false;
+
+        // Rest time variables
+        let currentRestPeriodActualStartTime; // Timestamp when the current pause/rest began
+        let accumulatedRestDisplayValue = 0; // Accumulates rest time for display continuity within a session
+        let totalSessionRestTime = 0; // Sum of all *completed* rest periods for history
+        let restInterval; // Interval for rest timer
+        let isResting = false; // True if stopwatch is paused and rest timer is active
+        
+        // DOM elements
+        const hoursElement = document.getElementById('hours');
+        const minutesElement = document.getElementById('minutes');
+        const secondsElement = document.getElementById('seconds');
+        const millisecondsElement = document.getElementById('milliseconds');
+        
+        const timerHoursElement = document.getElementById('timerHours');
+        const timerMinutesElement = document.getElementById('timerMinutes');
+        const timerSecondsElement = document.getElementById('timerSeconds');
+        const timerMillisecondsElement = document.getElementById('timerMilliseconds');
+
+        const currentRestTimeDisplayElement = document.getElementById('currentRestTimeDisplay');
+        const restHoursElement = document.getElementById('restHours');
+        const restMinutesElement = document.getElementById('restMinutes');
+        const restSecondsElement = document.getElementById('restSeconds');
+        
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const timerStartBtn = document.getElementById('timerStartBtn');
+        const timerResetBtn = document.getElementById('timerResetBtn');
+        const pipBtn = document.getElementById('pipBtn');
+        const splitBtn = document.getElementById('splitBtn');
+        const lapsSection = document.getElementById('lapsSection');
+        const lapsContainer = document.getElementById('lapsContainer');
+        const clearLapsBtn = document.getElementById('clearLapsBtn');
+        const presetButtons = document.querySelectorAll('[data-preset]');
+        const pipVideo = document.getElementById('pipVideo');
+        const pipCanvas = document.getElementById('pipCanvas');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const fullscreenToggle = document.getElementById('fullscreenToggle');
+        const timeProgress = document.getElementById('timeProgress');
+        const timerProgress = document.getElementById('timerProgress');
+        
+        const stopwatchModeBtn = document.getElementById('stopwatchMode');
+        const timerModeBtn = document.getElementById('timerMode');
+        const stopwatchDisplay = document.getElementById('stopwatchDisplay');
+        const timerDisplay = document.getElementById('timerDisplay');
+        
+        const hourInput = document.getElementById('hourInput');
+        const minuteInput = document.getElementById('minuteInput');
+        const secondInput = document.getElementById('secondInput');
+        const setTimerBtn = document.getElementById('setTimerBtn');
+        
+        const historyToggle = document.getElementById('historyToggle');
+        const historySection = document.getElementById('historySection');
+        const historyContainer = document.getElementById('historyContainer');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        
+        const enableSoundCheckbox = document.getElementById('enableSound');
+        const timerSound = document.getElementById('timerSound');
+        
+        function initializeDarkMode() {
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                document.body.classList.remove('dark-mode');
+                darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        }
+        
+        function toggleDarkMode() {
+            const isDarkMode = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+            darkModeToggle.innerHTML = isDarkMode ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            if (pipActive && document.pictureInPictureElement) updatePipCanvas();
+        }
+        
+        function toggleFullscreen() {
+            const timerContainer = document.querySelector('.timer-container');
+            if (!isFullscreen) {
+                timerContainer.classList.add('fullscreen');
+                fullscreenToggle.innerHTML = '<i class="fas fa-compress"></i>';
+                if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+                else if (document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
+                else if (document.documentElement.msRequestFullscreen) document.documentElement.msRequestFullscreen();
+            } else {
+                timerContainer.classList.remove('fullscreen');
+                fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
+            }
+            isFullscreen = !isFullscreen;
+        }
+        
+        function switchMode(mode) {
+            if (currentMode === 'stopwatch' && isResting) { // Switching from resting stopwatch
+                clearInterval(restInterval);
+                // The rest period didn't "complete" by starting the stopwatch, so don't add to totalSessionRestTime yet.
+                // accumulatedRestDisplayValue already holds the value *before* this current rest segment.
+                // The current segment's progress is lost if switching modes while resting. This is acceptable.
+                isResting = false; // No longer resting if switching mode
+                currentRestTimeDisplayElement.classList.add('hidden');
+            }
+
+            currentMode = mode;
+            if (mode === 'stopwatch') {
+                stopwatchModeBtn.classList.add('active');
+                timerModeBtn.classList.remove('active');
+                stopwatchDisplay.classList.remove('hidden');
+                timerDisplay.classList.add('hidden');
+                if (laps.length > 0) lapsSection.classList.remove('hidden');
+                historyToggle.classList.remove('hidden');
+                if (historyVisible) historySection.classList.remove('hidden');
+                 // If it was previously resting and we switch back, the state should be restored by load/save logic
+                if(isResting) { // If isResting is true (e.g. loaded state), show display
+                    currentRestTimeDisplayElement.classList.remove('hidden');
+                } else {
+                    currentRestTimeDisplayElement.classList.add('hidden');
+                }
+            } else { // Timer mode
+                stopwatchModeBtn.classList.remove('active');
+                timerModeBtn.classList.add('active');
+                stopwatchDisplay.classList.add('hidden');
+                timerDisplay.classList.remove('hidden');
+                lapsSection.classList.add('hidden');
+                historySection.classList.add('hidden');
+                historyToggle.classList.add('hidden');
+                currentRestTimeDisplayElement.classList.add('hidden');
+            }
+            localStorage.setItem('currentMode', mode);
+            if (pipActive && document.pictureInPictureElement) updatePipCanvas();
+        }
+        
+        function toggleHistory() {
+            historyVisible = !historyVisible;
+            if (historyVisible) {
+                historySection.classList.remove('hidden');
+                historyToggle.classList.add('open');
+                renderHistory();
+            } else {
+                historySection.classList.add('hidden');
+                historyToggle.classList.remove('open');
+            }
+        }
+        
+        function loadSavedState() {
+            initializeDarkMode();
+            const savedHistory = JSON.parse(localStorage.getItem('stopwatchHistory'));
+            if (savedHistory) stopwatchHistory = savedHistory;
+            
+            const savedMode = localStorage.getItem('currentMode') || 'stopwatch';
+            
+            const savedStopwatchState = JSON.parse(localStorage.getItem('stopwatchState'));
+            if (savedStopwatchState) {
+                elapsedTime = savedStopwatchState.elapsedTime || 0;
+                totalSessionRestTime = savedStopwatchState.totalSessionRestTime || 0;
+                accumulatedRestDisplayValue = savedStopwatchState.accumulatedRestDisplayValue || 0;
+
+                if (savedStopwatchState.isResting && typeof savedStopwatchState.currentRestPeriodActualStartTime === 'number') {
+                    isResting = true;
+                    isRunning = false;
+                    currentRestPeriodActualStartTime = savedStopwatchState.currentRestPeriodActualStartTime;
+                    
+                    if (savedMode === 'stopwatch') {
+                        currentRestTimeDisplayElement.classList.remove('hidden');
+                        // Calculate initial display based on time passed since save
+                        let currentPauseSegmentDuration = Date.now() - currentRestPeriodActualStartTime;
+                        updateRestDisplay(accumulatedRestDisplayValue + currentPauseSegmentDuration);
+                        // Start interval to continue counting
+                        restInterval = setInterval(() => {
+                            let currentPauseSegmentDuration = Date.now() - currentRestPeriodActualStartTime;
+                            updateRestDisplay(accumulatedRestDisplayValue + currentPauseSegmentDuration);
+                        }, 1000); // Update every second for rest
+                    }
+                    startBtn.innerHTML = '<i class="fas fa-play"></i> Start';
+                    startBtn.classList.replace('accent-button', 'primary-button');
+
+                } else if (savedStopwatchState.isRunning && typeof savedStopwatchState.startTime === 'number') {
+                    isRunning = true;
+                    isResting = false;
+                    // elapsedTime was total before this segment. startTime was ref point.
+                    // Total elapsed now = (Date.now() - startTime_ref_when_segment_started)
+                    elapsedTime = Date.now() - savedStopwatchState.startTime; 
+                    // startTimer() will be called if mode is stopwatch, using this updated elapsedTime
+                } else { // Paused but not resting, or fresh
+                    isRunning = false;
+                    isResting = false;
+                    startBtn.innerHTML = '<i class="fas fa-play"></i> Start';
+                    startBtn.classList.replace('accent-button', 'primary-button');
+                }
+
+                if (savedStopwatchState.laps && savedStopwatchState.laps.length > 0) {
+                    laps = savedStopwatchState.laps;
+                    lapCount = savedStopwatchState.lapCount || laps.length;
+                    if (savedMode === 'stopwatch') lapsSection.classList.remove('hidden');
+                    renderLaps();
+                }
+                updateStopwatchDisplay(); // Update main display with loaded elapsedTime
+            }
+            
+            switchMode(savedMode); // Apply mode AFTER loading stopwatch specific states
+            
+            if (savedMode === 'stopwatch' && isRunning && !isResting) { // Check isRunning again after mode switch
+                 startTimer(); // Uses global elapsedTime which is now correctly calculated
+            }
+
+            const savedTimerState = JSON.parse(localStorage.getItem('timerState'));
+            if (savedTimerState) {
+                timerDuration = savedTimerState.timerDuration || 0;
+                if (savedTimerState.isRunning && typeof savedTimerState.pausedAt !== 'number') { // Was running
+                    const timeElapsedSinceLastTick = Date.now() - (savedTimerState.timerTickReferenceTime || Date.now());
+                    timerRemaining = Math.max(0, savedTimerState.timerRemaining - timeElapsedSinceLastTick);
+
+                    if (timerRemaining > 0 && currentMode === 'timer') startTimerCountdown();
+                    else if (timerRemaining <= 0) { // Expired while away
+                        timerRemaining = 0;
+                        completeTimer(); // Show completion state
+                    } else {
+                         timerRemaining = timerDuration; // Fallback if something is off
+                    }
+                } else { // Was paused or fresh
+                    timerRemaining = savedTimerState.timerRemaining || timerDuration;
+                }
+                updateTimerInputFields();
+                updateTimerDisplay();
+                updateTimerProgress();
+            }
+        }
+        
+        function saveStopwatchState() {
+            const state = {
+                startTime: (isRunning && !isResting) ? startTime : null,
+                elapsedTime: elapsedTime,
+                isRunning: isRunning && !isResting,
+                
+                laps: laps,
+                lapCount: lapCount,
+                
+                totalSessionRestTime: totalSessionRestTime,
+                accumulatedRestDisplayValue: accumulatedRestDisplayValue,
+                isResting: isResting,
+                currentRestPeriodActualStartTime: isResting ? currentRestPeriodActualStartTime : null,
+                
+                pausedAt: (!isRunning || isResting) ? Date.now() : null, // General timestamp for inactivity start
+            };
+            localStorage.setItem('stopwatchState', JSON.stringify(state));
+        }
+        
+        function saveTimerState() {
+            const state = {
+                timerDuration: timerDuration,
+                timerRemaining: timerRemaining,
+                isRunning: isRunning && currentMode === 'timer',
+                pausedAt: (isRunning && currentMode === 'timer') ? null : Date.now(), // Timestamp if paused
+                timerTickReferenceTime: (isRunning && currentMode === 'timer') ? Date.now() : null // For calculating remaining on load
+            };
+            localStorage.setItem('timerState', JSON.stringify(state));
+        }
+        
+        function saveStopwatchHistory() {
+            localStorage.setItem('stopwatchHistory', JSON.stringify(stopwatchHistory));
+        }
+        
+        function formatTime(time, digits = 2) {
+            return Math.floor(time).toString().padStart(digits, '0');
+        }
+        
+        function formatTimeForDisplay(timeMs) {
+            if (typeof timeMs !== 'number' || isNaN(timeMs)) return '00:00:00.00';
+            const totalSeconds = Math.floor(timeMs / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            const milliseconds = Math.floor((timeMs % 1000) / 10);
+            return `${formatTime(hours)}:${formatTime(minutes)}:${formatTime(seconds)}.${formatTime(milliseconds)}`;
+        }
+        
+        function formatDateForDisplay(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+        
+        function updateStopwatchDisplay() {
+            const totalMilliseconds = elapsedTime;
+            const totalSeconds = Math.floor(totalMilliseconds / 1000);
+            hoursElement.textContent = formatTime(totalSeconds / 3600);
+            minutesElement.textContent = formatTime((totalSeconds % 3600) / 60);
+            secondsElement.textContent = formatTime(totalSeconds % 60);
+            millisecondsElement.textContent = formatTime((totalMilliseconds % 1000) / 10);
+            timeProgress.style.width = `${((totalSeconds % 60) / 60) * 100}%`;
+            if (pipActive && document.pictureInPictureElement) updatePipCanvas();
+        }
+
+        function updateRestDisplay(displayValueMs) {
+            const totalSecondsValue = Math.floor(displayValueMs / 1000);
+            restHoursElement.textContent = formatTime(totalSecondsValue / 3600);
+            restMinutesElement.textContent = formatTime((totalSecondsValue % 3600) / 60);
+            restSecondsElement.textContent = formatTime(totalSecondsValue % 60);
+            if (pipActive && document.pictureInPictureElement) updatePipCanvas();
+        }
+        
+        function updateTimerDisplay() {
+            const totalMilliseconds = timerRemaining;
+            const totalSeconds = Math.floor(totalMilliseconds / 1000);
+            timerHoursElement.textContent = formatTime(totalSeconds / 3600);
+            timerMinutesElement.textContent = formatTime((totalSeconds % 3600) / 60);
+            timerSecondsElement.textContent = formatTime(totalSeconds % 60);
+            timerMillisecondsElement.textContent = formatTime((totalMilliseconds % 1000) / 10);
+            if (pipActive && document.pictureInPictureElement) updatePipCanvas();
+        }
+        
+        function updateTimerInputFields() {
+            const totalSeconds = Math.floor(timerDuration / 1000);
+            hourInput.value = Math.floor(totalSeconds / 3600) > 0 ? Math.floor(totalSeconds / 3600) : '';
+            minuteInput.value = Math.floor((totalSeconds % 3600) / 60) > 0 ? Math.floor((totalSeconds % 3600) / 60) : '';
+            secondInput.value = (totalSeconds % 60) > 0 ? (totalSeconds % 60) : '';
+        }
+        
+        function updateTimerProgress() {
+            timerProgress.style.width = timerDuration > 0 ? `${(timerRemaining / timerDuration) * 100}%` : '0%';
+        }
+        
+        function startTimer() { // For stopwatch
+            isRunning = true;
+            isResting = false;
+            clearInterval(restInterval); // Stop rest interval if it was running
+
+            // Add duration of the just-ended rest period to totals
+            if (typeof currentRestPeriodActualStartTime === 'number') { // Check if it was actually resting
+                const lastPauseSegmentDuration = Date.now() - currentRestPeriodActualStartTime;
+                totalSessionRestTime += lastPauseSegmentDuration;
+                accumulatedRestDisplayValue += lastPauseSegmentDuration;
+                currentRestPeriodActualStartTime = null; // Clear for next rest
+            }
+            
+            currentRestTimeDisplayElement.classList.add('hidden'); // Hide rest display
+
+            startTime = Date.now() - elapsedTime; // elapsedTime is already accumulated active time
+            timerInterval = setInterval(() => {
+                elapsedTime = Date.now() - startTime;
+                updateStopwatchDisplay();
+            }, 10); // Update every 10ms for stopwatch
+
+            startBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+            startBtn.classList.replace('primary-button', 'accent-button');
+            saveStopwatchState();
+        }
+        
+        function pauseTimer() { // For stopwatch
+            isRunning = false;
+            isResting = true;
+            clearInterval(timerInterval); // Stop main stopwatch interval
+            // elapsedTime is now fixed at its last updated value.
+
+            currentRestPeriodActualStartTime = Date.now(); // Mark start of this specific rest segment
+            currentRestTimeDisplayElement.classList.remove('hidden');
+            
+            // Initial display for this rest segment
+            updateRestDisplay(accumulatedRestDisplayValue + 0); 
+
+            restInterval = setInterval(() => {
+                let currentPauseSegmentDuration = Date.now() - currentRestPeriodActualStartTime;
+                updateRestDisplay(accumulatedRestDisplayValue + currentPauseSegmentDuration);
+            }, 1000); // Update rest display every second
+
+            startBtn.innerHTML = '<i class="fas fa-play"></i> Start';
+            startBtn.classList.replace('accent-button', 'primary-button');
+            saveStopwatchState();
+        }
+        
+        function startTimerCountdown() {
+            if (timerRemaining <= 0 && timerDuration > 0) { // Allow restart if duration is set
+                 timerRemaining = timerDuration;
+            } else if (timerDuration <= 0) { // No duration set
+                return;
+            }
+            
+            const endTime = Date.now() + timerRemaining;
+            timerInterval = setInterval(() => {
+                timerRemaining = Math.max(0, endTime - Date.now());
+                updateTimerDisplay();
+                updateTimerProgress();
+                if (timerRemaining <= 0) completeTimer();
+            }, 10);
+            isRunning = true;
+            timerStartBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
+            timerStartBtn.classList.replace('primary-button', 'accent-button');
+            isTimerCompleted = false;
+            saveTimerState();
+        }
+        
+        function pauseTimerCountdown() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            timerStartBtn.innerHTML = '<i class="fas fa-play"></i> Start';
+            timerStartBtn.classList.replace('accent-button', 'primary-button');
+            saveTimerState();
+        }
+        
+        function completeTimer() {
+            pauseTimerCountdown(); 
+            isTimerCompleted = true;
+            timerStartBtn.innerHTML = '<i class="fas fa-redo"></i> Restart';
+            let flashCount = 0;
+            const flashInterval = setInterval(() => {
+                const displayEl = document.querySelector('#timerDisplay .time-display');
+                displayEl.style.color = flashCount % 2 === 0 ? '#EF4444' : '';
+                if (++flashCount > 5) {
+                    clearInterval(flashInterval);
+                    displayEl.style.color = '';
+                }
+            }, 300);
+            if (enableSoundCheckbox.checked) {
+                timerSound.currentTime = 0;
+                timerSound.play().catch(e => console.log('Error playing sound:', e));
+            }
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('Timer Selesai', {
+                    body: 'Timer Anda telah berakhir!',
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%233B82F6"><path d="M12 0C5.383 0 0 5.383 0 12s5.383 12 12 12 12-5.383 12-12S18.617 0 12 0zm0 2c5.535 0 10 4.465 10 10s-4.465 10-10 10S2 17.535 2 12 6.465 2 12 2zm1 3h-2v8h6v-2h-4V5z"/></svg>'
+                });
+            }
+        }
+        
+        function toggleStopwatch() {
+            if (isRunning && !isResting) { 
+                pauseTimer(); 
+            } else { 
+                startTimer(); 
+            }
+        }
+        
+        function toggleTimer() {
+            if (isTimerCompleted) {
+                timerRemaining = timerDuration;
+                isTimerCompleted = false;
+                startTimerCountdown();
+            } else if (isRunning) {
+                pauseTimerCountdown();
+            } else {
+                startTimerCountdown();
+            }
+        }
+        
+        function resetStopwatch() {
+            if (elapsedTime > 0 || totalSessionRestTime > 0) addToHistory();
+            
+            clearInterval(timerInterval);
+            clearInterval(restInterval);
+            elapsedTime = 0;
+            accumulatedRestDisplayValue = 0; // Reset accumulator
+            totalSessionRestTime = 0;       // Reset session total
+            currentRestPeriodActualStartTime = null;
+            isResting = false;
+            isRunning = false;
+            
+            updateStopwatchDisplay();
+            updateRestDisplay(0); // Reset rest display to 0
+            currentRestTimeDisplayElement.classList.add('hidden');
+            
+            startBtn.innerHTML = '<i class="fas fa-play"></i> Start';
+            startBtn.classList.replace('accent-button', 'primary-button');
+            saveStopwatchState();
+        }
+        
+        function addToHistory() {
+            const historyEntry = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                duration: elapsedTime,
+                totalSessionRestTime: totalSessionRestTime, // Use the correct variable
+                laps: laps.slice(),
+                lapCount: lapCount
+            };
+            stopwatchHistory.unshift(historyEntry);
+            if (stopwatchHistory.length > 50) stopwatchHistory.pop();
+            saveStopwatchHistory();
+            if (historyVisible) renderHistory();
+        }
+        
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timerRemaining = timerDuration; // Reset to initial duration
+            updateTimerDisplay();
+            updateTimerProgress();
+            isRunning = false;
+            isTimerCompleted = false;
+            timerStartBtn.innerHTML = '<i class="fas fa-play"></i> Start';
+            timerStartBtn.classList.replace('accent-button', 'primary-button');
+            saveTimerState();
+        }
+        
+        function setTimerFromInputs() {
+            const hours = parseInt(hourInput.value) || 0;
+            const minutes = parseInt(minuteInput.value) || 0;
+            const seconds = parseInt(secondInput.value) || 0;
+            if (hours === 0 && minutes === 0 && seconds === 0) {
+                // Allow setting to 0 to clear, but don't start.
+                // Or, alert if you prefer to enforce a positive time.
+                // For now, let it be settable to 0.
+            }
+            timerDuration = (hours * 3600 + minutes * 60 + seconds) * 1000;
+            resetTimer(); // Reset to apply new duration and stop if running
+        }
+        
+        function setPresetTime(seconds) {
+            timerDuration = seconds * 1000;
+            resetTimer(); // Reset to apply new duration
+        }
+        
+        function addSplit() {
+            if (elapsedTime === 0 || isResting) return; 
+            lapCount++;
+            const lapTime = elapsedTime;
+            const previousLapTime = laps.length > 0 ? laps[laps.length - 1].totalTime : 0;
+            laps.push({
+                number: lapCount,
+                totalTime: lapTime,
+                splitTime: lapTime - previousLapTime,
+                timestamp: new Date().toISOString()
+            });
+            renderLaps();
+            lapsSection.classList.remove('hidden');
+            saveStopwatchState();
+        }
+        
+        function clearLaps() {
+            if (laps.length === 0) return;
+            if (confirm('Apakah Anda yakin ingin menghapus semua riwayat split?')) {
+                laps = [];
+                lapCount = 0;
+                lapsContainer.innerHTML = '';
+                lapsSection.classList.add('hidden');
+                saveStopwatchState();
+            }
+        }
+        
+        function clearHistory() {
+            if (stopwatchHistory.length === 0) return;
+            if (confirm('Apakah Anda yakin ingin menghapus semua riwayat stopwatch?')) {
+                stopwatchHistory = [];
+                historyContainer.innerHTML = ''; // Clear display
+                saveStopwatchHistory(); // Save cleared history
+            }
+        }
+        
+        function renderLaps() {
+            lapsContainer.innerHTML = '';
+            if (laps.length === 0) {
+                lapsSection.classList.add('hidden');
+                return;
+            }
+            let bestSplitTime = Infinity, worstSplitTime = 0;
+            if (laps.length > 0) { // Calculate even for one lap (split will be same as total)
+                 laps.forEach(lap => { // Iterate all laps to find best/worst split time
+                    if (lap.splitTime < bestSplitTime) bestSplitTime = lap.splitTime;
+                    if (lap.splitTime > worstSplitTime) worstSplitTime = lap.splitTime;
+                });
+                 if (laps.length === 1) { // If only one lap, it's neither best nor worst comparatively
+                    bestSplitTime = worstSplitTime = laps[0].splitTime;
+                 }
+            }
+
+            laps.forEach((lap, index) => {
+                const lapElement = document.createElement('div');
+                lapElement.className = 'lap-item';
+                if (index === laps.length - 1) lapElement.classList.add('highlight');
+                
+                let splitClass = '';
+                let splitIcon = '';
+                // Only apply best/worst if there's more than one lap to compare against
+                if (laps.length > 1) {
+                    if (lap.splitTime === bestSplitTime && bestSplitTime !== worstSplitTime) { 
+                        splitClass = 'text-green-500'; splitIcon = '<i class="fas fa-bolt mr-1"></i>'; 
+                    } else if (lap.splitTime === worstSplitTime && bestSplitTime !== worstSplitTime) { 
+                        splitClass = 'text-red-500'; splitIcon = '<i class="fas fa-turtle mr-1"></i>'; 
+                    }
+                }
+
+                const timeStr = new Date(lap.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                lapElement.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="font-semibold mr-2">#${lap.number}</span>
+                        <span class="text-gray-500 text-sm mr-3">${timeStr}</span>
+                        <span class="font-medium">Total: ${formatTimeForDisplay(lap.totalTime)}</span>
+                    </div>
+                    <span class="font-medium ${splitClass}">
+                        ${splitIcon}${formatTimeForDisplay(lap.splitTime)}
+                    </span>
+                `;
+                lapsContainer.appendChild(lapElement);
+            });
+            lapsContainer.scrollTop = lapsContainer.scrollHeight;
+        }
+        
+        function renderHistory() {
+            historyContainer.innerHTML = '';
+            if (stopwatchHistory.length === 0) {
+                historyContainer.innerHTML = '<div class="p-4 text-center text-gray-500">Tidak ada riwayat ditemukan.</div>';
+                return;
+            }
+            stopwatchHistory.forEach((entry) => {
+                const historyElement = document.createElement('div');
+                historyElement.className = 'lap-item flex flex-col items-start'; 
+                let lapsDetail = entry.laps && entry.laps.length > 0 ? `<span class="text-sm text-gray-500 dark:text-gray-400 mt-1">Split: ${entry.laps.length}</span>` : '';
+                let restDetail = entry.totalSessionRestTime && entry.totalSessionRestTime > 0 ? `<span class="text-sm text-green-600 dark:text-green-400 mt-1">Istirahat: ${formatTimeForDisplay(entry.totalSessionRestTime)}</span>` : '';
+                
+                historyElement.innerHTML = `
+                    <div class="w-full flex items-center justify-between">
+                        <div>
+                            <span class="font-medium">${formatDateForDisplay(entry.timestamp)}</span>
+                        </div>
+                        <span class="font-bold">${formatTimeForDisplay(entry.duration)}</span>
+                    </div>
+                    ${lapsDetail || restDetail ? `<div class="w-full mt-1 flex flex-col items-start">${lapsDetail}${restDetail}</div>` : ''}
+                `;
+                historyContainer.appendChild(historyElement);
+            });
+        }
+        
+        async function togglePictureInPicture() {
+            try {
+                if (!document.pictureInPictureElement) {
+                    updatePipCanvas();
+                    const stream = pipCanvas.captureStream();
+                    pipVideo.srcObject = stream;
+                    await pipVideo.play();
+                    await pipVideo.requestPictureInPicture();
+                    pipActive = true;
+                    pipBtn.innerHTML = '<i class="fas fa-times"></i> Keluar PiP';
+                    pipBtn.classList.replace('secondary-button', 'danger-button');
+                    pipVideo.addEventListener('leavepictureinpicture', () => {
+                        pipActive = false;
+                        pipBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> PiP';
+                        pipBtn.classList.replace('danger-button', 'secondary-button');
+                    }, { once: true });
+                } else {
+                    await document.exitPictureInPicture();
+                }
+            } catch (error) {
+                console.error("PiP gagal:", error);
+                alert("Picture-in-Picture gagal. Browser Anda mungkin tidak mendukung fitur ini.");
+                pipActive = false; 
+                pipBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> PiP';
+                pipBtn.classList.replace('danger-button', 'secondary-button');
+            }
+        }
+        
+        function updatePipCanvas() {
+            const ctx = pipCanvas.getContext('2d');
+            const width = pipCanvas.width;
+            const height = pipCanvas.height;
+            const cs = getComputedStyle(document.documentElement);
+            const bgColor = cs.getPropertyValue('--card-bg');
+            const textColor = cs.getPropertyValue('--text-color');
+            const accentColor = cs.getPropertyValue('--accent-color');
+            const primaryColor = cs.getPropertyValue('--primary-color');
+            const restColorPip = cs.getPropertyValue('--rest-color'); // Use the same rest color
+            const isDM = document.body.classList.contains('dark-mode');
+
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, width, height);
+
+            for (let i = 0; i < 2; i++) {
+                ctx.fillStyle = i % 2 === 0 ? primaryColor : accentColor;
+                ctx.globalAlpha = 0.03;
+                ctx.beginPath();
+                ctx.arc(Math.random() * width, Math.random() * height, 50 + Math.random() * 80, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+            const gradient = ctx.createLinearGradient(0, 0, width, height);
+            gradient.addColorStop(0, isDM ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)');
+            gradient.addColorStop(1, isDM ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.02)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.fillStyle = textColor;
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(currentMode === 'stopwatch' ? 'Stopwatch' : 'Timer', width / 2, 20);
+
+            let mainTextY = height * 0.45;
+            let statusTextY = height * 0.8;
+            let subTextY = height * 0.9;
+
+            if (currentMode === 'stopwatch') {
+                const h = hoursElement.textContent;
+                const m = minutesElement.textContent;
+                const s = secondsElement.textContent;
+                const ms = millisecondsElement.textContent;
+                
+                ctx.font = 'bold 32px Arial';
+                ctx.fillStyle = textColor;
+                ctx.fillText(`${h}:${m}:${s}`, width / 2 - 15, mainTextY);
+                ctx.font = 'bold 20px Arial';
+                ctx.fillStyle = primaryColor;
+                ctx.fillText(ms, width / 2 + 60, mainTextY);
+
+                let statusText = isRunning && !isResting ? 'Berjalan' : 'Dijeda';
+                let statusColor = isRunning && !isResting ? accentColor : (isDM ? 'rgba(200,200,200,0.7)' : 'rgba(100,100,100,0.7)');
+
+                if (isResting) {
+                    statusText = 'Istirahat';
+                    statusColor = restColorPip;
+                    
+                    // Calculate displayed rest time for PiP
+                    let currentPauseSegmentDuration = (typeof currentRestPeriodActualStartTime === 'number') ? (Date.now() - currentRestPeriodActualStartTime) : 0;
+                    let pipDisplayedRestValue = accumulatedRestDisplayValue + currentPauseSegmentDuration;
+                    
+                    const totalRestSeconds = Math.floor(pipDisplayedRestValue / 1000);
+                    const rH = formatTime(totalRestSeconds / 3600);
+                    const rM = formatTime((totalRestSeconds % 3600) / 60);
+                    const rS = formatTime(totalRestSeconds % 60);
+
+                    ctx.font = 'normal 16px Arial';
+                    ctx.fillStyle = restColorPip;
+                    ctx.fillText(`${rH}:${rM}:${rS}`, width / 2, subTextY);
+                } else if (laps.length > 0 && !isResting) {
+                    const latestLap = laps[laps.length - 1];
+                    ctx.font = 'normal 12px Arial';
+                    ctx.fillStyle = isDM ? 'rgba(200,200,200,0.6)' : 'rgba(100,100,100,0.6)';
+                    ctx.fillText(`Split Terakhir: ${formatTimeForDisplay(latestLap.splitTime)}`, width / 2, subTextY);
+                }
+                
+                ctx.font = 'bold 16px Arial';
+                ctx.fillStyle = statusColor;
+                const now = Date.now();
+                if (isRunning || isResting) { // Pulse if active (running or resting)
+                    const pulse = (Math.sin(now / 300) + 1) / 2;
+                    ctx.globalAlpha = 0.7 + pulse * 0.3;
+                } else {
+                    ctx.globalAlpha = 1;
+                }
+                ctx.fillText(statusText, width / 2, statusTextY);
+                ctx.globalAlpha = 1;
+
+            } else { // Timer mode
+                const h = timerHoursElement.textContent;
+                const m = timerMinutesElement.textContent;
+                const s = timerSecondsElement.textContent;
+                
+                ctx.font = 'bold 32px Arial';
+                ctx.fillStyle = textColor;
+                ctx.fillText(`${h}:${m}:${s}`, width / 2, mainTextY);
+
+                const percent = timerDuration > 0 ? Math.round(((timerDuration - timerRemaining) / timerDuration) * 100) : 0;
+                const statusText = isTimerCompleted ? 'Selesai!' : (isRunning ? `Berjalan (${percent}%)` : `Dijeda (${percent}%)`);
+                let statusColor = isTimerCompleted ? '#EF4444' : (isRunning ? accentColor : (isDM ? 'rgba(200,200,200,0.7)' : 'rgba(100,100,100,0.7)'));
+
+                ctx.font = 'bold 16px Arial';
+                const now = Date.now();
+                if (isTimerCompleted || isRunning) {
+                     const pulse = (Math.sin(now / 300) + 1) / 2;
+                     ctx.globalAlpha = 0.7 + pulse * 0.3;
+                } else {
+                    ctx.globalAlpha = 1;
+                }
+                ctx.fillStyle = statusColor;
+                ctx.fillText(statusText, width / 2, statusTextY);
+                ctx.globalAlpha = 1;
+            }
+        }
+        
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                Notification.requestPermission();
+            }
+        }
+        
+        // Event listeners
+        startBtn.addEventListener('click', toggleStopwatch);
+        resetBtn.addEventListener('click', resetStopwatch);
+        timerStartBtn.addEventListener('click', toggleTimer);
+        timerResetBtn.addEventListener('click', resetTimer);
+        pipBtn.addEventListener('click', togglePictureInPicture);
+        splitBtn.addEventListener('click', addSplit);
+        clearLapsBtn.addEventListener('click', clearLaps);
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+        fullscreenToggle.addEventListener('click', toggleFullscreen);
+        
+        stopwatchModeBtn.addEventListener('click', () => switchMode('stopwatch'));
+        timerModeBtn.addEventListener('click', () => switchMode('timer'));
+        
+        setTimerBtn.addEventListener('click', setTimerFromInputs);
+        historyToggle.addEventListener('click', toggleHistory);
+        clearHistoryBtn.addEventListener('click', clearHistory);
+        
+        presetButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const seconds = parseFloat(this.getAttribute('data-preset'));
+                setPresetTime(seconds);
+                presetButtons.forEach(btn => btn.classList.replace('primary-button','secondary-button'));
+                this.classList.replace('secondary-button','primary-button');
+            });
+        });
+        
+        [hourInput, minuteInput, secondInput].forEach(input => {
+            input.addEventListener('keypress', e => { if (e.key === 'Enter') setTimerFromInputs(); });
+        });
+        
+        setInterval(() => { // For PiP canvas update
+            if (pipActive && document.pictureInPictureElement) updatePipCanvas();
+        }, 100); 
+        
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && isFullscreen) {
+                const timerContainer = document.querySelector('.timer-container');
+                timerContainer.classList.remove('fullscreen');
+                fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
+                isFullscreen = false;
+            }
+        });
+        
+        window.addEventListener('load', () => {
+            loadSavedState();
+            requestNotificationPermission();
+            // Initial display updates if no saved state or for elements not covered by load
+            // These are mostly covered by loadSavedState now.
+            updateStopwatchDisplay(); 
+            updateRestDisplay(accumulatedRestDisplayValue); // Initial rest display based on loaded accumulator
+            updateTimerDisplay();
+            updateTimerProgress();
+        });
+        
+        window.addEventListener('beforeunload', () => {
+            // Ensure current state is saved based on mode
+            if (currentMode === 'stopwatch') saveStopwatchState();
+            else if (currentMode === 'timer') saveTimerState();
+            saveStopwatchHistory(); 
+        });
+    </script>
+</body>
+</html>
+
