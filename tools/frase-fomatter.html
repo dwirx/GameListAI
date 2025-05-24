@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Seed Phrase Formatter</title>
+  <style>
+    :root {
+      --primary: #1976d2;
+      --bg: #f9f9f9;
+      --text: #333;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      margin: 0;
+      padding: 20px;
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--primary);
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      font-size: 16px;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      resize: none;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #1565c0;
+    }
+
+    .word-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+
+    .word {
+      background-color: #e3f2fd;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 15px;
+      border: 1px solid #90caf9;
+      user-select: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .word:hover {
+      background-color: #bbdefb;
+    }
+
+    #confirmation {
+      text-align: center;
+      margin-top: 10px;
+      color: green;
+      font-size: 14px;
+    }
+
+    @media (max-width: 480px) {
+      .word {
+        font-size: 14px;
+        padding: 8px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Seed Phrase Formatter</h2>
+    <p>Masukkan seed phrase kamu (pisahkan dengan spasi):</p>
+    <textarea id="inputSeed" placeholder="Contoh: abandon ability able about above ..."></textarea>
+    <button onclick="formatSeed()">Tata Frasa</button>
+
+    <div class="word-list" id="wordList"></div>
+
+    <button id="copyAll" style="display:none;">Salin Semua Kata</button>
+    <div id="confirmation"></div>
+  </div>
+
+  <script>
+    function formatSeed() {
+      const input = document.getElementById("inputSeed").value.trim();
+      const words = input.split(/\s+/);
+      const wordListDiv = document.getElementById("wordList");
+      wordListDiv.innerHTML = "";
+
+      words.forEach(word => {
+        const span = document.createElement("div");
+        span.className = "word";
+        span.textContent = word;
+        span.addEventListener("click", () => {
+          navigator.clipboard.writeText(word).then(() => {
+            document.getElementById("confirmation").textContent = `Kata "${word}" disalin!`;
+          });
+        });
+        wordListDiv.appendChild(span);
+      });
+
+      if (words.length > 0) {
+        document.getElementById("copyAll").style.display = "block";
+        document.getElementById("confirmation").textContent = "";
+      }
+    }
+
+    document.getElementById("copyAll").addEventListener("click", () => {
+      const words = Array.from(document.querySelectorAll(".word")).map(el => el.textContent);
+      const phrase = words.join(" ");
+      navigator.clipboard.writeText(phrase).then(() => {
+        document.getElementById("confirmation").textContent = "Seed phrase berhasil disalin!";
+      });
+    });
+  </script>
+</body>
+</html>
+
+Tolong sempurnakan agar lebih baik lagi dan tambahkan fitur yang menurut kamu Perla Dan tampilanya bisa responsif serta compatible dengan mobile maupun desktop sempurnakan
