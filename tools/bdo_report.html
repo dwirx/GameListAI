@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan SS Akhir - Black Desert Online</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .form-container {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            border-left: 5px solid #3498db;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            min-width: 150px;
+            color: #34495e;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.2);
+        }
+
+        .trashloot-container {
+            background: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .trashloot-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .trashloot-item input {
+            flex: 1;
+            margin: 0;
+        }
+
+        .calculation-section {
+            background: #e8f5e8;
+            border-left-color: #27ae60;
+        }
+
+        .result-display {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #27ae60;
+            text-align: center;
+            border: 2px solid #27ae60;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #219a52);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .progress-section {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffc107, #ff8f00);
+            transition: width 0.3s;
+            border-radius: 10px;
+        }
+
+        .output-section {
+            background: #f8f9fa;
+            border: 2px solid #6c757d;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .output-content {
+            white-space: pre-line;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .form-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .form-group label {
+                min-width: auto;
+                margin-bottom: 5px;
+            }
+
+            .trashloot-item {
+                flex-direction: column;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 Laporan SS Akhir - Black Desert Online</h1>
+            <p>Sistem Pelaporan Interaktif</p>
+        </div>
+
+        <div class="form-container">
+            <form id="bdoForm">
+                <!-- Informasi Dasar -->
+                <div class="section">
+                    <div class="section-title">
+                        <span>👤</span> Informasi Dasar
+                    </div>
+                    <div class="form-group">
+                        <label>🧾 Nama:</label>
+                        <input type="text" id="nama" placeholder="Masukkan nama">
+                    </div>
+                    <div class="form-group">
+                        <label>🕒 Shift:</label>
+                        <select id="shift">
+                            <option value="">Pilih Shift</option>
+                            <option value="PAGI">PAGI</option>
+                            <option value="SIANG">SIANG</option>
+                            <option value="MALAM">MALAM</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>📦 No Order:</label>
+                        <input type="number" id="noOrder" placeholder="Contoh: 17025">
+                    </div>
+                    <div class="form-group">
+                        <label>🆔 ID Order:</label>
+                        <input type="text" id="idOrder" placeholder="Contoh: danielc7753">
+                    </div>
+                    <div class="form-group">
+                        <label>📝 Tugas:</label>
+                        <input type="text" id="tugas" placeholder="Contoh: FARM 520B">
+                    </div>
+                </div>
+
+                <!-- Perolehan -->
+                <div class="section">
+                    <div class="section-title">
+                        <span>📊</span> Perolehan
+                    </div>
+                    <div class="form-group">
+                        <label>🔹 Trashloot:</label>
+                        <button type="button" class="btn btn-primary" onclick="addTrashlootItem()" style="margin-left: auto; padding: 8px 15px; font-size: 12px;">
+                            ➕ Tambah Item
+                        </button>
+                    </div>
+                    <div class="trashloot-container" id="trashlootContainer">
+                        <div class="trashloot-item">
+                            <input type="text" placeholder="Nama Tempat (e.g. TROL)" class="trashloot-name" style="flex: 1;">
+                            <input type="number" placeholder="Jumlah" class="trashloot-count" style="flex: 1;">
+                            <span>></span>
+                            <input type="text" placeholder="Silver (e.g. 4.8 B)" class="trashloot-value" style="flex: 1;" oninput="calculateTotal()">
+                            <button type="button" class="btn-remove" onclick="removeTrashlootItem(this)" style="background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">🗑️</button>
+                        </div>
+                        <div class="trashloot-item">
+                            <input type="text" placeholder="Nama Tempat (e.g. CRESCENT)" class="trashloot-name" style="flex: 1;">
+                            <input type="number" placeholder="Jumlah" class="trashloot-count" style="flex: 1;">
+                            <span>></span>
+                            <input type="text" placeholder="Silver (e.g. 1.1 B)" class="trashloot-value" style="flex: 1;" oninput="calculateTotal()">
+                            <button type="button" class="btn-remove" onclick="removeTrashlootItem(this)" style="background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>💰 Penjualan di Storage:</label>
+                        <input type="text" id="storage" placeholder="Contoh: 900 M" oninput="calculateTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>💸 Market (Terjual):</label>
+                        <input type="text" id="marketSold" placeholder="Contoh: 2.9 B" oninput="calculateTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>🔄 Market (Belum Terjual):</label>
+                        <input type="text" id="marketUnsold" placeholder="Contoh: 1.5 B" oninput="calculateTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>🧩 Ganti Crystal:</label>
+                        <input type="text" id="gantiCrystal" placeholder="Biaya ganti crystal" oninput="calculateTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label>📥 Collect Shift Sebelumnya:</label>
+                        <input type="text" id="collectShift" placeholder="Contoh: 2.5 B" oninput="calculateTotal()">
+                    </div>
+                </div>
+
+                <!-- Kalkulasi Total -->
+                <div class="section calculation-section">
+                    <div class="section-title">
+                        <span>💵</span> Total Perolehan
+                    </div>
+                    <div class="result-display" id="totalPerolehan">
+                        Total akan dihitung otomatis
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="section progress-section">
+                    <div class="section-title">
+                        <span>📈</span> Progress
+                    </div>
+                    <div class="form-group">
+                        <label>Target:</label>
+                        <input type="text" id="target" placeholder="Contoh: 520 B" oninput="updateProgress()">
+                    </div>
+                    <div class="form-group">
+                        <label>Progress Saat Ini:</label>
+                        <input type="text" id="currentProgress" placeholder="Contoh: 280.1 B" oninput="updateProgress()">
+                        <button type="button" class="btn btn-success" onclick="addTotalToProgress()" style="margin-left: 10px; padding: 8px 15px; font-size: 12px; white-space: nowrap;">
+                            ➕ Tambah Total
+                        </button>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <div id="progressText" style="text-align: center; margin-top: 10px; font-weight: bold;">0%</div>
+                </div>
+
+                <!-- Keterangan Tambahan -->
+                <div class="section">
+                    <div class="section-title">
+                        <span>📌</span> Keterangan Tambahan
+                    </div>
+                    <div class="form-group">
+                        <label>⚔️ Class:</label>
+                        <input type="text" id="class" placeholder="Contoh: dosa">
+                    </div>
+                    <div class="form-group">
+                        <label>🌍 Grinding Spot:</label>
+                        <input type="text" id="grindingSpot" placeholder="Contoh: trol, crescent">
+                    </div>
+                    <div class="form-group">
+                        <label>🔥 Agris Digunakan:</label>
+                        <input type="text" id="agris" placeholder="Contoh: 10.000">
+                    </div>
+                    <div class="form-group">
+                        <label>💥 Crystal Pecah:</label>
+                        <select id="crystalPecah">
+                            <option value="">Pilih</option>
+                            <option value="Ya">Ya</option>
+                            <option value="Tidak">Tidak</option>
+                            <option value="-">-</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>🧱 Status Crystal:</label>
+                        <select id="statusCrystal">
+                            <option value="">Pilih Status</option>
+                            <option value="Sudah Beli">Sudah Beli</option>
+                            <option value="Sudah PO">Sudah PO</option>
+                            <option value="Belum">Belum</option>
+                            <option value="-">-</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>⚠️ Kendala:</label>
+                        <textarea id="kendala" rows="3" placeholder="Masukkan kendala yang dialami"></textarea>
+                    </div>
+                </div>
+
+                <!-- Tombol Aksi -->
+                <div class="button-group">
+                    <button type="button" class="btn btn-primary" onclick="generateReport()">
+                        📋 Generate Report
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="clearForm()">
+                        🗑️ Clear Form
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="copyReport()">
+                        📋 Copy to Clipboard
+                    </button>
+                </div>
+            </form>
+
+            <!-- Output Section -->
+            <div class="output-section" id="outputSection">
+                <div class="section-title">
+                    <span>📄</span> Report Output
+                </div>
+                <div class="output-content" id="outputContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function addTrashlootItem() {
+            const container = document.getElementById('trashlootContainer');
+            const newItem = document.createElement('div');
+            newItem.className = 'trashloot-item';
+            newItem.innerHTML = `
+                <input type="text" placeholder="Nama Tempat" class="trashloot-name" style="flex: 1;">
+                <input type="number" placeholder="Jumlah" class="trashloot-count" style="flex: 1;">
+                <span>></span>
+                <input type="text" placeholder="Silver" class="trashloot-value" style="flex: 1;" oninput="calculateTotal()">
+                <button type="button" class="btn-remove" onclick="removeTrashlootItem(this)" style="background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">🗑️</button>
+            `;
+            container.appendChild(newItem);
+        }
+
+        function removeTrashlootItem(button) {
+            const container = document.getElementById('trashlootContainer');
+            const items = container.getElementsByClassName('trashloot-item');
+            
+            // Jangan hapus jika hanya tersisa 1 item
+            if (items.length > 1) {
+                button.parentElement.remove();
+                calculateTotal(); // Recalculate after removal
+            } else {
+                alert('Minimal harus ada 1 item trashloot!');
+            }
+        }
+
+        function parseValue(valueStr) {
+            if (!valueStr || valueStr.trim() === '' || valueStr.trim() === '-') return 0;
+            
+            // Remove all whitespace and convert to lowercase
+            let cleanValue = valueStr.toString().replace(/\s+/g, '').toLowerCase();
+            
+            // Handle different decimal separators (comma to dot)
+            cleanValue = cleanValue.replace(/,/g, '.');
+            
+            // Extract number and multiplier with improved regex
+            const match = cleanValue.match(/^([0-9]+\.?[0-9]*)([kmbt]?)$/);
+            if (!match) {
+                console.log('Could not parse value:', valueStr);
+                return 0;
+            }
+            
+            const number = parseFloat(match[1]);
+            const multiplier = match[2];
+            
+            if (isNaN(number)) {
+                console.log('Invalid number:', match[1]);
+                return 0;
+            }
+            
+            let result = 0;
+            switch (multiplier) {
+                case 'k': result = number * 1000; break;
+                case 'm': result = number * 1000000; break;
+                case 'b': result = number * 1000000000; break;
+                case 't': result = number * 1000000000000; break;
+                default: result = number; break;
+            }
+            
+            console.log(`Parsed ${valueStr} -> ${number} * ${multiplier || '1'} = ${result}`);
+            return result;
+        }
+
+        function formatValue(value) {
+            if (value === 0) return '0';
+            
+            const absValue = Math.abs(value);
+            let formattedValue = '';
+            
+            if (absValue >= 1000000000000) {
+                formattedValue = (absValue / 1000000000000).toFixed(1) + ' T';
+            } else if (absValue >= 1000000000) {
+                formattedValue = (absValue / 1000000000).toFixed(1) + ' B';
+            } else if (absValue >= 1000000) {
+                formattedValue = (absValue / 1000000).toFixed(1) + ' M';
+            } else if (absValue >= 1000) {
+                formattedValue = (absValue / 1000).toFixed(1) + ' K';
+            } else {
+                formattedValue = absValue.toFixed(0);
+            }
+            
+            // Add negative sign if needed
+            return value < 0 ? '-' + formattedValue : formattedValue;
+        }
+
+        function calculateTotal() {
+            console.log('=== Calculating Total ===');
+            let total = 0;
+            
+            // Calculate trashloot total
+            const trashlootItems = document.querySelectorAll('.trashloot-value');
+            let trashlootTotal = 0;
+            trashlootItems.forEach((item, index) => {
+                const value = parseValue(item.value);
+                trashlootTotal += value;
+                console.log(`Trashloot ${index + 1}: ${item.value} = ${value}`);
+            });
+            total += trashlootTotal;
+            console.log('Total Trashloot:', trashlootTotal);
+            
+            // Add storage value
+            const storageValue = document.getElementById('storage').value;
+            const storageParsed = parseValue(storageValue);
+            total += storageParsed;
+            console.log('Storage:', storageValue, '=', storageParsed);
+            
+            // Add market sold value
+            const marketSoldValue = document.getElementById('marketSold').value;
+            const marketSoldParsed = parseValue(marketSoldValue);
+            total += marketSoldParsed;
+            console.log('Market Sold:', marketSoldValue, '=', marketSoldParsed);
+            
+            // Add market unsold value
+            const marketUnsoldValue = document.getElementById('marketUnsold').value;
+            const marketUnsoldParsed = parseValue(marketUnsoldValue);
+            total += marketUnsoldParsed;
+            console.log('Market Unsold:', marketUnsoldValue, '=', marketUnsoldParsed);
+            
+            // Subtract crystal cost
+            const crystalCost = document.getElementById('gantiCrystal').value;
+            const crystalCostParsed = parseValue(crystalCost);
+            total -= crystalCostParsed;
+            console.log('Crystal Cost:', crystalCost, '=', crystalCostParsed);
+            
+            // Subtract collect shift value
+            const collectShift = document.getElementById('collectShift').value;
+            const collectShiftParsed = parseValue(collectShift);
+            total -= collectShiftParsed;
+            console.log('Collect Shift:', collectShift, '=', collectShiftParsed);
+            
+            console.log('FINAL TOTAL:', total);
+            
+            // Display result
+            const resultDisplay = document.getElementById('totalPerolehan');
+            if (total > 0) {
+                resultDisplay.textContent = `Total Perolehan: ${formatValue(total)}`;
+                resultDisplay.style.color = '#27ae60';
+            } else if (total < 0) {
+                resultDisplay.textContent = `Total Perolehan: ${formatValue(total)}`;
+                resultDisplay.style.color = '#e74c3c';
+            } else {
+                resultDisplay.textContent = 'Total Perolehan: 0';
+                resultDisplay.style.color = '#6c757d';
+            }
+            
+            // Auto-update progress if total is positive and current progress is empty or zero
+            const currentProgressInput = document.getElementById('currentProgress');
+            const currentProgressValue = parseValue(currentProgressInput.value || '0');
+            
+            if (total > 0 && currentProgressValue === 0 && currentProgressInput.value.trim() === '') {
+                currentProgressInput.value = formatValue(total);
+                updateProgress();
+                console.log('Auto-updated progress with total:', formatValue(total));
+            } else if (total > 0) {
+                // Just update the progress bar calculation without changing the input
+                updateProgress();
+            }
+            
+            console.log('=== End Calculation ===');
+        }
+
+        function getTrashlootData() {
+            const container = document.getElementById('trashlootContainer');
+            const items = container.getElementsByClassName('trashloot-item');
+            const trashlootData = [];
+            
+            for (let item of items) {
+                const name = item.querySelector('.trashloot-name').value || '-';
+                const count = item.querySelector('.trashloot-count').value || '0';
+                const value = item.querySelector('.trashloot-value').value || '-';
+                
+                trashlootData.push({ name, count, value });
+            }
+            
+            return trashlootData;
+        }
+
+        function updateProgress() {
+            const targetStr = document.getElementById('target').value || '0';
+            const currentStr = document.getElementById('currentProgress').value || '0';
+            
+            const target = parseValue(targetStr);
+            const current = parseValue(currentStr);
+            
+            console.log('Progress Update:', currentStr, '/', targetStr, '=', current, '/', target);
+            
+            if (target > 0) {
+                const percentage = Math.min((current / target) * 100, 100);
+                document.getElementById('progressFill').style.width = percentage + '%';
+                document.getElementById('progressText').textContent = percentage.toFixed(1) + '%';
+            } else {
+                document.getElementById('progressFill').style.width = '0%';
+                document.getElementById('progressText').textContent = '0%';
+            }
+        }
+
+        function addTotalToProgress() {
+            // Get current progress value
+            const currentProgressStr = document.getElementById('currentProgress').value || '0';
+            const currentProgress = parseValue(currentProgressStr);
+            
+            // Get total perolehan value (need to parse from display text)
+            const totalDisplayText = document.getElementById('totalPerolehan').textContent;
+            const totalMatch = totalDisplayText.match(/Total Perolehan: (.+)/);
+            if (!totalMatch) {
+                alert('Belum ada total perolehan yang dihitung!');
+                return;
+            }
+            
+            const totalValueStr = totalMatch[1];
+            const totalValue = parseValue(totalValueStr);
+            
+            if (totalValue <= 0) {
+                alert('Total perolehan harus positif untuk ditambahkan ke progress!');
+                return;
+            }
+            
+            // Add total to current progress
+            const newProgress = currentProgress + totalValue;
+            const newProgressFormatted = formatValue(newProgress);
+            
+            // Update the input field
+            document.getElementById('currentProgress').value = newProgressFormatted;
+            
+            // Update progress bar and save
+            updateProgress();
+            saveToLocalStorage();
+            
+            alert(`Progress berhasil ditambah!\nSebelum: ${formatValue(currentProgress)}\nTotal Ditambah: ${totalValueStr}\nSesudah: ${newProgressFormatted}`);
+        }
+
+        function generateReport() {
+            const nama = document.getElementById('nama').value || '-';
+            const shift = document.getElementById('shift').value || '-';
+            const noOrder = document.getElementById('noOrder').value || '-';
+            const idOrder = document.getElementById('idOrder').value || '-';
+            const tugas = document.getElementById('tugas').value || '-';
+            
+            const trashlootData = getTrashlootData();
+            let trashlootText = '';
+            trashlootData.forEach(item => {
+                if (item.name !== '-' || item.count !== '0' || item.value !== '-') {
+                    trashlootText += `    - ${item.name.toUpperCase()} : ${item.count} > ${item.value}\n`;
+                }
+            });
+            
+            const storage = document.getElementById('storage').value || '-';
+            const marketSold = document.getElementById('marketSold').value || '-';
+            const marketUnsold = document.getElementById('marketUnsold').value || '-';
+            const gantiCrystal = document.getElementById('gantiCrystal').value || '-';
+            const collectShift = document.getElementById('collectShift').value || '-';
+            
+            // Get calculated total
+            const totalDisplay = document.getElementById('totalPerolehan').textContent;
+            const calculatedTotal = totalDisplay.replace('Total Perolehan: ', '');
+            
+            const target = document.getElementById('target').value || '-';
+            const currentProgress = document.getElementById('currentProgress').value || '-';
+            
+            const classValue = document.getElementById('class').value || '-';
+            const grindingSpot = document.getElementById('grindingSpot').value || '-';
+            const agris = document.getElementById('agris').value || '-';
+            const crystalPecah = document.getElementById('crystalPecah').value || '-';
+            const statusCrystal = document.getElementById('statusCrystal').value || '-';
+            const kendala = document.getElementById('kendala').value || '-';
+
+            const report = `📄 Laporan SS Akhir - Black Desert Online
+
+🧾 Nama: ${nama}
+🕒 Shift: ${shift}
+📦 No Order: ${noOrder}
+🆔 ID Order: ${idOrder}
+📝 Tugas: ${tugas}
+
+━━━━━━━━━━━━━━━━━━
+
+📊 Perolehan
+🔹 Trashloot:
+${trashlootText}
+💰 Penjualan di Storage: ${storage}
+💸 Market (Terjual): ${marketSold}
+🔄 Market (Belum Terjual): ${marketUnsold}
+🧩 Pengurangan (Ganti Crystal): ${gantiCrystal}
+📥 Pengurangan (Collect Shift Sebelumnya): ${collectShift}
+
+💵 Total Perolehan Bersih: ${calculatedTotal}
+💵 Total Progres: ${currentProgress} / ${target}
+
+━━━━━━━━━━━━━━━━━━
+
+📌 Keterangan Tambahan
+⚔️ Class: ${classValue}
+🌍 Grinding Spot: ${grindingSpot}
+🔥 Agris Digunakan: ${agris}
+💥 Crystal Pecah: ${crystalPecah}
+🧱 Ganti Crystal: ${statusCrystal}
+⚠️ Kendala: ${kendala}
+
+━━━━━━━━━━━━━━━━━━`;
+
+            document.getElementById('outputContent').textContent = report;
+            document.getElementById('outputSection').style.display = 'block';
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function clearForm() {
+            if (confirm('Apakah Anda yakin ingin menghapus semua data?')) {
+                document.getElementById('bdoForm').reset();
+                
+                // Reset trashloot container to default 2 items
+                const container = document.getElementById('trashlootContainer');
+                container.innerHTML = `
+                    <div class="trashloot-item">
+                        <input type="text" placeholder="Nama Tempat (e.g. TROL)" class="trashloot-name" style="flex: 1;">
+                        <input type="number" placeholder="Jumlah" class="trashloot-count" style="flex: 1;">
+                        <span>></span>
+                        <input type="text" placeholder="Silver (e.g. 4.8 B)" class="trashloot-value" style="flex: 1;" oninput="calculateTotal()">
+                        <button type="button" class="btn-remove" onclick="removeTrashlootItem(this)" style="background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">🗑️</button>
+                    </div>
+                    <div class="trashloot-item">
+                        <input type="text" placeholder="Nama Tempat (e.g. CRESCENT)" class="trashloot-name" style="flex: 1;">
+                        <input type="number" placeholder="Jumlah" class="trashloot-count" style="flex: 1;">
+                        <span>></span>
+                        <input type="text" placeholder="Silver (e.g. 1.1 B)" class="trashloot-value" style="flex: 1;" oninput="calculateTotal()">
+                        <button type="button" class="btn-remove" onclick="removeTrashlootItem(this)" style="background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">🗑️</button>
+                    </div>
+                `;
+                
+                document.getElementById('progressFill').style.width = '0%';
+                document.getElementById('progressText').textContent = '0%';
+                document.getElementById('outputSection').style.display = 'none';
+                
+                // Reset calculation
+                calculateTotal();
+            }
+        }
+
+        function copyReport() {
+            const reportText = document.getElementById('outputContent').textContent;
+            if (reportText) {
+                navigator.clipboard.writeText(reportText).then(() => {
+                    alert('Report berhasil disalin ke clipboard!');
+                }).catch(() => {
+                    // Fallback untuk browser lama
+                    const textarea = document.createElement('textarea');
+                    textarea.value = reportText;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    alert('Report berhasil disalin ke clipboard!');
+                });
+            } else {
+                alert('Silakan generate report terlebih dahulu!');
+            }
+        }
+
+        // Auto-save to localStorage
+        function saveToLocalStorage() {
+            try {
+                const formData = {};
+                
+                // Save basic form data
+                const inputs = document.querySelectorAll('#bdoForm input:not(.trashloot-name):not(.trashloot-count):not(.trashloot-value), #bdoForm select, #bdoForm textarea');
+                inputs.forEach(input => {
+                    if (input.id) {
+                        formData[input.id] = input.value;
+                    }
+                });
+                
+                // Save trashloot data
+                formData.trashlootData = getTrashlootData();
+                
+                localStorage.setItem('bdoReportData', JSON.stringify(formData));
+                console.log('Data saved to localStorage');
+            } catch (error) {
+                console.error('Error saving to localStorage:', error);
+            }
+        }
+
+        // Load from localStorage
+        function loadFromLocalStorage() {
+            try {
+                const savedData = localStorage.getItem('bdoReportData');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    
+                    // Load basic form data
+                    for (let key in data) {
+                        if (key !== 'trashlootData') {
+                            const element = document.getElementById(key);
+                            if (element) {
+                                element.value = data[key];
+                            }
+                        }
+                    }
+                    
+                    // Load trashloot data
+                    if (data.trashlootData && data.trashlootData.length > 0) {
+                        const container = document.getElementById('trashlootContainer');
+                        container.innerHTML = '';
+                        
+                        data.trashlootData.forEach(item => {
+                            const newItem = document.createElement('div');
+                            newItem.className = 'trashloot-item';
+                            newItem.innerHTML = `
+                                <input type="text" placeholder="Nama Tempat" class="trashloot-name" style="flex: 1;" value="${item.name || ''}">
+                                <input type="number" placeholder="Jumlah" class="trashloot-count" style="flex: 1;" value="${item.count || ''}">
+                                <span>></span>
+                                <input type="text" placeholder="Silver" class="trashloot-value" style="flex: 1;" oninput="calculateTotal()" value="${item.value || ''}">
+                                <button type="button" class="btn-remove" onclick="removeTrashlootItem(this)" style="background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">🗑️</button>
+                            `;
+                            container.appendChild(newItem);
+                        });
+                    }
+                    
+                    console.log('Data loaded from localStorage');
+                }
+            } catch (error) {
+                console.error('Error loading from localStorage:', error);
+            }
+        }
+
+        // Auto-save on input change with debouncing
+        let saveTimeout;
+        function debouncedSave() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                saveToLocalStorage();
+            }, 500); // Save after 500ms of no input
+        }
+
+        // Auto-save on input change
+        document.addEventListener('input', function(e) {
+            // Calculate total for calculation-related inputs
+            if (e.target.classList.contains('trashloot-value') || 
+                e.target.id === 'storage' || 
+                e.target.id === 'marketSold' || 
+                e.target.id === 'marketUnsold' || 
+                e.target.id === 'gantiCrystal' || 
+                e.target.id === 'collectShift') {
+                calculateTotal();
+            }
+            
+            // Update progress for progress-related inputs
+            if (e.target.id === 'target' || e.target.id === 'currentProgress') {
+                updateProgress();
+            }
+            
+            // Debounced auto-save
+            debouncedSave();
+        });
+
+        document.addEventListener('change', debouncedSave);
+
+        // Load saved data on page load
+        window.addEventListener('load', function() {
+            loadFromLocalStorage();
+            calculateTotal(); // Calculate total after loading data
+            updateProgress(); // Update progress after loading data
+        });
+    </script>
+</body>
+</html> 
