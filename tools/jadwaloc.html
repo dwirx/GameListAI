@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jadwal Piket OC – Juni 2025</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tambahkan html2canvas dari CDN untuk konversi elemen DOM ke gambar -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaPjvH1+LM4ehqiBz+9zxlhx/SvC5pOCINNA7bMxlmKuFphvvV96vKMYFejqn3wtNqHAvAdztF7z1hb9LxmJQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style>
+    .highlight {
+      @apply bg-yellow-200;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-center mb-6">Jadwal Piket OC – Juni 2025</h1>
+
+    <!-- Card hari ini -->
+    <div id="today-info" class="hidden bg-blue-100 border-l-4 border-blue-500 p-4 mb-4 rounded">
+      <p id="today-date" class="text-lg font-medium text-blue-700"></p>
+      <p id="today-morning" class="mt-1">🌞 Piket Pagi: <span class="font-semibold"></span></p>
+      <p id="today-night" class="mt-1">🌜 Piket Malam: <span class="font-semibold"></span></p>
+      <!-- Tombol unduh PNG -->
+      <button id="download-png" class="mt-3 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none">
+        ⬇️ Download PNG
+      </button>
+    </div>
+
+    <!-- Pencarian -->
+    <div class="flex justify-end mb-4">
+      <input id="search" type="text" placeholder="Cari nama / tanggal…" class="w-full max-w-sm px-4 py-2 border rounded shadow focus:outline-none focus:ring focus:ring-blue-400" />
+    </div>
+
+    <!-- Tabel jadwal -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white rounded shadow-md">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="px-4 py-2 text-left text-sm font-medium">Tanggal</th>
+            <th class="px-4 py-2 text-left text-sm font-medium">Hari</th>
+            <th class="px-4 py-2 text-left text-sm font-medium">Piket Pagi (O)</th>
+            <th class="px-4 py-2 text-left text-sm font-medium">Piket Malam (X)</th>
+          </tr>
+        </thead>
+        <tbody id="jadwal-body" class="divide-y">
+          <!-- Baris akan diisi oleh JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Daftar jadwal untuk Juni 2025
+    const jadwal = [
+      { date: "2025-06-01", day: "Minggu", morning: ["Radith"], night: ["Shofa"] },
+      { date: "2025-06-02", day: "Senin", morning: ["Yazid"], night: ["Rahul"] },
+      { date: "2025-06-03", day: "Selasa", morning: ["Rumi"], night: ["Zhohrif"] },
+      { date: "2025-06-04", day: "Rabu", morning: ["Anim"], night: ["Yaqin"] },
+      { date: "2025-06-05", day: "Kamis", morning: ["Dwi"], night: [] },
+      { date: "2025-06-06", day: "Jumat", morning: ["Agung"], night: [] },
+      { date: "2025-06-07", day: "Sabtu", morning: ["Isal"], night: ["Tony"] },
+      { date: "2025-06-08", day: "Minggu", morning: ["Dimas"], night: ["Kiki"] },
+      { date: "2025-06-09", day: "Senin", morning: ["Rafi"], night: ["Faris"] },
+      { date: "2025-06-10", day: "Selasa", morning: ["Adi P"], night: ["Ghozi"] },
+      { date: "2025-06-11", day: "Rabu", morning: ["Senja"], night: ["Rizal"] },
+      { date: "2025-06-12", day: "Kamis", morning: ["Thutoll"], night: ["Hendra"] },
+      { date: "2025-06-13", day: "Jumat", morning: ["Radith"], night: ["Shofa"] },
+      { date: "2025-06-14", day: "Sabtu", morning: ["Rafi"], night: ["Rahul"] },
+      { date: "2025-06-15", day: "Minggu", morning: ["Yazid"], night: ["Rifqi"] },
+      { date: "2025-06-16", day: "Senin", morning: ["Rumi"], night: ["Yaqin"] },
+      { date: "2025-06-17", day: "Selasa", morning: ["Anim"], night: ["Agung"] },
+      { date: "2025-06-18", day: "Rabu", morning: ["Dwi"], night: ["Rifqi"] },
+      { date: "2025-06-19", day: "Kamis", morning: ["Dimas"], night: ["Tony"] },
+      { date: "2025-06-20", day: "Jumat", morning: ["Isal"], night: ["Kiki"] },
+      { date: "2025-06-21", day: "Sabtu", morning: ["Adi P"], night: ["Senja"] },
+      { date: "2025-06-22", day: "Minggu", morning: ["Kiki"], night: ["Faris"] },
+      { date: "2025-06-23", day: "Senin", morning: ["Rizal"], night: ["Ghozi"] },
+      { date: "2025-06-24", day: "Selasa", morning: ["Hendra"], night: ["Faris"] },
+      { date: "2025-06-25", day: "Rabu", morning: ["Isal"], night: ["Shofa"] },
+      { date: "2025-06-26", day: "Kamis", morning: ["Rafi"], night: ["Rahul"] },
+      { date: "2025-06-27", day: "Jumat", morning: ["Radith"], night: ["Zhohrif"] },
+      { date: "2025-06-28", day: "Sabtu", morning: ["Yazid"], night: ["Yaqin"] },
+      { date: "2025-06-29", day: "Minggu", morning: ["Rumi"], night: ["Agung"] },
+      { date: "2025-06-30", day: "Senin", morning: ["Dwi"], night: ["Tony"] }
+    ];
+
+    // Fungsi untuk mendapatkan tanggal hari ini berdasarkan zona waktu Asia/Jakarta
+    function getTodayJakartaDateString() {
+      const now = new Date();
+      const jakartaStr = now.toLocaleString("sv-SE", { timeZone: "Asia/Jakarta" });
+      return jakartaStr.split(" ")[0];
+    }
+
+    const tbody = document.getElementById("jadwal-body");
+    const todayStr = getTodayJakartaDateString(); // ex. "2025-06-02"
+
+    jadwal.forEach(item => {
+      const tr = document.createElement("tr");
+      const pagi = item.morning.length ? item.morning.join(", ") : "-";
+      const malam = item.night.length ? item.night.join(", ") : "-";
+
+      // Jika jadwal sesuai hari ini (WIB), beri highlight dan tampilkan card
+      if (item.date === todayStr) {
+        tr.classList.add("bg-green-100", "font-medium");
+        document.getElementById("today-info").classList.remove("hidden");
+        document.getElementById("today-date").textContent = `📅 Hari ini: ${item.day}, ${item.date}`;
+        document.querySelector("#today-morning span").textContent = pagi;
+        document.querySelector("#today-night span").textContent = malam;
+      }
+
+      tr.innerHTML = `
+        <td class="px-4 py-2">${item.date}</td>
+        <td class="px-4 py-2">${item.day}</td>
+        <td class="px-4 py-2">${pagi}</td>
+        <td class="px-4 py-2">${malam}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Fitur pencarian: pencocokan & highlight
+    document.getElementById("search").addEventListener("input", function () {
+      const keyword = this.value.toLowerCase();
+      const rows = tbody.querySelectorAll("tr");
+      rows.forEach(row => {
+        const match = row.textContent.toLowerCase().includes(keyword);
+        row.classList.toggle("hidden", !match);
+        row.querySelectorAll("td").forEach(td => {
+          td.classList.toggle("highlight", keyword && td.textContent.toLowerCase().includes(keyword));
+        });
+      });
+    });
+
+    // Handler untuk tombol Download PNG
+    document.getElementById("download-png").addEventListener("click", () => {
+      const card = document.getElementById("today-info");
+      // Pastikan hanya merender konten yang terlihat (card hari ini)
+      html2canvas(card, {
+        backgroundColor: null, // biar transparan jika perlu
+        scale: 2               // resolusi sedikit lebih tinggi
+      }).then(canvas => {
+        // Buat link download
+        const link = document.createElement("a");
+        link.download = `piket_hari_ini_${todayStr}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      }).catch(err => {
+        console.error("Gagal membuat PNG:", err);
+        alert("Terjadi kesalahan saat membuat gambar. Coba ulangi lagi.");
+      });
+    });
+  </script>
+</body>
+</html>
