@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio - TypingMind Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#3b82f6',
+                        'secondary': '#1e40af',
+                        'dark-bg': '#1f2937',
+                        'dark-sidebar': '#374151',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <div class="text-center flex-1">
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800">My AI Projects Portfolio</h1>
+                    <p class="text-gray-600 mt-2">AI Applications & Development</p>
+                </div>
+                <div class="ml-4">
+                    <button id="downloadPDF" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition duration-300 flex items-center">
+                        <i class="fas fa-file-pdf mr-2"></i>Download PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Projects Section -->
+    <section class="py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+            
+            <!-- TypingMind Clone Project -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">TypingMind Clone</h3>
+                    <p class="text-gray-600 mb-4">Advanced AI chat interface supporting multiple models via OpenRouter API</p>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">AI Chat</span>
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Multi-Model</span>
+                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">OpenRouter</span>
+                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">React</span>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 rounded-lg overflow-hidden mb-4">
+                    <div class="bg-gray-800 px-3 py-2 flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                            <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                        </div>
+                        <div class="text-white text-xs">ai.dwx.my.id</div>
+                    </div>
+                    <div class="flex h-48">
+                        <div class="w-20 bg-gray-700 p-2 text-xs">
+                            <div class="text-gray-300 mb-2">📁 Default</div>
+                            <div class="text-gray-400">💬 Chats</div>
+                        </div>
+                        <div class="flex-1 bg-white flex flex-col">
+                            <div class="bg-gray-50 px-3 py-2 border-b text-xs">
+                                <span class="font-semibold">GPT-4o Mini</span>
+                                <span class="bg-green-100 text-green-800 px-1 rounded ml-2">Available</span>
+                            </div>
+                            <div class="flex-1 flex items-center justify-center">
+                                <div class="text-center">
+                                    <div class="w-8 h-8 bg-blue-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                                        <i class="fas fa-brain text-white text-sm"></i>
+                                    </div>
+                                    <div class="text-xs text-gray-600">Welcome to TypingMind</div>
+                                </div>
+                            </div>
+                            <div class="p-2 border-t">
+                                <div class="bg-gray-100 rounded px-2 py-1 text-xs">Type your message...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a href="https://ai.dwx.my.id/" target="_blank" 
+                   class="inline-flex items-center bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300">
+                    <i class="fas fa-external-link-alt mr-2"></i>View Live Demo
+                </a>
+
+                            </div>
+
+            <!-- Bot Telegram Groq AI Project -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Bot Telegram Groq AI</h3>
+                    <p class="text-gray-600 mb-4">Advanced Telegram bot with Groq API integration supporting multiple AI models</p>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Telegram Bot</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Groq API</span>
+                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Python</span>
+                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">PyQt6</span>
+                    </div>
+                </div>
+                <div class="bg-gray-900 rounded-lg overflow-hidden mx-6 mb-4">
+                    <div class="bg-gray-800 px-3 py-2 text-white text-xs">
+                        <i class="fab fa-telegram-plane mr-2"></i>Telegram Bot Interface
+                    </div>
+                    <div class="bg-gray-700 p-4 text-white text-sm">
+                        <div class="mb-2">🤖 <strong>AI Bot:</strong> Hello! I'm your AI assistant</div>
+                        <div class="mb-2">👤 <strong>You:</strong> Tell me about AI</div>
+                        <div class="mb-2">🤖 <strong>AI Bot:</strong> AI (Artificial Intelligence) is...</div>
+                        <div class="text-gray-400 text-xs mt-3">
+                            Powered by Groq API • Multiple Models Available
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 pb-6">
+                    <a href="https://github.com/bangundwir/bot-telegram-groq-ai" target="_blank" 
+                       class="inline-flex items-center bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300">
+                        <i class="fab fa-github mr-2"></i>View on GitHub
+                    </a>
+                    <span class="text-xs text-gray-500 ml-3">Released: Jul 28, 2024</span>
+                </div>
+            </div>
+
+            <!-- Plant Agent AI Project -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Plant Agent AI</h3>
+                    <p class="text-gray-600 mb-4">Mitra cerdas untuk perencanaan dan pengembangan bisnis Anda</p>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Business AI</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Planning Tool</span>
+                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Pro Planner</span>
+                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">AI Analytics</span>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg mx-6 mb-4 p-4">
+                    <div class="text-blue-600 font-bold text-lg mb-2">Plant Agent AI</div>
+                    <div class="text-gray-600 text-sm mb-3">Mitra cerdas untuk perencanaan dan pengembangan bisnis Anda</div>
+                    <div class="bg-white p-3 rounded border mb-3">
+                        <div class="text-sm text-gray-700 mb-2">💡 <strong>Ide Usaha Anda:</strong></div>
+                        <div class="bg-gray-100 p-2 rounded text-sm">jual makan kuda</div>
+                    </div>
+                    <div class="flex gap-2 mb-3">
+                        <button class="bg-blue-500 text-white px-3 py-1 rounded text-xs">🔧 Buat Rencana</button>
+                        <button class="bg-gray-300 text-gray-700 px-3 py-1 rounded text-xs">🔄 Reset</button>
+                        <button class="bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs">📖 Riwayat</button>
+                    </div>
+                    <div class="bg-white p-3 rounded border">
+                        <div class="text-sm font-semibold text-gray-700 mb-2">🧠 Proses Pemikiran AI</div>
+                        <div class="space-y-1 text-xs text-gray-600">
+                            <div>✓ Menganalisis ide usaha...</div>
+                            <div>✓ Menilai kelayakan pasar...</div>
+                            <div>✓ Menghitung estimasi modal...</div>
+                            <div>✓ Mengidentifikasi target konsumen...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 pb-6">
+                    <a href="https://list.dwx.my.id/tools/plantAgenAi.html" target="_blank" 
+                       class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300">
+                        <i class="fas fa-external-link-alt mr-2"></i>Try Live Demo
+                    </a>
+                </div>
+            </div>
+
+            <!-- FLUX Image Generator Project -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">FLUX Image Generator</h3>
+                    <p class="text-gray-600 mb-4">Advanced AI image generation using FLUX models with multiple options</p>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">AI Image</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">FLUX Models</span>
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Generation</span>
+                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">API</span>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg mx-6 mb-4 p-4">
+                    <div class="text-center mb-4">
+                        <div class="text-lg font-bold text-gray-800 mb-2">FLUX Image Generator</div>
+                        <div class="flex justify-center gap-4 mb-3">
+                            <label class="flex items-center text-sm">
+                                <input type="radio" checked class="mr-1"> FLUX.1-schnell
+                            </label>
+                            <label class="flex items-center text-sm">
+                                <input type="radio" class="mr-1"> FLUX.1-dev
+                            </label>
+                        </div>
+                        <div class="bg-white p-3 rounded border mb-3">
+                            <input type="text" placeholder="create malang in 1945" 
+                                   class="w-full text-sm focus:outline-none" readonly>
+                        </div>
+                        <button class="bg-purple-600 text-white px-6 py-2 rounded-lg text-sm font-medium w-full mb-3">
+                            Generate Image
+                        </button>
+                    </div>
+                    <div class="bg-white p-3 rounded border mb-3">
+                        <div class="bg-gray-200 h-32 rounded flex items-center justify-center text-gray-500 text-sm">
+                            🖼️ Generated Image Preview
+                        </div>
+                        <div class="flex gap-2 mt-3">
+                            <button class="bg-green-500 text-white px-3 py-1 rounded text-xs flex-1">Download Image</button>
+                            <button class="bg-blue-500 text-white px-3 py-1 rounded text-xs flex-1">Send to Telegram</button>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-sm font-semibold text-gray-700 mb-2">Generation History</div>
+                        <div class="bg-white p-2 rounded border">
+                            <div class="text-xs text-gray-500">Recent generations stored</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 pb-6">
+                    <a href="https://list.dwx.my.id/tools/Flux-image-generator.html" target="_blank" 
+                       class="inline-flex items-center bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300">
+                        <i class="fas fa-external-link-alt mr-2"></i>Try Generator
+                    </a>
+                </div>
+            </div>
+
+            <!-- ElevenLabs TTS Project -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">ElevenLabs TTS Demo</h3>
+                    <p class="text-gray-600 mb-4">Advanced Text-to-Speech conversion using ElevenLabs API with multiple voice options</p>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Text-to-Speech</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">ElevenLabs API</span>
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Voice AI</span>
+                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Audio</span>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg mx-6 mb-4 p-4 text-white">
+                    <div class="text-center mb-4">
+                        <div class="text-lg font-bold mb-2">ElevenLabs TTS Demo</div>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm mb-3">
+                            🔑 Show API Key Management
+                        </button>
+                    </div>
+                    <div class="bg-white/20 p-3 rounded border mb-3">
+                        <div class="text-sm mb-2">Enter text to convert to speech:</div>
+                        <div class="bg-white/30 p-2 rounded text-sm">Enter your text here...</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-sm mb-2">Select voice:</div>
+                        <select class="bg-white/30 p-2 rounded text-sm w-full">
+                            <option>Select an API key first</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-sm mb-2">Preview voice:</div>
+                        <div class="bg-white/20 p-2 rounded flex items-center justify-between">
+                            <span class="text-xs">0:00 / 0:00</span>
+                            <div class="flex items-center space-x-2">
+                                <button class="text-white">▶️</button>
+                                <button class="text-white">🔊</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg text-sm font-medium w-full">
+                        🎤 Convert to Speech
+                    </button>
+                    <div class="mt-3 flex justify-between items-center">
+                        <span class="text-sm">History</span>
+                        <button class="bg-red-500 text-white px-2 py-1 rounded text-xs">Clear History</button>
+                    </div>
+                </div>
+                <div class="px-6 pb-6">
+                    <a href="https://list.dwx.my.id/tools/8-elevenlabs.html" target="_blank" 
+                       class="inline-flex items-center bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300">
+                        <i class="fas fa-external-link-alt mr-2"></i>Try TTS Demo
+                    </a>
+                </div>
+            </div>
+
+            <!-- Gemini Image Extractor Pro Project -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Gemini Image Extractor Pro</h3>
+                    <p class="text-gray-600 mb-4">Extract dan organize text & angka dari gambar dengan AI menggunakan Gemini API</p>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">OCR AI</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Gemini API</span>
+                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Image Processing</span>
+                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Text Extract</span>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg mx-6 mb-4 p-4 text-white">
+                    <div class="text-center mb-4">
+                        <div class="text-lg font-bold mb-2">🖼️ Gemini Image Extractor Pro</div>
+                        <div class="text-sm mb-3">Extract dan organize text & angka dari gambar dengan AI</div>
+                        <div class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs inline-block mb-3">
+                            💰 Total Biaya Penggunaan: $0.000000
+                        </div>
+                    </div>
+                    <div class="bg-white/20 p-3 rounded border mb-3">
+                        <div class="text-sm font-semibold mb-2">📁 Upload Gambar</div>
+                        <div class="border-2 border-dashed border-white/50 p-4 rounded text-center">
+                            <div class="text-sm">🖱️ Klik untuk memilih gambar</div>
+                            <div class="text-xs mt-1">atau drag & drop • JPG, PNG, GIF, WebP</div>
+                        </div>
+                    </div>
+                    <div class="bg-white/20 p-3 rounded border mb-3">
+                        <div class="text-sm mb-2">✍️ Custom Prompt</div>
+                        <div class="bg-white/30 p-2 rounded text-xs">
+                            Opsional: Berikan instruksi khusus untuk ekstraksi...
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex-1">🚀 Extract Text</button>
+                        <button class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm">🧹 Clear</button>
+                    </div>
+                </div>
+                <div class="px-6 pb-6">
+                    <a href="https://list.dwx.my.id/tools/ocr-gemini-pro.html" target="_blank" 
+                       class="inline-flex items-center bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300">
+                        <i class="fas fa-external-link-alt mr-2"></i>Try OCR Tool
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tech News Hub Project -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Tech News Hub</h3>
+                    <p class="text-gray-600 mb-4">Berita teknologi terkini dari Hacker News dengan AI summarization untuk setiap topik</p>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">News Hub</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Hacker News</span>
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">AI Summary</span>
+                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Tech News</span>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-r from-orange-500 to-red-600 rounded-lg mx-6 mb-4 p-4 text-white">
+                    <div class="bg-gray-800 p-3 rounded mb-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="text-orange-400 font-bold">📰 Tech News Hub</div>
+                            <div class="flex gap-2">
+                                <button class="bg-orange-500 px-2 py-1 rounded text-xs">Segarkan</button>
+                                <button class="bg-gray-600 px-2 py-1 rounded text-xs">Mode Gelap</button>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mb-3 text-xs">
+                            <span class="bg-orange-500 px-2 py-1 rounded">⭐ Unggulan</span>
+                            <span class="bg-gray-600 px-2 py-1 rounded">🔥 Terpopuler</span>
+                            <span class="bg-gray-600 px-2 py-1 rounded">🆕 Terbaru</span>
+                            <span class="bg-gray-600 px-2 py-1 rounded">❓ Tanya</span>
+                        </div>
+                        <div class="text-sm font-semibold mb-2">Topik Tren</div>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            <span class="bg-blue-600 px-2 py-1 rounded text-xs">#story 15</span>
+                            <span class="bg-blue-600 px-2 py-1 rounded text-xs">#ai 1</span>
+                            <span class="bg-blue-600 px-2 py-1 rounded text-xs">#github 3</span>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="bg-gray-700 p-2 rounded">
+                                <div class="text-blue-300 text-sm font-medium mb-1">My AI skeptic friends are all nuts</div>
+                                <div class="text-gray-400 text-xs">Oleh tablecorry • Skor: 2323 • 6 hari yang lalu</div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-orange-400 text-xs">💬 2816 komentar</span>
+                                    <button class="bg-green-500 px-2 py-1 rounded text-xs">🤖 Ringkas AI</button>
+                                </div>
+                            </div>
+                            <div class="bg-gray-700 p-2 rounded">
+                                <div class="text-blue-300 text-sm font-medium mb-1">OpenAI slams court order to save all ChatGPT logs</div>
+                                <div class="text-gray-400 text-xs">Oleh ColinWright • Skor: 1112 • 4 hari yang lalu</div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-orange-400 text-xs">💬 931 komentar</span>
+                                    <button class="bg-green-500 px-2 py-1 rounded text-xs">🤖 Ringkas AI</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 pb-6">
+                    <a href="https://list.dwx.my.id/tools/thehackernewasai2.html" target="_blank" 
+                       class="inline-flex items-center bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300">
+                        <i class="fas fa-external-link-alt mr-2"></i>Read Tech News
+                    </a>
+                </div>
+            </div>
+
+            <!-- Eco-fuel Analytics Project -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Eco-fuel Analytics</h3>
+                    <p class="text-gray-600 mb-4">Unlock your driving insights • Track fuel • Monitor emissions • Drive greener</p>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Fuel Tracking</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Analytics</span>
+                        <span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs">Eco-friendly</span>
+                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Dashboard</span>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-green-500 to-teal-600 rounded-lg mx-6 mb-4 p-4 text-white">
+                    <div class="text-center mb-4">
+                        <div class="flex items-center justify-center mb-2">
+                            <span class="text-2xl mr-2">🌱</span>
+                            <div class="text-lg font-bold">Eco-fuel Analytics</div>
+                        </div>
+                        <div class="text-sm mb-3">Unlock your driving insights • Track fuel • Monitor emissions • Drive greener</div>
+                        <div class="flex justify-center gap-2 mb-3 text-xs">
+                            <span class="bg-white/20 px-2 py-1 rounded">Dashboard</span>
+                            <span class="bg-white/30 px-2 py-1 rounded">Pencatatan BBM</span>
+                            <span class="bg-white/30 px-2 py-1 rounded">Analisis CO2</span>
+                            <span class="bg-white/30 px-2 py-1 rounded">Kalender</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="bg-white/20 p-3 rounded">
+                            <div class="text-xs mb-1">Total Pengeluaran</div>
+                            <div class="text-lg font-bold">Rp 0</div>
+                            <div class="text-xs text-green-200">Dalam budget</div>
+                            <div class="text-xs">Budget: Rp 2.000.000</div>
+                        </div>
+                        <div class="bg-white/20 p-3 rounded">
+                            <div class="text-xs mb-1">Total Liter</div>
+                            <div class="text-lg font-bold">0.0L</div>
+                            <div class="text-xs text-blue-200">0 kali isi bensin</div>
+                            <div class="text-xs">📊 Rata-rata 0.0L/isi</div>
+                        </div>
+                        <div class="bg-white/20 p-3 rounded">
+                            <div class="text-xs mb-1">CO2 Bulan Ini</div>
+                            <div class="text-lg font-bold">0.0kg</div>
+                            <div class="text-xs text-green-200">Dalam batas aman</div>
+                            <div class="text-xs">Batas: 200kg CO2</div>
+                        </div>
+                        <div class="bg-white/20 p-3 rounded">
+                            <div class="text-xs mb-1">Efisiensi BBM</div>
+                            <div class="text-lg font-bold">N/A</div>
+                            <div class="text-xs text-yellow-200">Konsumsi bahan bakar</div>
+                        </div>
+                    </div>
+                    <div class="bg-white/20 p-3 rounded mb-3">
+                        <div class="text-sm font-semibold mb-2">📊 Ringkasan Bulan June 2025</div>
+                        <div class="text-xs mb-2">Statistik penggunaan bahan bakar dan emisi CO2</div>
+                        <div class="grid grid-cols-4 gap-2 text-center">
+                            <div>
+                                <div class="text-lg font-bold text-blue-300">0</div>
+                                <div class="text-xs">Kali Isi Bensin</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-green-300">Rp 0</div>
+                                <div class="text-xs">Rata-rata per Isi</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-purple-300">0</div>
+                                <div class="text-xs">Rp per Liter</div>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-red-300">0.0</div>
+                                <div class="text-xs">kg CO2 per Liter</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white/20 p-3 rounded">
+                        <div class="text-sm font-semibold mb-2">💡 Tips Penghematan</div>
+                        <div class="text-xs space-y-1">
+                            <div>🚗 <strong>Berkendara Efisien:</strong> Jaga kecepatan konstan, hindari akselerasi mendadak</div>
+                            <div>🌱 <strong>Ramah Lingkungan:</strong> Gunakan transportasi umum atau kendaraan listrik</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 pb-6">
+                    <a href="https://pencata-pengeluaran-bensin.vercel.app/" target="_blank" 
+                       class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition duration-300">
+                        <i class="fas fa-external-link-alt mr-2"></i>Track Your Fuel
+                    </a>
+                </div>
+            </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-4">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm text-gray-400">&copy; 2024 AI Projects Portfolio</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Simple animations and interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add scroll reveal animation
+            const cards = document.querySelectorAll('.bg-white');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+
+            cards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'all 0.6s ease-out';
+                observer.observe(card);
+            });
+
+            // PDF Download functionality
+            const downloadBtn = document.getElementById('downloadPDF');
+            downloadBtn.addEventListener('click', async function() {
+                // Show loading state
+                const originalText = downloadBtn.innerHTML;
+                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating PDF...';
+                downloadBtn.disabled = true;
+
+                try {
+                    // Create PDF with proper formatting
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+
+                    // Set initial position
+                    let currentY = 20;
+                    const margin = 20;
+                    const pageWidth = 210;
+                    const contentWidth = pageWidth - (margin * 2);
+
+                    // Header
+                    pdf.setFontSize(24);
+                    pdf.setFont("helvetica", "bold");
+                    pdf.setTextColor(31, 41, 55); // gray-800
+                    pdf.text('My AI Projects Portfolio', pageWidth/2, currentY, { align: 'center' });
+                    
+                    currentY += 10;
+                    pdf.setFontSize(14);
+                    pdf.setFont("helvetica", "normal");
+                    pdf.setTextColor(75, 85, 99); // gray-600
+                    pdf.text('AI Applications & Development', pageWidth/2, currentY, { align: 'center' });
+                    
+                    currentY += 15;
+                    
+                    // Divider line
+                    pdf.setDrawColor(209, 213, 219); // gray-300
+                    pdf.line(margin, currentY, pageWidth - margin, currentY);
+                    currentY += 15;
+
+                    // Projects data
+                    const projects = [
+                        {
+                            title: 'TypingMind Clone',
+                            description: 'Advanced AI chat interface supporting multiple models via OpenRouter API',
+                            tags: ['AI Chat', 'Multi-Model', 'OpenRouter', 'React'],
+                            url: 'https://ai.dwx.my.id/',
+                            color: [59, 130, 246] // blue-500
+                        },
+                        {
+                            title: 'Bot Telegram Groq AI',
+                            description: 'Advanced Telegram bot with Groq API integration supporting multiple AI models',
+                            tags: ['Telegram Bot', 'Groq API', 'Python', 'PyQt6'],
+                            url: 'https://github.com/bangundwir/bot-telegram-groq-ai',
+                            color: [107, 114, 128] // gray-500
+                        },
+                        {
+                            title: 'Plant Agent AI',
+                            description: 'Mitra cerdas untuk perencanaan dan pengembangan bisnis Anda',
+                            tags: ['Business AI', 'Planning Tool', 'Pro Planner', 'AI Analytics'],
+                            url: 'https://list.dwx.my.id/tools/plantAgenAi.html',
+                            color: [34, 197, 94] // green-500
+                        },
+                        {
+                            title: 'FLUX Image Generator',
+                            description: 'Advanced AI image generation using FLUX models with multiple options',
+                            tags: ['AI Image', 'FLUX Models', 'Generation', 'API'],
+                            url: 'https://list.dwx.my.id/tools/Flux-image-generator.html',
+                            color: [168, 85, 247] // purple-500
+                        },
+                        {
+                            title: 'ElevenLabs TTS Demo',
+                            description: 'Advanced Text-to-Speech conversion using ElevenLabs API with multiple voice options',
+                            tags: ['Text-to-Speech', 'ElevenLabs API', 'Voice AI', 'Audio'],
+                            url: 'https://list.dwx.my.id/tools/8-elevenlabs.html',
+                            color: [168, 85, 247] // purple-500
+                        },
+                        {
+                            title: 'Gemini Image Extractor Pro',
+                            description: 'Extract dan organize text & angka dari gambar dengan AI menggunakan Gemini API',
+                            tags: ['OCR AI', 'Gemini API', 'Image Processing', 'Text Extract'],
+                            url: 'https://list.dwx.my.id/tools/ocr-gemini-pro.html',
+                            color: [168, 85, 247] // purple-500
+                        },
+                        {
+                            title: 'Tech News Hub',
+                            description: 'Berita teknologi terkini dari Hacker News dengan AI summarization untuk setiap topik',
+                            tags: ['News Hub', 'Hacker News', 'AI Summary', 'Tech News'],
+                            url: 'https://list.dwx.my.id/tools/thehackernewasai2.html',
+                            color: [249, 115, 22] // orange-500
+                        },
+                        {
+                            title: 'Eco-fuel Analytics',
+                            description: 'Unlock your driving insights • Track fuel • Monitor emissions • Drive greener',
+                            tags: ['Fuel Tracking', 'Analytics', 'Eco-friendly', 'Dashboard'],
+                            url: 'https://pencata-pengeluaran-bensin.vercel.app/',
+                            color: [34, 197, 94] // green-500
+                        }
+                    ];
+
+                    // Render each project
+                    projects.forEach((project, index) => {
+                        // Check if we need a new page
+                        if (currentY > 250) {
+                            pdf.addPage();
+                            currentY = 20;
+                        }
+
+                        // Project number
+                        pdf.setFontSize(12);
+                        pdf.setFont("helvetica", "bold");
+                        pdf.setTextColor(75, 85, 99); // gray-600
+                        pdf.text(`${index + 1}.`, margin, currentY);
+
+                        // Project title
+                        pdf.setFontSize(16);
+                        pdf.setFont("helvetica", "bold");
+                        pdf.setTextColor(31, 41, 55); // gray-800
+                        pdf.text(project.title, margin + 10, currentY);
+                        currentY += 8;
+
+                        // Project description
+                        pdf.setFontSize(10);
+                        pdf.setFont("helvetica", "normal");
+                        pdf.setTextColor(75, 85, 99); // gray-600
+                        const descLines = pdf.splitTextToSize(project.description, contentWidth - 10);
+                        pdf.text(descLines, margin + 10, currentY);
+                        currentY += descLines.length * 4 + 3;
+
+                        // Tags
+                        pdf.setFontSize(8);
+                        pdf.setFont("helvetica", "normal");
+                        pdf.setTextColor(107, 114, 128); // gray-500
+                        const tagsText = 'Tags: ' + project.tags.join(' • ');
+                        pdf.text(tagsText, margin + 10, currentY);
+                        currentY += 5;
+
+                        // URL (clickable link)
+                        pdf.setFontSize(9);
+                        pdf.setFont("helvetica", "normal");
+                        pdf.setTextColor(project.color[0], project.color[1], project.color[2]);
+                        pdf.textWithLink('🔗 ' + project.url, margin + 10, currentY, {
+                            url: project.url
+                        });
+                        currentY += 8;
+
+                        // Separator line
+                        if (index < projects.length - 1) {
+                            pdf.setDrawColor(229, 231, 235); // gray-200
+                            pdf.line(margin + 10, currentY, pageWidth - margin, currentY);
+                            currentY += 8;
+                        }
+                    });
+
+                    // Footer
+                    const pageCount = pdf.internal.getNumberOfPages();
+                    for (let i = 1; i <= pageCount; i++) {
+                        pdf.setPage(i);
+                        
+                        // Page number
+                        pdf.setFontSize(8);
+                        pdf.setFont("helvetica", "normal");
+                        pdf.setTextColor(107, 114, 128); // gray-500
+                        pdf.text(`Page ${i} of ${pageCount}`, pageWidth - margin, 285, { align: 'right' });
+                        
+                        // Footer text
+                        const currentDate = new Date().toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        });
+                        pdf.text(`Generated on ${currentDate}`, margin, 285);
+                        
+                        // Website
+                        if (i === pageCount) {
+                            pdf.setFontSize(9);
+                            pdf.setTextColor(59, 130, 246); // blue-500
+                            pdf.textWithLink('View Online Portfolio', pageWidth/2, 285, {
+                                url: window.location.href,
+                                align: 'center'
+                            });
+                        }
+                    }
+
+                    // Set PDF metadata
+                    pdf.setProperties({
+                        title: 'AI Projects Portfolio',
+                        subject: 'Comprehensive AI Applications & Development Portfolio',
+                        author: 'AI Developer',
+                        keywords: 'AI, Machine Learning, Portfolio, Projects, OpenRouter, Groq, ElevenLabs, Gemini',
+                        creator: 'Portfolio Generator v2.0'
+                    });
+
+                    // Save the PDF
+                    const currentDate = new Date().toISOString().slice(0, 10);
+                    pdf.save(`AI-Projects-Portfolio-${currentDate}.pdf`);
+
+                    // Success message
+                    downloadBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Downloaded!';
+                    setTimeout(() => {
+                        downloadBtn.innerHTML = originalText;
+                        downloadBtn.disabled = false;
+                    }, 2000);
+
+                } catch (error) {
+                    console.error('Error generating PDF:', error);
+                    downloadBtn.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Error!';
+                    setTimeout(() => {
+                        downloadBtn.innerHTML = originalText;
+                        downloadBtn.disabled = false;
+                    }, 2000);
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
