@@ -293,3 +293,530 @@
                 // --- Settings Section Elements ---
                 settings: {
                     toggleBtn: document.getElementById('settings-toggle-btn'),
+                    content: document.getElementById('settings-content'),
+                    chevron: document.getElementById('settings-chevron'),
+                    apiKeyInput: document.getElementById('api-key-input'),
+                    saveApiKeyBtn: document.getElementById('save-api-key-btn'),
+                    aiModelSelect: document.getElementById('ai-model-select'),
+                    aiGenerateBtn: document.getElementById('ai-generate-btn'),
+                    aiImproveBtn: document.getElementById('ai-improve-btn'),
+                    importBtn: document.getElementById('import-btn'),
+                    importFileInput: document.getElementById('import-file-input'),
+                    exportBtn: document.getElementById('export-btn'),
+                    resetBtn: document.getElementById('reset-btn'),
+                    deleteAllBtn: document.getElementById('delete-all-btn'),
+                },
+            };
+
+            // --- LOCAL STORAGE & DATA ---
+            const getSamplePrompts = () => [
+                { id: Date.now() + 1, title: "Email Subject Lines", tags: ["copywriting", "marketing"], content: "Generate 10 compelling email subject lines for a new product launch in the tech industry. The product is a productivity app.", createdAt: new Date().toISOString(), isFavorite: true },
+                { id: Date.now() + 2, title: "Python Data Scraping", tags: ["coding", "python"], content: "Write a Python script using BeautifulSoup and Requests to scrape all the headlines from the front page of bbc.com.", createdAt: new Date().toISOString(), isFavorite: false },
+                { id: Date.now() + 3, title: "Midjourney Sci-Fi Art", tags: ["image generation", "art"], content: "A photorealistic image of a futuristic city at night, with flying vehicles and neon signs, in the style of Blade Runner. --ar 16:9 --v 5.2", createdAt: new Date().toISOString(), isFavorite: false },
+            ];
+            
+            const loadPrompts = () => {
+                try {
+                    const stored = localStorage.getItem('promptVaultPrompts');
+                    state.prompts = stored ? JSON.parse(stored) : getSamplePrompts();
+                } catch (e) {
+                    console.error("Failed to load or parse prompts:", e);
+                    state.prompts = getSamplePrompts();
+                }
+            };
+
+            const savePrompts = () => localStorage.setItem('promptVaultPrompts', JSON.stringify(state.prompts));
+
+            const loadSettings = () => {
+                // API Key
+                const key = localStorage.getItem('promptVaultApiKey');
+                if (key) {
+                    state.apiKey = key;
+                    DOMElements.settings.apiKeyInput.value = key;
+                    DOMElements.settings.saveApiKeyBtn.textContent = 'Saved';
+                    DOMElements.settings.saveApiKeyBtn.classList.add('bg-teal-500');
+                }
+                // AI Model
+                const model = localStorage.getItem('promptVaultAiModel');
+                if (model) {
+                    state.aiModel = model;
+                    DOMElements.settings.aiModelSelect.value = model;
+                }
+                updateAIButtonStates();
+            };
+            
+            const saveApiKey = () => {
+                const key = DOMElements.settings.apiKeyInput.value.trim();
+                const btn = DOMElements.settings.saveApiKeyBtn;
+                if (key) {
+                    state.apiKey = key;
+                    localStorage.setItem('promptVaultApiKey', key);
+                    showToast('API Key saved.');
+                    btn.textContent = 'Saved';
+                    btn.classList.add('bg-teal-500');
+                } else {
+                    state.apiKey = null;
+                    localStorage.removeItem('promptVaultApiKey');
+                    showToast('API Key removed.');
+                    btn.textContent = 'Save';
+                    btn.classList.remove('bg-teal-500');
+                }
+                updateAIButtonStates();
+            };
+
+            const saveAiModel = () => {
+                const select = DOMElements.settings.aiModelSelect;
+                state.aiModel = select.value;
+                localStorage.setItem('promptVaultAiModel', state.aiModel);
+                const friendlyName = select.options[select.selectedIndex].text;
+                showToast(`AI model set to: ${friendlyName}`);
+            };
+
+            const updateAIButtonStates = () => {
+                const hasApiKey = !!state.apiKey;
+                const { aiGenerateBtn, aiImproveBtn } = DOMElements.settings;
+                aiGenerateBtn.disabled = !hasApiKey;
+                aiImproveBtn.disabled = !hasApiKey;
+                const title = hasApiKey ? "" : "Add your Gemini API Key in Settings to enable.";
+                aiGenerateBtn.title = title || "Generate prompt from a topic";
+                aiImproveBtn.title = title || "Improve the current prompt using AI";
+            };
+            
+            const callGeminiAPI = async (promptForAI) => {
+                const model = state.aiModel; // Use model from state
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${state.apiKey}`;
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            "contents": [{ "parts": [{ "text": promptForAI }] }],
+                            "generationConfig": { "responseMimeType": "text/plain" },
+                        }),
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error?.message || 'API request failed.');
+                    }
+                    const data = await response.json();
+                    if (!data.candidates || data.candidates.length === 0) {
+                         throw new Error("API returned no content. Check safety settings in your Google AI Studio.");
+                    }
+                    return data.candidates[0].content.parts[0].text;
+                } catch (error) {
+                    console.error(`Error calling Gemini API (${model}):`, error);
+                    throw error;
+                }
+            };
+
+            // --- RENDER FUNCTIONS ---
+            const render = () => {
+                renderFiltersAndTags();
+                renderPrompts();
+                lucide.createIcons();
+            };
+
+            const renderPrompts = () => {
+                const { promptsGrid, emptyState, emptyStateIcon, emptyStateTitle, emptyStateText } = DOMElements;
+                promptsGrid.innerHTML = '';
+                
+                let filteredPrompts = state.prompts.filter(p => {
+                    const searchMatch = state.searchTerm === '' ||
+                        p.title.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
+                        p.content.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
+                        p.tags.some(t => t.toLowerCase().includes(state.searchTerm.toLowerCase()));
+                    if (!searchMatch) return false;
+                    switch(state.filter.type) {
+                        case 'favorites': return p.isFavorite;
+                        case 'tag': return p.tags.map(t => t.toLowerCase()).includes(state.filter.value.toLowerCase());
+                        default: return true;
+                    }
+                });
+
+                filteredPrompts.sort((a, b) => {
+                    const titleA = a.title.toLowerCase();
+                    const titleB = b.title.toLowerCase();
+                    switch(state.sortOrder) {
+                        case 'date_asc': return new Date(a.createdAt) - new Date(b.createdAt);
+                        case 'title_asc': return titleA.localeCompare(titleB);
+                        case 'title_desc': return titleB.localeCompare(titleA);
+                        default: return new Date(b.createdAt) - new Date(a.createdAt);
+                    }
+                });
+
+                if (filteredPrompts.length === 0) {
+                    promptsGrid.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                    emptyState.classList.add('flex');
+                    if(state.prompts.length === 0) {
+                        emptyStateIcon.dataset.lucide = 'file-text';
+                        emptyStateTitle.textContent = 'Your Vault is Empty';
+                        emptyStateText.textContent = 'Click "New Prompt" to add your first one and start your collection.';
+                    } else {
+                        emptyStateIcon.dataset.lucide = 'search-x';
+                        emptyStateTitle.textContent = 'No Matches Found';
+                        emptyStateText.textContent = 'Try adjusting your search or filters.';
+                    }
+                } else {
+                    promptsGrid.classList.remove('hidden');
+                    emptyState.classList.add('hidden');
+                    emptyState.classList.remove('flex');
+                    filteredPrompts.forEach(p => promptsGrid.appendChild(createPromptCard(p)));
+                }
+            };
+            
+            const createPromptCard = (prompt) => {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-800/70 p-5 rounded-lg border border-gray-700/60 flex flex-col gap-4 hover:border-teal-400/50 hover:-translate-y-1 transition-all-300 group';
+                const tagsHTML = prompt.tags.map(tag => `<span class="bg-gray-700 text-teal-300 text-xs font-medium px-2 py-0.5 rounded-full">${tag}</span>`).join('');
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start gap-3 mb-2">
+                            <h3 class="text-lg font-bold text-white pr-2">${prompt.title}</h3>
+                            <button data-action="favorite" data-id="${prompt.id}" class="p-1 rounded-full text-gray-500 hover:text-yellow-400 hover:bg-gray-700 transition-all-300 flex-shrink-0" title="Favorite">
+                                <i data-lucide="star" class="lucide ${prompt.isFavorite ? 'fill-yellow-400 text-yellow-400' : ''}"></i>
+                            </button>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mb-3">${tagsHTML}</div>
+                        <p class="text-gray-400 text-sm leading-relaxed line-clamp-4">${prompt.content}</p>
+                    </div>
+                    <div class="mt-auto pt-4 border-t border-gray-700/50 flex items-center justify-between gap-2">
+                         <p class="text-xs text-gray-500">${new Date(prompt.createdAt).toLocaleDateString()}</p>
+                         <div class="flex items-center gap-1">
+                            <button data-action="copy" data-id="${prompt.id}" class="copy-btn p-2 rounded-md hover:bg-gray-700 text-gray-400 hover:text-white" title="Copy"><i data-lucide="copy" class="lucide"></i></button>
+                            <button data-action="edit" data-id="${prompt.id}" class="p-2 rounded-md hover:bg-gray-700 text-gray-400 hover:text-white" title="Edit"><i data-lucide="edit-3" class="lucide"></i></button>
+                            <button data-action="delete" data-id="${prompt.id}" class="p-2 rounded-md hover:bg-red-900/50 text-gray-400 hover:text-red-400" title="Delete"><i data-lucide="trash-2" class="lucide"></i></button>
+                        </div>
+                    </div>
+                `;
+                return card;
+            };
+
+            const renderFiltersAndTags = () => {
+                const { filterList, tagList } = DOMElements;
+                const filters = [
+                    { type: 'all', value: null, label: 'All Prompts', icon: 'layout-grid' },
+                    { type: 'favorites', value: null, label: 'Favorites', icon: 'star' }
+                ];
+                filterList.innerHTML = filters.map(f => createFilterLink(f)).join('');
+
+                const allTags = [...new Set(state.prompts.flatMap(p => p.tags))].sort();
+                if (allTags.length > 0) {
+                    tagList.parentElement.classList.remove('hidden');
+                    tagList.innerHTML = allTags.map(tag => createFilterLink({type: 'tag', value: tag, label: tag, icon: 'tag'})).join('');
+                } else {
+                    tagList.parentElement.classList.add('hidden');
+                }
+            };
+            
+            const createFilterLink = ({ type, value, label, icon }) => {
+                const isActive = state.filter.type === type && state.filter.value === value;
+                return `<li>
+                    <a href="#" data-filter-type="${type}" data-filter-value="${value || ''}" class="filter-link flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all-300 ${isActive ? 'bg-teal-400/10 text-teal-300' : 'hover:bg-gray-700/50 text-gray-400 hover:text-white'}">
+                        <i data-lucide="${icon}" class="lucide w-4 h-4 ${isActive && icon === 'star' ? 'fill-teal-300' : ''}"></i>
+                        <span class="capitalize">${label}</span>
+                    </a>
+                </li>`;
+            };
+
+            // --- UI INTERACTION & MODALS ---
+            const toggleSidebar = (forceClose = false) => {
+                const { sidebar, sidebarOverlay } = DOMElements;
+                if (forceClose || !sidebar.classList.contains('-translate-x-full')) {
+                    sidebar.classList.add('-translate-x-full');
+                    sidebarOverlay.classList.add('hidden');
+                } else {
+                    sidebar.classList.remove('-translate-x-full');
+                    sidebarOverlay.classList.remove('hidden');
+                }
+            };
+            
+            const toggleSettingsAccordion = () => {
+                const { content, chevron } = DOMElements.settings;
+                const isHidden = content.classList.contains('max-h-0');
+                content.classList.toggle('max-h-0');
+                content.classList.toggle('max-h-[500px]'); // A large enough value
+                chevron.classList.toggle('rotate-180', isHidden);
+            };
+
+            const openModal = (modal) => {
+                modal.el.classList.remove('hidden');
+                setTimeout(() => modal.content.classList.remove('scale-95', 'opacity-0'), 10);
+            };
+
+            const closeModal = (modal) => {
+                modal.content.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => modal.el.classList.add('hidden'), 300);
+            };
+
+            const showToast = (message) => {
+                const { toast } = DOMElements;
+                toast.message.textContent = message;
+                toast.el.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => toast.el.classList.add('translate-y-20', 'opacity-0'), 3000);
+            };
+            
+            const showConfirmation = (config) => {
+                const { confirmModal } = DOMElements;
+                confirmModal.title.textContent = config.title;
+                confirmModal.text.innerHTML = config.text;
+                confirmModal.okBtn.className = config.okClass;
+                confirmModal.okBtn.onclick = () => {
+                    if (config.requiresInput && confirmModal.input.value !== config.requiresInput) {
+                        confirmModal.input.classList.add('border-red-500', 'animate-shake');
+                        setTimeout(() => confirmModal.input.classList.remove('border-red-500', 'animate-shake'), 500);
+                    } else {
+                        config.onConfirm();
+                        closeModal(confirmModal);
+                    }
+                };
+                confirmModal.iconContainer.innerHTML = `<i data-lucide="${config.icon || 'alert-triangle'}" class="h-6 w-6 ${config.iconClass || 'text-red-400'}"></i>`;
+                confirmModal.iconContainer.className = `mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full sm:mx-0 sm:h-10 sm:w-10 ${config.iconBg || 'bg-red-900/50'}`;
+                confirmModal.inputContainer.classList.toggle('hidden', !config.requiresInput);
+                if (config.requiresInput) {
+                    confirmModal.input.value = '';
+                    confirmModal.input.placeholder = `Type "${config.requiresInput}" to confirm`;
+                }
+                openModal(confirmModal);
+                lucide.createIcons();
+            };
+            
+            const toggleButtonLoading = (button, isLoading, originalContent = '') => {
+                if (isLoading) {
+                    button.dataset.originalContent = button.innerHTML;
+                    button.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>`;
+                    button.disabled = true;
+                } else {
+                    button.innerHTML = button.dataset.originalContent || originalContent;
+                    button.disabled = false;
+                }
+                lucide.createIcons();
+            };
+
+            // --- TAG INPUT ---
+            const setupTagInput = () => {
+                const { tagsContainer, tagsInput } = DOMElements.promptModal;
+                tagsContainer.addEventListener('click', (e) => {
+                    if (e.target.closest('.remove-tag-btn')) e.target.closest('.tag-pill').remove();
+                });
+                tagsInput.addEventListener('keydown', (e) => {
+                    if (e.key === ',' || e.key === 'Enter') {
+                        e.preventDefault();
+                        const tagValue = tagsInput.value.trim();
+                        if (tagValue) { addTag(tagValue); tagsInput.value = ''; }
+                    }
+                });
+            };
+            const addTag = (tag) => {
+                DOMElements.promptModal.tagsContainer.insertBefore(Object.assign(document.createElement('span'), {
+                    className: 'tag-pill',
+                    innerHTML: `${tag}<button type="button" class="remove-tag-btn ml-1.5"><i data-lucide="x" class="w-3 h-3 pointer-events-none"></i></button>`
+                }), DOMElements.promptModal.tagsInput);
+            };
+            const getTagsFromInput = () => Array.from(DOMElements.promptModal.tagsContainer.querySelectorAll('.tag-pill')).map(p => p.firstChild.textContent.trim());
+            const setTagsInInput = (tags) => {
+                DOMElements.promptModal.tagsContainer.querySelectorAll('.tag-pill').forEach(p => p.remove());
+                tags.forEach(addTag);
+            };
+
+            // --- HANDLERS ---
+            const handleFormSubmit = (e) => {
+                e.preventDefault();
+                const { titleInput, contentInput, tagsInput } = DOMElements.promptModal;
+                if(tagsInput.value.trim()){ addTag(tagsInput.value.trim()); tagsInput.value = ''; }
+                
+                const formData = {
+                    id: state.editingId || Date.now(),
+                    title: titleInput.value.trim(),
+                    tags: getTagsFromInput(),
+                    content: contentInput.value.trim(),
+                    isFavorite: state.editingId ? state.prompts.find(p => p.id === state.editingId).isFavorite : false,
+                };
+
+                if (state.editingId) {
+                    const index = state.prompts.findIndex(p => p.id === state.editingId);
+                    state.prompts[index] = { ...state.prompts[index], ...formData };
+                    showToast('Prompt updated!');
+                } else {
+                    formData.createdAt = new Date().toISOString();
+                    state.prompts.push(formData);
+                    showToast('Prompt created!');
+                }
+                savePrompts(); render(); closeModal(DOMElements.promptModal);
+            };
+
+            const handleGridClick = (e) => {
+                const button = e.target.closest('button[data-action]');
+                if (!button) return;
+                const action = button.dataset.action;
+                const id = Number(button.dataset.id);
+                const prompt = state.prompts.find(p => p.id === id);
+
+                if (action === 'edit') {
+                    state.editingId = id;
+                    const { title, idInput, titleInput, contentInput } = DOMElements.promptModal;
+                    title.textContent = 'Edit Prompt';
+                    idInput.value = prompt.id;
+                    titleInput.value = prompt.title;
+                    contentInput.value = prompt.content;
+                    setTagsInInput(prompt.tags);
+                    openModal(DOMElements.promptModal);
+                    updateAIButtonStates();
+                } else if (action === 'delete') {
+                    showConfirmation({
+                        title: 'Delete Prompt', text: 'Are you sure you want to permanently delete this prompt?', okClass: 'bg-red-600 hover:bg-red-500',
+                        onConfirm: () => { state.prompts = state.prompts.filter(p => p.id !== id); savePrompts(); render(); showToast('Prompt deleted.'); }
+                    });
+                } else if (action === 'copy') {
+                    navigator.clipboard.writeText(prompt.content).then(() => showToast('Copied to clipboard!'));
+                } else if (action === 'favorite') {
+                    prompt.isFavorite = !prompt.isFavorite;
+                    savePrompts(); render();
+                }
+            };
+            
+            const handleFilterClick = (e) => {
+                 e.preventDefault();
+                 const link = e.target.closest('.filter-link');
+                 if (link) {
+                     state.filter.type = link.dataset.filterType;
+                     state.filter.value = link.dataset.filterValue || null;
+                     render();
+                     if (window.innerWidth < 1024) toggleSidebar(true);
+                 }
+            };
+            
+            const handleAIGenerate = async () => {
+                const topic = prompt("Enter a topic or idea for the prompt:", "A marketing campaign for a new coffee brand");
+                if (!topic) return;
+
+                const button = DOMElements.settings.aiGenerateBtn;
+                toggleButtonLoading(button, true);
+
+                const systemPrompt = `You are a prompt engineering assistant. Based on the following topic, generate a single, valid JSON object with three keys: "title" (a short, descriptive title), "tags" (an array of 2-3 relevant lowercase strings), and "content" (the full prompt text). Do not include any other text, explanations, or markdown. Topic: "${topic}"`;
+                try {
+                    const responseText = await callGeminiAPI(systemPrompt);
+                    const result = JSON.parse(responseText.replace(/```json\n?|\n?```/g, '').trim());
+                    if (result.title && result.content && Array.isArray(result.tags)) {
+                        DOMElements.promptModal.titleInput.value = result.title;
+                        setTagsInInput(result.tags);
+                        DOMElements.promptModal.contentInput.value = result.content;
+                        showToast('AI-generated prompt filled in!');
+                    } else { throw new Error("AI response was not in the expected format."); }
+                } catch (error) { showToast(`Generation failed: ${error.message}`);
+                } finally { toggleButtonLoading(button, false); }
+            };
+
+            const handleAIImprove = async () => {
+                const { contentInput } = DOMElements.promptModal;
+                const currentContent = contentInput.value.trim();
+                if (!currentContent) return showToast('There is no content to improve.');
+
+                const button = DOMElements.settings.aiImproveBtn;
+                toggleButtonLoading(button, true);
+
+                const systemPrompt = `You are a prompt engineering expert. Rewrite the following prompt to be more detailed, clear, and effective. Add context, constraints, and a clear goal. Provide only the improved prompt text, with no other commentary. Original prompt: "${currentContent}"`;
+                try {
+                    contentInput.value = await callGeminiAPI(systemPrompt);
+                    showToast('Prompt improved by AI.');
+                } catch(error) { showToast(`Improvement failed: ${error.message}`);
+                } finally { toggleButtonLoading(button, false); }
+            };
+            
+            const handleExport = () => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([JSON.stringify(state.prompts, null, 2)], { type: 'application/json' }));
+                a.download = `promptvault_backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                showToast('Data exported successfully.');
+            };
+
+            const handleImport = (e) => {
+                const file = e.target.files[0]; if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const importedPrompts = JSON.parse(event.target.result);
+                        if (!Array.isArray(importedPrompts)) throw new Error('Invalid format');
+                        
+                        showConfirmation({
+                            title: 'Import Options', text: `Found ${importedPrompts.length} prompts. Choose an import method.`, okClass: 'bg-teal-500 hover:bg-teal-400', icon: 'upload', iconBg: 'bg-teal-900/50', iconClass: 'text-teal-300',
+                            onConfirm: () => {
+                                const newPrompts = importedPrompts.filter(p => !state.prompts.some(ep => ep.content === p.content));
+                                state.prompts.push(...newPrompts);
+                                savePrompts(); render(); showToast(`${newPrompts.length} new prompts merged.`);
+                            },
+                        });
+                        const replaceBtn = DOMElements.confirmModal.okBtn.cloneNode(true);
+                        replaceBtn.textContent = 'Replace All';
+                        replaceBtn.className = 'bg-red-600 hover:bg-red-500 inline-flex justify-center rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm';
+                        replaceBtn.onclick = () => { state.prompts = importedPrompts; savePrompts(); render(); showToast(`Replaced data with ${importedPrompts.length} prompts.`); closeModal(DOMElements.confirmModal); };
+                        DOMElements.confirmModal.okBtn.textContent = 'Merge';
+                        DOMElements.confirmModal.okBtn.after(replaceBtn);
+
+                    } catch (err) { showToast('Import failed. Invalid file format.'); console.error(err); }
+                };
+                reader.readAsText(file);
+                e.target.value = '';
+            };
+
+            const handleReset = () => {
+                showConfirmation({
+                    title: 'Reset to Sample Data', text: 'This will delete all your current prompts and load the samples.',
+                    okClass: 'bg-red-600 hover:bg-red-500',
+                    onConfirm: () => { state.prompts = getSamplePrompts(); savePrompts(); render(); showToast('Prompts have been reset.'); }
+                });
+            };
+
+            const handleDeleteAll = () => {
+                showConfirmation({
+                    title: 'Delete All Data', text: `This will permanently delete all <strong>${state.prompts.length}</strong> prompts.`,
+                    okClass: 'bg-red-600 hover:bg-red-500', requiresInput: 'DELETE',
+                    onConfirm: () => { state.prompts = []; savePrompts(); render(); showToast('All data has been deleted.'); }
+                });
+            };
+            
+            // --- EVENT LISTENERS ---
+            DOMElements.hamburgerBtn.addEventListener('click', () => toggleSidebar());
+            DOMElements.sidebarOverlay.addEventListener('click', () => toggleSidebar(true));
+            DOMElements.newPromptBtn.addEventListener('click', () => {
+                state.editingId = null;
+                DOMElements.promptModal.form.reset();
+                setTagsInInput([]);
+                DOMElements.promptModal.title.textContent = 'New Prompt';
+                openModal(DOMElements.promptModal);
+                updateAIButtonStates();
+            });
+            document.querySelectorAll('.modal-cancel, .modal-backdrop').forEach(el => el.addEventListener('click', () => {
+                closeModal(DOMElements.promptModal); closeModal(DOMElements.confirmModal);
+            }));
+            DOMElements.promptModal.form.addEventListener('submit', handleFormSubmit);
+            DOMElements.promptsGrid.addEventListener('click', handleGridClick);
+            DOMElements.filterList.addEventListener('click', handleFilterClick);
+            DOMElements.tagList.addEventListener('click', handleFilterClick);
+            DOMElements.searchInput.addEventListener('input', e => { state.searchTerm = e.target.value; render(); });
+            DOMElements.sortSelect.addEventListener('change', e => { state.sortOrder = e.target.value; render(); });
+            
+            // Settings Listeners
+            const { settings } = DOMElements;
+            settings.toggleBtn.addEventListener('click', toggleSettingsAccordion);
+            settings.saveApiKeyBtn.addEventListener('click', saveApiKey);
+            settings.aiModelSelect.addEventListener('change', saveAiModel);
+            settings.aiGenerateBtn.addEventListener('click', handleAIGenerate);
+            settings.aiImproveBtn.addEventListener('click', handleAIImprove);
+            settings.exportBtn.addEventListener('click', handleExport);
+            settings.importBtn.addEventListener('click', () => settings.importFileInput.click());
+            settings.importFileInput.addEventListener('change', handleImport);
+            settings.resetBtn.addEventListener('click', handleReset);
+            settings.deleteAllBtn.addEventListener('click', handleDeleteAll);
+
+            // --- INITIALIZATION ---
+            loadPrompts();
+            loadSettings();
+            setupTagInput();
+            render();
+        });
+    </script>
+</body>
+</html>
