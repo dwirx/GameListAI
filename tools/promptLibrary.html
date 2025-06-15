@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptVault Pro - Advanced Prompt Library</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --brand-color: #2dd4bf; /* teal-400 */
+            --danger-color: #f87171; /* red-400 */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* gray-900 */
+            color: #d1d5db; /* gray-300 */
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        .backdrop-blur-sm { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+        .transition-all-300 { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .focus-ring-brand { --tw-ring-color: var(--brand-color); }
+        .focus-ring-danger { --tw-ring-color: var(--danger-color); }
+        .lucide { width: 1rem; height: 1rem; stroke-width: 2; }
+
+        /* Tag Input Styles */
+        .tag-container { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+        .tag-pill {
+            display: inline-flex; align-items: center; gap: 0.375rem; background-color: #374151; /* gray-700 */
+            padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; line-height: 1rem; font-weight: 500;
+        }
+        .tag-pill button { background: none; border: none; padding: 0; cursor: pointer; color: #9ca3af; /* gray-400 */ }
+        .tag-pill button:hover { color: #f9fafb; /* gray-50 */ }
+        #prompt-tags-input { flex-grow: 1; min-width: 120px; }
+        
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1s linear infinite; }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-64 bg-gray-800/80 backdrop-blur-sm border-r border-gray-700/50 p-5 flex flex-col fixed inset-y-0 left-0 z-40 transform -translate-x-full lg:translate-x-0 transition-all-300">
+        <div class="flex items-center gap-3 mb-8">
+            <div class="bg-teal-400 p-2 rounded-lg shadow-lg shadow-teal-500/20"><i data-lucide="brain-circuit" class="text-gray-900"></i></div>
+            <h1 class="text-xl font-bold text-white">PromptVault</h1>
+        </div>
+        <button id="new-prompt-btn" class="flex items-center justify-center gap-2 w-full bg-teal-400 text-gray-900 font-bold py-2.5 px-4 rounded-lg hover:bg-teal-300 transition-all-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus-ring-brand">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i> New Prompt
+        </button>
+        
+        <div class="flex-grow overflow-y-auto mt-8 -mr-3 pr-3">
+            <nav>
+                <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">Filters</h2>
+                <ul id="filter-list" class="space-y-1"></ul>
+            </nav>
+            <nav class="mt-6">
+                <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">Tags</h2>
+                <ul id="tag-list" class="space-y-1"></ul>
+            </nav>
+        </div>
+        
+        <!-- Collapsible Settings Section -->
+        <div class="mt-6 pt-6 border-t border-gray-700/60">
+            <button id="settings-toggle-btn" class="w-full flex justify-between items-center text-left text-sm font-semibold text-gray-300 hover:text-white p-2 rounded-md hover:bg-gray-700/50 transition-all-300">
+                <span class="flex items-center gap-2"><i data-lucide="settings" class="w-4 h-4"></i> Settings</span>
+                <i data-lucide="chevron-down" id="settings-chevron" class="w-4 h-4 transition-transform"></i>
+            </button>
+
+            <div id="settings-content" class="overflow-hidden max-h-0 transition-all-300 duration-500 mt-2 space-y-4">
+                <!-- AI Assistant Settings -->
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">AI Assistant</h3>
+                    <div class="space-y-2 text-sm p-2 bg-gray-900/30 rounded-lg">
+                        <div>
+                            <label for="ai-model-select" class="block text-xs font-medium text-gray-400 mb-1">AI Model</label>
+                            <select id="ai-model-select" class="w-full bg-gray-700 border border-gray-600 rounded-md py-1 px-2 text-xs focus:outline-none focus:ring-1 focus-ring-brand">
+                                <option value="gemini-2.5-flash-preview-05-20">Gemini 2.5 Flash (Preview)</option>
+                                <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                            </select>
+                        </div>
+                        <div>
+                           <label for="api-key-input" class="block text-xs font-medium text-gray-400 mb-1">Gemini API Key</label>
+                            <div class="flex gap-2">
+                                <input type="password" id="api-key-input" placeholder="Enter your key..." class="w-full bg-gray-700 border border-gray-600 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-1 focus-ring-brand">
+                                <button id="save-api-key-btn" class="bg-gray-600 text-white text-xs font-semibold px-3 rounded-md hover:bg-gray-500 transition-all-300">Save</button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 pt-1 px-1">Your key is stored locally in your browser.</p>
+                    </div>
+                </div>
+                <!-- Data Management Settings -->
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">Data Management</h3>
+                     <div class="space-y-2 text-sm">
+                        <button id="import-btn" class="w-full flex items-center gap-2 text-gray-400 hover:text-white hover:bg-gray-700/50 p-2 rounded-md transition-all-300"><i data-lucide="upload" class="w-4 h-4"></i> Import Data</button>
+                        <input type="file" id="import-file-input" class="hidden" accept=".json">
+                        <button id="export-btn" class="w-full flex items-center gap-2 text-gray-400 hover:text-white hover:bg-gray-700/50 p-2 rounded-md transition-all-300"><i data-lucide="download" class="w-4 h-4"></i> Export Data</button>
+                    </div>
+                </div>
+                <!-- Danger Zone -->
+                <div>
+                    <h3 class="text-xs font-semibold text-red-400/80 uppercase tracking-wider mb-2 px-2">Danger Zone</h3>
+                    <div class="space-y-2 text-sm">
+                        <button id="reset-btn" class="w-full flex items-center gap-2 text-red-400/80 hover:text-red-400 hover:bg-red-900/30 p-2 rounded-md transition-all-300"><i data-lucide="history" class="w-4 h-4"></i> Reset to Samples</button>
+                        <button id="delete-all-btn" class="w-full flex items-center gap-2 text-red-400/80 hover:text-red-400 hover:bg-red-900/30 p-2 rounded-md transition-all-300"><i data-lucide="trash-2" class="w-4 h-4"></i> Delete All Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden"></div>
+
+    <main class="lg:pl-64 transition-all-300">
+         <div class="p-4 sm:p-6 lg:p-8 flex flex-col min-h-screen">
+            <header class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-4 w-full sm:w-auto">
+                    <button id="hamburger-btn" class="lg:hidden p-2 -ml-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus-ring-brand">
+                         <i data-lucide="menu" class="h-6 w-6 text-white"></i>
+                    </button>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white">My Prompts</h1>
+                </div>
+                <div class="flex items-center gap-4 w-full sm:w-auto">
+                    <div class="relative w-full sm:w-56">
+                        <i data-lucide="search" class="lucide absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="search-input" placeholder="Search..." class="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus-ring-brand">
+                    </div>
+                    <div class="relative">
+                        <select id="sort-select" class="appearance-none w-full sm:w-auto bg-gray-800 border border-gray-700 rounded-lg py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus-ring-brand text-sm">
+                            <option value="date_desc">Newest First</option>
+                            <option value="date_asc">Oldest First</option>
+                            <option value="title_asc">Title (A-Z)</option>
+                            <option value="title_desc">Title (Z-A)</option>
+                        </select>
+                        <i data-lucide="chevrons-up-down" class="lucide absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    </div>
+                </div>
+            </header>
+
+            <div id="prompts-grid" class="flex-grow grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"></div>
+            
+            <div id="empty-state" class="hidden flex-col items-center justify-center text-center h-full text-gray-500 flex-grow">
+                <div class="animate-float"><i id="empty-state-icon" data-lucide="file-text" class="w-24 h-24 mb-4 text-gray-600"></i></div>
+                <h2 id="empty-state-title" class="text-xl font-semibold text-gray-400"></h2>
+                <p id="empty-state-text" class="mt-2 max-w-sm"></p>
+            </div>
+         </div>
+    </main>
+
+    <!-- Modals Container -->
+    <div id="modal-container">
+        <!-- Add/Edit Prompt Modal -->
+        <div id="prompt-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm modal-backdrop"></div>
+            <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl z-10 transform scale-95 opacity-0 transition-all-300 modal-content">
+                <form id="prompt-form" class="p-6 sm:p-8">
+                    <input type="hidden" id="prompt-id">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 id="modal-title" class="text-2xl font-bold text-white">New Prompt</h2>
+                        <button type="button" id="ai-generate-btn" title="Generate prompt from a topic" class="flex items-center gap-2 text-sm bg-gray-700 text-teal-300 font-semibold py-1.5 px-3 rounded-lg hover:bg-gray-600 transition-all-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i> Generate
+                        </button>
+                    </div>
+
+                    <div class="space-y-4 mb-6">
+                        <div>
+                            <label for="prompt-title" class="block text-sm font-medium text-gray-400 mb-2">Title</label>
+                            <input type="text" id="prompt-title" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus-ring-brand">
+                        </div>
+                        <div>
+                            <label for="prompt-tags-input" class="block text-sm font-medium text-gray-400 mb-2">Tags (comma-separated)</label>
+                            <div class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 focus-within:ring-2 focus-within:ring-inset focus-ring-brand">
+                                <div class="tag-container" id="prompt-tags-container">
+                                    <input type="text" id="prompt-tags-input" class="bg-transparent border-none focus:ring-0 p-1 text-sm" placeholder="Add a tag...">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label for="prompt-content" class="block text-sm font-medium text-gray-400">Prompt</label>
+                                <button type="button" id="ai-improve-btn" class="flex items-center gap-1.5 text-xs text-teal-400 hover:text-teal-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i data-lucide="wand-2" class="w-3 h-3"></i> Improve with AI
+                                </button>
+                            </div>
+                            <textarea id="prompt-content" rows="8" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus-ring-brand resize-y"></textarea>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-4"><button type="button" class="modal-cancel bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-500 transition-all-300">Cancel</button><button type="submit" class="bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-400 transition-all-300">Save Prompt</button></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Confirmation Modal -->
+        <div id="confirm-modal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 hidden">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm modal-backdrop"></div>
+            <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-md z-10 transform scale-95 opacity-0 transition-all-300 modal-content">
+                <div class="p-6">
+                    <div class="flex items-start gap-4">
+                        <div id="confirm-icon-container" class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full sm:mx-0 sm:h-10 sm:w-10">
+                            <i data-lucide="alert-triangle" class="h-6 w-6 text-red-400"></i>
+                        </div>
+                        <div class="mt-0 text-left">
+                            <h3 class="text-lg font-semibold leading-6 text-white" id="confirm-title">Confirmation</h3>
+                            <div class="mt-2"><p class="text-sm text-gray-400" id="confirm-text"></p></div>
+                            <div id="confirm-input-container" class="mt-4 hidden">
+                                <input type="text" id="confirm-input" class="w-full bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus-ring-danger">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-800/50 px-6 py-4 flex flex-row-reverse gap-3">
+                    <button type="button" id="confirm-ok-btn" class="inline-flex justify-center rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm">Confirm</button>
+                    <button type="button" class="modal-cancel inline-flex justify-center rounded-md bg-gray-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 border border-teal-400 text-white py-2 px-4 rounded-lg shadow-lg flex items-center gap-3 transform translate-y-20 opacity-0 transition-all-300 z-[70]">
+        <i data-lucide="check-circle" class="text-teal-400"></i><span id="toast-message"></span>
+    </div>
+
+    <script>
+        // --- SCRIPT START ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- STATE MANAGEMENT ---
+            const state = {
+                prompts: [],
+                filter: { type: 'all', value: null },
+                sortOrder: 'date_desc',
+                searchTerm: '',
+                editingId: null,
+                apiKey: null,
+                aiModel: 'gemini-2.5-flash-preview-05-20', // Default model updated
+            };
+
+            // --- DOM ELEMENTS ---
+            const DOMElements = {
+                sidebar: document.getElementById('sidebar'),
+                sidebarOverlay: document.getElementById('sidebar-overlay'),
+                hamburgerBtn: document.getElementById('hamburger-btn'),
+                newPromptBtn: document.getElementById('new-prompt-btn'),
+                promptsGrid: document.getElementById('prompts-grid'),
+                filterList: document.getElementById('filter-list'),
+                tagList: document.getElementById('tag-list'),
+                searchInput: document.getElementById('search-input'),
+                sortSelect: document.getElementById('sort-select'),
+                emptyState: document.getElementById('empty-state'),
+                emptyStateIcon: document.getElementById('empty-state-icon'),
+                emptyStateTitle: document.getElementById('empty-state-title'),
+                emptyStateText: document.getElementById('empty-state-text'),
+                promptModal: {
+                    el: document.getElementById('prompt-modal'),
+                    content: document.querySelector('#prompt-modal .modal-content'),
+                    form: document.getElementById('prompt-form'),
+                    title: document.getElementById('modal-title'),
+                    idInput: document.getElementById('prompt-id'),
+                    titleInput: document.getElementById('prompt-title'),
+                    tagsContainer: document.getElementById('prompt-tags-container'),
+                    tagsInput: document.getElementById('prompt-tags-input'),
+                    contentInput: document.getElementById('prompt-content'),
+                },
+                confirmModal: {
+                    el: document.getElementById('confirm-modal'),
+                    content: document.querySelector('#confirm-modal .modal-content'),
+                    title: document.getElementById('confirm-title'),
+                    text: document.getElementById('confirm-text'),
+                    inputContainer: document.getElementById('confirm-input-container'),
+                    input: document.getElementById('confirm-input'),
+                    okBtn: document.getElementById('confirm-ok-btn'),
+                    iconContainer: document.getElementById('confirm-icon-container'),
+                },
+                toast: {
+                    el: document.getElementById('toast'),
+                    message: document.getElementById('toast-message'),
+                },
+                // --- Settings Section Elements ---
+                settings: {
+                    toggleBtn: document.getElementById('settings-toggle-btn'),
