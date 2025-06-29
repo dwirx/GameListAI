@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCTV Kota Malang - Live Streaming</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stream-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stream-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+        }
+
+        .stream-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .stream-iframe {
+            width: 100%;
+            height: 300px;
+            border: none;
+            background: #f0f0f0;
+        }
+
+        .stream-status {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .status-live {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            padding: 20px;
+            opacity: 0.8;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1200px) {
+            .grid-container {
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 2.2rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .grid-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .stream-iframe {
+                height: 280px;
+            }
+
+            .controls {
+                gap: 10px;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .btn {
+                padding: 12px 18px;
+                font-size: 0.9rem;
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .stream-header {
+                padding: 12px 15px;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.9rem;
+                margin-bottom: 8px;
+            }
+
+            .header p {
+                font-size: 0.95rem;
+            }
+
+            .stream-iframe {
+                height: 220px;
+            }
+
+            .grid-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .btn {
+                padding: 10px 15px;
+                font-size: 0.85rem;
+                min-width: 100px;
+            }
+
+            .controls {
+                gap: 8px;
+            }
+
+            .stream-header {
+                padding: 10px 12px;
+                font-size: 0.95rem;
+            }
+
+            .stream-header button {
+                font-size: 11px !important;
+                padding: 4px 8px !important;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .header h1 {
+                font-size: 1.7rem;
+            }
+
+            .stream-iframe {
+                height: 200px;
+            }
+
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+                min-width: 90px;
+            }
+        }
+
+        /* Full screen mode */
+        .fullscreen-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: black;
+            z-index: 1000;
+            display: none;
+        }
+
+        .fullscreen-mode.active {
+            display: block;
+        }
+
+        .fullscreen-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .close-fullscreen {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 20px;
+            z-index: 1001;
+        }
+
+        /* Progress bar */
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translate(-50%, 100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        .stream-counter {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.15);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .online-indicator {
+            width: 6px;
+            height: 6px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎥 CCTV Kota Malang</h1>
+            <p>Live Streaming - Pantau Kondisi Lalu Lintas Real Time</p>
+            <div class="stream-counter">
+                <div class="online-indicator"></div>
+                <span>📡 <span id="streamCount">8</span> Camera Live</span>
+                <span>|</span>
+                <span>🌐 Real-time Updates</span>
+            </div>
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="refreshAllStreams()">🔄 Refresh Semua</button>
+            <button class="btn btn-secondary" onclick="changeGridLayout()" id="gridBtn">📱 Layout: 2x4</button>
+            <button class="btn btn-secondary" onclick="toggleStreamInfo()" id="infoBtn">ℹ️ Info</button>
+        </div>
+
+        <div class="grid-container" id="streamGrid">
+            <!-- Loading state -->
+            <div class="loading" id="loadingState">
+                <div class="spinner"></div>
+                <p>Memuat CCTV streams...</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 CCTV Kota Malang - Data streaming dari stream.cctv.malangkota.go.id</p>
+            <p>📍 Lokasi: Malang, Jawa Timur, Indonesia</p>
+        </div>
+    </div>
+
+    <!-- Fullscreen mode -->
+    <div class="fullscreen-mode" id="fullscreenMode">
+        <button class="close-fullscreen" onclick="closeFullscreen()">✕</button>
+        <iframe class="fullscreen-iframe" id="fullscreenIframe"></iframe>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast-notification" id="toastNotification"></div>
+
+    <script>
+        // CCTV data
+        const cctvStreams = [
+            {
+                id: 'taman-kendedes',
+                name: 'Taman Kendedes - Jl. A. Yani',
+                location: 'Jl. A. Yani No.252, Purwodadi, Kec. Blimbing',
+                url: 'http://stream.cctv.malangkota.go.id/WebRTCApp/play.html?name=195874189915723862555674'
+            },
+            {
+                id: 'ayani-flyover',
+                name: 'Jl. A. Yani Arah Selatan (Fly Over)',
+                location: 'Fly Over Jl. Ahmad Yani',
+                url: 'http://stream.cctv.malangkota.go.id/WebRTCApp/play.html?name=957992467319427676437983'
+            },
+            {
+                id: 'ayani-selatan',
+                name: 'Jl. Ahmad Yani Arah Selatan',
+                location: 'Jl. Ahmad Yani',
+                url: 'http://stream.cctv.malangkota.go.id/WebRTCApp/play.html?name=466452347587002114136805'
+            },
+            {
+                id: 'ayani-sabilillah',
+                name: 'Jl. A Yani Arah Selatan (Masjid Sabilillah)',
+                location: 'Dekat Masjid Sabilillah',
+                url: 'http://stream.cctv.malangkota.go.id/WebRTCApp/play.html?name=982131430615781858979987'
+            },
+            {
+                id: 'borobudur',
+                name: 'Jl. Borobudur Arah Timur',
+                location: 'Jl. Borobudur',
+                url: 'http://stream.cctv.malangkota.go.id/WebRTCApp/play.html?name=807179387709306202506877'
+            },
+            {
+                id: 'soekarno-hatta-timur',
+                name: 'Jl. Soekarno Hatta Arah Timur',
+                location: 'Jl. Soekarno Hatta',
+                url: 'http://stream.cctv.malangkota.go.id/WebRTCApp/play.html?name=184398221253246434285173'
+            },
+            {
+                id: 'soekarno-hatta-selatan',
+                name: 'Jl. Soekarno Hatta Arah Selatan',
+                location: 'Jl. Soekarno Hatta',
+                url: 'http://stream.cctv.malangkota.go.id/WebRTCApp/play.html?name=227920422769509645238654'
+            },
+            {
+                id: 'letjen-parman',
+                name: 'Jl. Letjen S. Parman Arah Selatan',
+                location: 'Jl. Ciliwung No.1b, Purwantoro, Kec. Blimbing',
+                url: 'http://stream.cctv.malangkota.go.id/WebRTCApp/play.html?name=810133524862588268334710'
+            }
+        ];
+
+        let currentGridLayout = 'auto';
+        let showStreamInfo = true;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            showProgressBar();
+            
+            setTimeout(() => {
+                updateProgress(30);
+                document.getElementById('loadingState').style.display = 'none';
+                renderStreams();
+                updateProgress(70);
+                
+                setTimeout(() => {
+                    updateProgress(100);
+                    hideProgressBar();
+                    showToast('🎉 Semua CCTV berhasil dimuat!');
+                }, 1000);
+            }, 1000);
+        });
+
+        function showProgressBar() {
+            document.getElementById('progressContainer').style.display = 'block';
+            updateProgress(0);
+        }
+
+        function hideProgressBar() {
+            setTimeout(() => {
+                document.getElementById('progressContainer').style.display = 'none';
+            }, 500);
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        function renderStreams() {
+            const grid = document.getElementById('streamGrid');
+            grid.innerHTML = '';
+
+            cctvStreams.forEach(stream => {
+                const streamCard = createStreamCard(stream);
+                grid.appendChild(streamCard);
+            });
+            
+            // Check stream status after all cards are rendered
+            setTimeout(() => {
+                checkStreamStatus();
+            }, 500);
+        }
+
+        function createStreamCard(stream) {
+            const card = document.createElement('div');
+            card.className = 'stream-card';
+            card.innerHTML = `
+                <div class="stream-header">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>${stream.name}</span>
+                        <button style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 10px; border-radius: 15px; cursor: pointer; font-size: 12px;" onclick="openFullscreen('${stream.url}')">
+                            🔍 Full Screen
+                        </button>
+                    </div>
+                    <div style="font-size: 0.9rem; opacity: 0.8; margin-top: 5px;">📍 ${stream.location}</div>
+                </div>
+                <iframe 
+                    class="stream-iframe" 
+                    src="${stream.url}"
+                    loading="lazy"
+                    allowfullscreen>
+                </iframe>
+                <div class="stream-status">
+                    <span class="status-indicator"></span>
+                    <span class="status-live">LIVE</span> - Streaming Real Time
+                </div>
+            `;
+            return card;
+        }
+
+        function refreshAllStreams() {
+            showProgressBar();
+            updateProgress(20);
+            
+            const iframes = document.querySelectorAll('.stream-iframe');
+            let completed = 0;
+            
+            iframes.forEach((iframe, index) => {
+                const src = iframe.src;
+                iframe.src = '';
+                setTimeout(() => {
+                    iframe.src = src;
+                    completed++;
+                    updateProgress(20 + (completed / iframes.length) * 80);
+                    
+                    if (completed === iframes.length) {
+                        setTimeout(() => {
+                            hideProgressBar();
+                            showToast('🔄 Semua stream berhasil di-refresh!');
+                        }, 300);
+                    }
+                }, 100 + index * 50);
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+
+
+        function changeGridLayout() {
+            const grid = document.getElementById('streamGrid');
+            const gridBtn = document.getElementById('gridBtn');
+            
+            if (currentGridLayout === 'auto') {
+                grid.style.gridTemplateColumns = '1fr 1fr';
+                currentGridLayout = '2-col';
+                gridBtn.textContent = '📱 Layout: 2x4';
+                showToast('📱 Layout: 2 kolom');
+            } else if (currentGridLayout === '2-col') {
+                grid.style.gridTemplateColumns = '1fr';
+                currentGridLayout = '1-col';
+                gridBtn.textContent = '📱 Layout: 1x8';
+                showToast('📱 Layout: 1 kolom');
+            } else {
+                grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(400px, 1fr))';
+                currentGridLayout = 'auto';
+                gridBtn.textContent = '📱 Layout: Auto';
+                showToast('📱 Layout: Otomatis');
+            }
+        }
+
+        function toggleStreamInfo() {
+            const statusElements = document.querySelectorAll('.stream-status');
+            const infoBtn = document.getElementById('infoBtn');
+            
+            if (showStreamInfo) {
+                statusElements.forEach(el => el.style.display = 'none');
+                showStreamInfo = false;
+                infoBtn.textContent = 'ℹ️ Tampilkan Info';
+                showToast('ℹ️ Info stream disembunyikan');
+            } else {
+                statusElements.forEach(el => el.style.display = 'block');
+                showStreamInfo = true;
+                infoBtn.textContent = 'ℹ️ Sembunyikan Info';
+                showToast('ℹ️ Info stream ditampilkan');
+            }
+        }
+
+        function checkStreamStatus() {
+            const iframes = document.querySelectorAll('.stream-iframe');
+            iframes.forEach((iframe, index) => {
+                iframe.onload = function() {
+                    // Update status indicator when stream loads
+                    const card = iframe.closest('.stream-card');
+                    const indicator = card.querySelector('.status-indicator');
+                    indicator.style.background = '#28a745';
+                    indicator.style.animation = 'pulse 2s infinite';
+                };
+                
+                iframe.onerror = function() {
+                    // Update status indicator when stream fails
+                    const card = iframe.closest('.stream-card');
+                    const indicator = card.querySelector('.status-indicator');
+                    indicator.style.background = '#dc3545';
+                    indicator.style.animation = 'none';
+                };
+            });
+        }
+
+        function openFullscreen(url) {
+            const fullscreenMode = document.getElementById('fullscreenMode');
+            const fullscreenIframe = document.getElementById('fullscreenIframe');
+            
+            fullscreenIframe.src = url;
+            fullscreenMode.classList.add('active');
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFullscreen() {
+            const fullscreenMode = document.getElementById('fullscreenMode');
+            const fullscreenIframe = document.getElementById('fullscreenIframe');
+            
+            fullscreenMode.classList.remove('active');
+            fullscreenIframe.src = '';
+            
+            // Restore body scroll
+            document.body.style.overflow = 'auto';
+        }
+
+
+
+        // Handle escape key for fullscreen
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeFullscreen();
+            }
+        });
+
+        // Handle mobile orientation change
+        window.addEventListener('orientationchange', function() {
+            setTimeout(() => {
+                refreshAllStreams();
+            }, 500);
+        });
+
+
+    </script>
+</body>
+</html> 
