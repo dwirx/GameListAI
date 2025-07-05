@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Papan Skor Pro v7.0</title>
+    <title>Papan Skor Pro v9.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Menghilangkan panah pada input number */
@@ -11,41 +11,31 @@
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         
-        .tab-aktif {
-            background-color: #0f172a; /* bg-slate-900 */
-            color: #38bdf8; /* text-sky-400 */
-            border-color: #38bdf8; /* border-sky-400 */
-        }
-
-        /* Styling slider */
+        .tab-aktif { background-color: #0f172a; color: #38bdf8; border-color: #38bdf8; }
         input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: #334155; border-radius: 5px; outline: none; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #38bdf8; cursor: pointer; border-radius: 50%; }
         input[type=range]::-moz-range-thumb { width: 20px; height: 20px; background: #38bdf8; cursor: pointer; border-radius: 50%; }
 
-        /* Mengatur titik asal transformasi untuk zoom */
-        #tabel-skor {
-            transform-origin: top left;
-            transition: transform 0.2s ease-out;
-        }
+        #tabel-skor { transform-origin: top left; transition: transform 0.2s ease-out; }
+        #keyboard-virtual { transition: transform 0.3s ease-in-out; }
+        #keyboard-virtual.hidden { transform: translateY(100%); }
+        .input-skor.aktif { box-shadow: 0 0 0 3px #38bdf8; /* sky-400 */ }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200 font-sans flex items-start justify-center min-h-screen p-2 sm:p-4">
 
     <div class="w-full max-w-5xl bg-slate-900/70 backdrop-blur-xl p-2 sm:p-6 rounded-2xl shadow-2xl shadow-sky-900/50 border border-slate-700">
         <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 bg-gradient-to-r from-sky-400 to-cyan-300 bg-clip-text text-transparent">
-            Papan Skor Pro v7.0
+            Papan Skor Pro v9.0
         </h1>
 
-        <!-- Navigasi Tab -->
         <div class="mb-6 border-b border-slate-700 flex">
             <button id="tab-baru" class="tab-tombol flex-1 py-3 px-2 sm:px-4 font-semibold border-b-2 transition-colors duration-300">Permainan Baru</button>
             <button id="tab-berlangsung" class="tab-tombol flex-1 py-3 px-2 sm:px-4 font-semibold border-b-2 transition-colors duration-300 border-transparent text-slate-500" disabled>Berlangsung</button>
             <button id="tab-riwayat" class="tab-tombol flex-1 py-3 px-2 sm:px-4 font-semibold border-b-2 transition-colors duration-300 border-transparent text-slate-400 hover:text-slate-200">Riwayat</button>
         </div>
 
-        <!-- Konten Panel -->
         <div id="konten-panel">
-            <!-- Panel 1: Pengaturan Permainan Baru -->
             <div id="panel-baru" class="space-y-8">
                 <div>
                     <h2 class="text-xl font-semibold mb-3 text-cyan-400">Database Pemain</h2>
@@ -62,43 +52,54 @@
                 </div>
             </div>
 
-            <!-- Panel 2: Area Permainan Berlangsung -->
             <div id="panel-berlangsung" class="hidden">
                  <div class="mb-4 bg-slate-800/50 p-3 rounded-lg border border-slate-700">
-                    <label for="pengatur-zoom" class="flex items-center gap-2 font-semibold text-slate-400 mb-2">
-                        🔍 Skala Tabel: <span id="label-nilai-zoom" class="font-bold text-sky-400">100%</span>
-                    </label>
+                    <label for="pengatur-zoom" class="flex items-center gap-2 font-semibold text-slate-400 mb-2">🔍 Skala Tabel: <span id="label-nilai-zoom" class="font-bold text-sky-400">100%</span></label>
                     <input type="range" id="pengatur-zoom" min="50" max="200" value="100">
-                    <p class="text-xs text-slate-500 mt-2 text-center">Geser untuk mengubah skala tabel (50% - 200%).</p>
                  </div>
-
                  <div class="overflow-x-auto pb-4">
-                    <table id="tabel-skor" class="w-full text-center">
+                    <table id="tabel-skor" class="w-full text-center min-w-[500px]">
                         <thead id="kepala-tabel" class="bg-slate-800"></thead>
                         <tbody id="badan-tabel" class="divide-y divide-slate-700"></tbody>
                         <tfoot id="kaki-tabel" class="bg-slate-900/80"></tfoot>
                     </table>
                 </div>
-
                 <div id="kontrol-permainan" class="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
                     <button id="tombol-tambah-ronde" class="w-full sm:w-auto bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-2">➕ Tambah Ronde</button>
                     <button id="tombol-selesaikan" class="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-2">🏁 Selesaikan Game</button>
                 </div>
-                
                 <div id="pesan-pemenang" class="hidden mt-6 text-center text-xl sm:text-2xl font-bold bg-emerald-900/50 border-2 border-emerald-500 p-6 rounded-lg"></div>
-
                 <div id="kontrol-akhir-permainan" class="hidden mt-6 flex flex-col sm:flex-row gap-4 justify-center">
                      <button id="tombol-permainan-baru-dari-akhir" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-2">🔄 Permainan Baru</button>
                 </div>
             </div>
 
-            <!-- Panel 3: Riwayat Permainan -->
             <div id="panel-riwayat" class="hidden space-y-4">
                 <div id="konten-riwayat" class="max-h-[60vh] overflow-y-auto pr-2 space-y-4"></div>
                 <p id="pesan-riwayat-kosong" class="text-center text-slate-500 py-8">Belum ada riwayat permainan yang selesai.</p>
             </div>
         </div>
     </div>
+    
+    <div id="keyboard-virtual" class="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-sm p-2 z-50 border-t border-slate-700 hidden">
+        <div class="grid grid-cols-4 gap-2 max-w-sm mx-auto">
+            <button class="tombol-keypad bg-slate-700 hover:bg-slate-600 rounded-lg p-4 text-2xl font-semibold" data-key="1">1</button>
+            <button class="tombol-keypad bg-slate-700 hover:bg-slate-600 rounded-lg p-4 text-2xl font-semibold" data-key="2">2</button>
+            <button class="tombol-keypad bg-slate-700 hover:bg-slate-600 rounded-lg p-4 text-2xl font-semibold" data-key="3">3</button>
+            <button class="tombol-keypad bg-rose-800 hover:bg-rose-700 rounded-lg p-4 text-2xl font-semibold flex justify-center items-center" data-key="hapus">⌫</button>
+            <button class="tombol-keypad bg-slate-700 hover:bg-slate-600 rounded-lg p-4 text-2xl font-semibold" data-key="4">4</button>
+            <button class="tombol-keypad bg-slate-700 hover:bg-slate-600 rounded-lg p-4 text-2xl font-semibold" data-key="5">5</button>
+            <button class="tombol-keypad bg-slate-700 hover:bg-slate-600 rounded-lg p-4 text-2xl font-semibold" data-key="6">6</button>
+            <button class="tombol-keypad bg-slate-700 hover:bg-slate-600 rounded-lg p-4 text-2xl font-semibold" data-key="-">-</button>
+            <button class="tombol-keypad bg-slate-700 hover:bg-slate-600 rounded-lg p-4 text-2xl font-semibold" data-key="7">7</button>
+            <button class="tombol-keypad bg-slate-700 hover:bg-slate-600 rounded-lg p-4 text-2xl font-semibold" data-key="8">8</button>
+            <button class="tombol-keypad bg-slate-700 hover:bg-slate-600 rounded-lg p-4 text-2xl font-semibold" data-key="9">9</button>
+            <button class="tombol-keypad bg-emerald-700 hover:bg-emerald-600 rounded-lg p-4 text-2xl font-semibold" data-key="ok">✓</button>
+            <button class="tombol-keypad bg-slate-700 hover:bg-slate-600 rounded-lg p-4 text-2xl font-semibold col-span-2" data-key="0">0</button>
+            <button class="tombol-keypad bg-slate-700 hover:bg-slate-600 rounded-lg p-4 text-2xl font-semibold" data-key=".">.</button>
+        </div>
+    </div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -111,7 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
         daftarSemuaPemain: document.getElementById('daftar-semua-pemain'),
         daftarPilihPemain: document.getElementById('daftar-pilih-pemain'),
         tombolMulai: document.getElementById('tombol-mulai'),
-        // Bagian Permainan Berlangsung
         tabelSkor: document.getElementById('tabel-skor'),
         pengaturZoom: document.getElementById('pengatur-zoom'),
         labelNilaiZoom: document.getElementById('label-nilai-zoom'),
@@ -124,27 +124,27 @@ document.addEventListener('DOMContentLoaded', () => {
         pesanPemenang: document.getElementById('pesan-pemenang'),
         kontrolAkhirPermainan: document.getElementById('kontrol-akhir-permainan'),
         tombolPermainanBaruDariAkhir: document.getElementById('tombol-permainan-baru-dari-akhir'),
-        // Bagian Riwayat
         kontenRiwayat: document.getElementById('konten-riwayat'),
         pesanRiwayatKosong: document.getElementById('pesan-riwayat-kosong'),
+        keyboardVirtual: document.getElementById('keyboard-virtual'),
     };
 
     // === Kunci & State Aplikasi ===
-    const KUNCI_PEMAIN = 'papanSkorPemain_v7';
-    const KUNCI_PERMAINAN_AKTIF = 'papanSkorAktif_v7';
-    const KUNCI_RIWAYAT = 'papanSkorRiwayat_v7';
+    const KUNCI_PEMAIN = 'papanSkorPemain_v9';
+    const KUNCI_PERMAINAN_AKTIF = 'papanSkorAktif_v9';
+    const KUNCI_RIWAYAT = 'papanSkorRiwayat_v9';
     const WARNA_PEMAIN = ['#38bdf8', '#fb7185', '#4ade80', '#facc15', '#a78bfa', '#2dd4bf', '#f97316', '#e879f9'];
 
-    let semuaPemain = [];
-    let riwayatPermainan = [];
+    let semuaPemain = [], riwayatPermainan = [];
     let statusPermainan = { pemain: [], skor: [], permainanAktif: false, tingkatZoom: 100 };
+    let inputAktif = null;
 
-    // === Fungsi Manajemen Data (Disimpan di Local Storage) ===
+    // === Fungsi Manajemen Data (LocalStorage) ===
     const muatData = () => {
         semuaPemain = JSON.parse(localStorage.getItem(KUNCI_PEMAIN)) || [];
         riwayatPermainan = JSON.parse(localStorage.getItem(KUNCI_RIWAYAT)) || [];
-        const permainanAktifTersimpan = JSON.parse(localStorage.getItem(KUNCI_PERMAINAN_AKTIF));
-        if (permainanAktifTersimpan && permainanAktifTersimpan.pemain.length > 0) statusPermainan = permainanAktifTersimpan;
+        const dataTersimpan = JSON.parse(localStorage.getItem(KUNCI_PERMAINAN_AKTIF));
+        if (dataTersimpan && dataTersimpan.pemain.length > 0) statusPermainan = dataTersimpan;
     };
     const simpanSemuaPemain = () => localStorage.setItem(KUNCI_PEMAIN, JSON.stringify(semuaPemain));
     const simpanRiwayat = () => localStorage.setItem(KUNCI_RIWAYAT, JSON.stringify(riwayatPermainan));
@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.querySelectorAll('.tombol-hapus-pemain').forEach(btn => btn.addEventListener('click', () => hapusPemain(btn.dataset.nama)));
     };
-
+    
     const tampilkanPapanSkor = () => {
         let barisHeader = '<tr><th class="p-3 sm:p-4 text-slate-400 font-semibold">Ronde</th>';
         statusPermainan.pemain.forEach(p => barisHeader += `<th class="p-3 sm:p-4 text-lg font-semibold border-t-4" style="border-color: ${p.warna}; color: ${p.warna};">${p.nama}</th>`);
@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.badanTabel.innerHTML = '';
         statusPermainan.skor.forEach((skorRonde, indexRonde) => {
             let baris = `<tr class="hover:bg-slate-700/50"><td class="p-3 sm:p-4 font-bold text-slate-500">${indexRonde + 1}</td>`;
-            statusPermainan.pemain.forEach((_, iPemain) => baris += `<td><input type="number" class="input-skor w-20 sm:w-24 text-center bg-transparent rounded-md p-2 outline-none focus:bg-slate-900 focus:ring-2 ring-sky-500 transition duration-200" data-ronde="${indexRonde}" data-pemain="${iPemain}" value="${skorRonde[iPemain] || ''}" inputmode="numeric"></td>`);
+            statusPermainan.pemain.forEach((_, iPemain) => baris += `<td><input type="text" class="input-skor w-20 sm:w-24 text-center bg-transparent rounded-md p-2 outline-none transition duration-200" data-ronde="${indexRonde}" data-pemain="${iPemain}" value="${skorRonde[iPemain] || ''}" readonly></td>`);
             dom.badanTabel.innerHTML += baris + '</tr>';
         });
         perbaruiTampilanTotal();
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
         aturSkalaTabel(statusPermainan.tingkatZoom);
         dom.pengaturZoom.value = statusPermainan.tingkatZoom;
     };
-    
+
     const perbaruiTampilanTotal = () => {
         const totalSkor = hitungTotalSkor();
         let barisTotal = `<tr class="border-t-4 border-slate-600"><th class="p-3 sm:p-4 font-semibold text-lg text-slate-300">Total</th>`;
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.kontenRiwayat.appendChild(kartu);
         });
     };
-
+    
     const tampilkanPemenang = () => {
         const totalSkor = hitungTotalSkor();
         const skorTertinggi = Math.max(...totalSkor);
@@ -238,6 +238,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const skala = nilaiZoom / 100;
         dom.tabelSkor.style.transform = `scale(${skala})`;
         dom.labelNilaiZoom.textContent = `${nilaiZoom}%`;
+    };
+
+    const bukaKeyboard = (inputElement) => {
+        document.querySelectorAll('.input-skor').forEach(el => el.classList.remove('aktif'));
+        inputAktif = inputElement;
+        inputAktif.classList.add('aktif');
+        if (inputAktif.value === '0') inputAktif.value = '';
+        dom.keyboardVirtual.classList.remove('hidden');
+    };
+    
+    const tutupKeyboard = () => {
+        if (inputAktif) {
+            if (inputAktif.value === '' || inputAktif.value === '-') inputAktif.value = '0';
+            inputAktif.dispatchEvent(new Event('input', { bubbles: true })); // Pastikan perubahan terakhir tersimpan
+            inputAktif.classList.remove('aktif');
+        }
+        inputAktif = null;
+        dom.keyboardVirtual.classList.add('hidden');
     };
 
     const tambahPemainBaru = (e) => {
@@ -261,6 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const mulaiPermainanBaru = () => {
+        tutupKeyboard();
         statusPermainan = { pemain: [], skor: [], permainanAktif: false, tingkatZoom: 100 };
         hapusPermainanAktif();
         dom.tabs.berlangsung.disabled = true;
@@ -294,19 +313,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // === Event Listeners ===
-    Object.keys(dom.tabs).forEach(key => dom.tabs[key].addEventListener('click', () => !dom.tabs[key].disabled && gantiTab(key)));
+    Object.keys(dom.tabs).forEach(key => dom.tabs[key].addEventListener('click', () => { tutupKeyboard(); !dom.tabs[key].disabled && gantiTab(key); }));
     dom.formTambahPemain.addEventListener('submit', tambahPemainBaru);
     
     dom.tombolMulai.addEventListener('click', () => {
-        const pemainTerpilihNodes = document.querySelectorAll('.pilih-pemain-checkbox:checked');
-        if (pemainTerpilihNodes.length < 2) return alert('Pilih minimal 2 pemain.');
-        const pemainTerpilih = Array.from(pemainTerpilihNodes).map(node => semuaPemain.find(p => p.nama === node.value));
-        statusPermainan = {
-            pemain: pemainTerpilih,
-            skor: Array.from({ length: 3 }, () => Array(pemainTerpilih.length).fill('')),
-            permainanAktif: true,
-            tingkatZoom: 100
-        };
+        const nodes = document.querySelectorAll('.pilih-pemain-checkbox:checked');
+        if (nodes.length < 2) return alert('Pilih minimal 2 pemain.');
+        const pemain = Array.from(nodes).map(node => semuaPemain.find(p => p.nama === node.value));
+        statusPermainan = { pemain, skor: Array.from({ length: 3 }, () => Array(pemain.length).fill('')), permainanAktif: true, tingkatZoom: 100 };
         simpanPermainanAktif();
         tampilkanPapanSkor();
         dom.tabs.berlangsung.disabled = false;
@@ -316,37 +330,100 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const tanganiInputSkor = (e) => {
         statusPermainan.skor[e.target.dataset.ronde][e.target.dataset.pemain] = e.target.value;
-        simpanPermainanAktif();
         perbaruiTampilanTotal();
     };
-    const tambahkanListenerKeInput = () => document.querySelectorAll('.input-skor').forEach(i => { i.removeEventListener('input', tanganiInputSkor); i.addEventListener('input', tanganiInputSkor); });
+
+    const tambahkanListenerKeInput = () => {
+        document.querySelectorAll('.input-skor').forEach(i => {
+            i.removeEventListener('input', tanganiInputSkor);
+            i.addEventListener('input', tanganiInputSkor);
+            i.removeEventListener('click', (e) => bukaKeyboard(e.target));
+            i.addEventListener('click', (e) => bukaKeyboard(e.target));
+        });
+    };
+    
     dom.tombolTambahRonde.addEventListener('click', () => {
+        tutupKeyboard();
         statusPermainan.skor.push(Array(statusPermainan.pemain.length).fill(''));
         simpanPermainanAktif();
         tampilkanPapanSkor();
     });
+    
     dom.tombolSelesaikan.addEventListener('click', () => {
+        tutupKeyboard();
         if (!confirm('Yakin ingin menyelesaikan permainan?')) return;
         arsipPermainanSelesai();
         statusPermainan.permainanAktif = false;
         simpanPermainanAktif();
         tampilkanPapanSkor();
     });
-    dom.pengaturZoom.addEventListener('input', (e) => {
-        const nilaiZoom = e.target.value;
-        aturSkalaTabel(nilaiZoom);
-    });
+
+    dom.pengaturZoom.addEventListener('input', (e) => aturSkalaTabel(e.target.value));
     dom.pengaturZoom.addEventListener('change', (e) => {
         statusPermainan.tingkatZoom = e.target.value;
         simpanPermainanAktif();
     });
+
     dom.tombolPermainanBaruDariAkhir.addEventListener('click', mulaiPermainanBaru);
+
+    // === INISIALISASI KEYBOARD VIRTUAL ===
+    const inisialisasiKeyboard = () => {
+        document.querySelectorAll('.tombol-keypad').forEach(tombol => {
+            tombol.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!inputAktif) return;
+
+                const key = tombol.dataset.key;
+                
+                if (key === 'ok') {
+                    // **FITUR BARU: LOGIKA AUTO-NEXT**
+                    const currentRonde = parseInt(inputAktif.dataset.ronde);
+                    const currentPlayer = parseInt(inputAktif.dataset.pemain);
+                    const totalPemain = statusPermainan.pemain.length;
+                    const totalRonde = statusPermainan.skor.length;
+
+                    let nextPemain = currentPlayer + 1;
+                    let nextRonde = currentRonde;
+
+                    if (nextPemain >= totalPemain) {
+                        nextPemain = 0;
+                        nextRonde++;
+                    }
+
+                    const nextInput = document.querySelector(`.input-skor[data-ronde="${nextRonde}"][data-pemain="${nextPemain}"]`);
+                    
+                    tutupKeyboard();
+                    if (nextInput) {
+                        bukaKeyboard(nextInput);
+                    }
+                    simpanPermainanAktif(); // Simpan setelah selesai input
+                    return;
+                }
+
+                let currentValue = inputAktif.value;
+                switch(key) {
+                    case 'hapus': currentValue = currentValue.slice(0, -1); break;
+                    case '-': if (currentValue.length === 0) currentValue = '-'; break;
+                    case '.': if (!currentValue.includes('.')) currentValue += '.'; break;
+                    default: currentValue += key; break;
+                }
+                inputAktif.value = currentValue;
+                inputAktif.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        });
+        document.addEventListener('click', (e) => {
+            if (!dom.keyboardVirtual.contains(e.target) && !e.target.classList.contains('input-skor')) {
+                tutupKeyboard();
+            }
+        });
+    };
 
     // === Inisialisasi Aplikasi ===
     const inisialisasi = () => {
         muatData();
         tampilkanDaftarPemain();
         tampilkanRiwayat();
+        inisialisasiKeyboard();
         if (statusPermainan.permainanAktif) {
             tampilkanPapanSkor();
             dom.tabs.berlangsung.disabled = false;
