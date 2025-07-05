@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Papan Skor Pro v7.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Menghilangkan panah pada input number */
+        input[type=number] { -moz-appearance: textfield; }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        .tab-aktif {
+            background-color: #0f172a; /* bg-slate-900 */
+            color: #38bdf8; /* text-sky-400 */
+            border-color: #38bdf8; /* border-sky-400 */
+        }
+
+        /* Styling slider */
+        input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: #334155; border-radius: 5px; outline: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #38bdf8; cursor: pointer; border-radius: 50%; }
+        input[type=range]::-moz-range-thumb { width: 20px; height: 20px; background: #38bdf8; cursor: pointer; border-radius: 50%; }
+
+        /* Mengatur titik asal transformasi untuk zoom */
+        #tabel-skor {
+            transform-origin: top left;
+            transition: transform 0.2s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans flex items-start justify-center min-h-screen p-2 sm:p-4">
+
+    <div class="w-full max-w-5xl bg-slate-900/70 backdrop-blur-xl p-2 sm:p-6 rounded-2xl shadow-2xl shadow-sky-900/50 border border-slate-700">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 bg-gradient-to-r from-sky-400 to-cyan-300 bg-clip-text text-transparent">
+            Papan Skor Pro v7.0
+        </h1>
+
+        <!-- Navigasi Tab -->
+        <div class="mb-6 border-b border-slate-700 flex">
+            <button id="tab-baru" class="tab-tombol flex-1 py-3 px-2 sm:px-4 font-semibold border-b-2 transition-colors duration-300">Permainan Baru</button>
+            <button id="tab-berlangsung" class="tab-tombol flex-1 py-3 px-2 sm:px-4 font-semibold border-b-2 transition-colors duration-300 border-transparent text-slate-500" disabled>Berlangsung</button>
+            <button id="tab-riwayat" class="tab-tombol flex-1 py-3 px-2 sm:px-4 font-semibold border-b-2 transition-colors duration-300 border-transparent text-slate-400 hover:text-slate-200">Riwayat</button>
+        </div>
+
+        <!-- Konten Panel -->
+        <div id="konten-panel">
+            <!-- Panel 1: Pengaturan Permainan Baru -->
+            <div id="panel-baru" class="space-y-8">
+                <div>
+                    <h2 class="text-xl font-semibold mb-3 text-cyan-400">Database Pemain</h2>
+                    <form id="form-tambah-pemain" class="flex flex-col sm:flex-row gap-2 mb-4">
+                        <input type="text" id="input-nama-pemain-baru" placeholder="Masukkan nama pemain baru" class="flex-grow bg-slate-800 border-2 border-slate-700 rounded-lg p-3 focus:border-cyan-500 focus:ring-cyan-500 outline-none transition" required>
+                        <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-5 rounded-lg transition-transform transform hover:scale-105">Tambah</button>
+                    </form>
+                    <div id="daftar-semua-pemain" class="space-y-2 max-h-48 overflow-y-auto pr-2"></div>
+                </div>
+                <div>
+                    <h2 class="text-xl font-semibold mb-3 text-sky-400">Pilih Pemain (min. 2)</h2>
+                    <div id="daftar-pilih-pemain" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-6"></div>
+                    <button id="tombol-mulai" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-[1.02] shadow-lg shadow-sky-600/30 flex items-center justify-center gap-2 text-lg">▶️ Mulai Permainan!</button>
+                </div>
+            </div>
+
+            <!-- Panel 2: Area Permainan Berlangsung -->
+            <div id="panel-berlangsung" class="hidden">
+                 <div class="mb-4 bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                    <label for="pengatur-zoom" class="flex items-center gap-2 font-semibold text-slate-400 mb-2">
+                        🔍 Skala Tabel: <span id="label-nilai-zoom" class="font-bold text-sky-400">100%</span>
+                    </label>
+                    <input type="range" id="pengatur-zoom" min="50" max="200" value="100">
+                    <p class="text-xs text-slate-500 mt-2 text-center">Geser untuk mengubah skala tabel (50% - 200%).</p>
+                 </div>
+
+                 <div class="overflow-x-auto pb-4">
+                    <table id="tabel-skor" class="w-full text-center">
+                        <thead id="kepala-tabel" class="bg-slate-800"></thead>
+                        <tbody id="badan-tabel" class="divide-y divide-slate-700"></tbody>
+                        <tfoot id="kaki-tabel" class="bg-slate-900/80"></tfoot>
+                    </table>
+                </div>
+
+                <div id="kontrol-permainan" class="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="tombol-tambah-ronde" class="w-full sm:w-auto bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-2">➕ Tambah Ronde</button>
+                    <button id="tombol-selesaikan" class="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-2">🏁 Selesaikan Game</button>
+                </div>
+                
+                <div id="pesan-pemenang" class="hidden mt-6 text-center text-xl sm:text-2xl font-bold bg-emerald-900/50 border-2 border-emerald-500 p-6 rounded-lg"></div>
+
+                <div id="kontrol-akhir-permainan" class="hidden mt-6 flex flex-col sm:flex-row gap-4 justify-center">
+                     <button id="tombol-permainan-baru-dari-akhir" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-2">🔄 Permainan Baru</button>
+                </div>
+            </div>
+
+            <!-- Panel 3: Riwayat Permainan -->
+            <div id="panel-riwayat" class="hidden space-y-4">
+                <div id="konten-riwayat" class="max-h-[60vh] overflow-y-auto pr-2 space-y-4"></div>
+                <p id="pesan-riwayat-kosong" class="text-center text-slate-500 py-8">Belum ada riwayat permainan yang selesai.</p>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // === Selektor Elemen DOM ===
+    const dom = {
+        tabs: { baru: document.getElementById('tab-baru'), berlangsung: document.getElementById('tab-berlangsung'), riwayat: document.getElementById('tab-riwayat') },
+        panels: { baru: document.getElementById('panel-baru'), berlangsung: document.getElementById('panel-berlangsung'), riwayat: document.getElementById('panel-riwayat') },
+        formTambahPemain: document.getElementById('form-tambah-pemain'),
+        inputNamaPemainBaru: document.getElementById('input-nama-pemain-baru'),
+        daftarSemuaPemain: document.getElementById('daftar-semua-pemain'),
+        daftarPilihPemain: document.getElementById('daftar-pilih-pemain'),
+        tombolMulai: document.getElementById('tombol-mulai'),
+        // Bagian Permainan Berlangsung
+        tabelSkor: document.getElementById('tabel-skor'),
+        pengaturZoom: document.getElementById('pengatur-zoom'),
+        labelNilaiZoom: document.getElementById('label-nilai-zoom'),
+        kepalaTabel: document.getElementById('kepala-tabel'),
+        badanTabel: document.getElementById('badan-tabel'),
+        kakiTabel: document.getElementById('kaki-tabel'),
+        kontrolPermainan: document.getElementById('kontrol-permainan'),
+        tombolTambahRonde: document.getElementById('tombol-tambah-ronde'),
+        tombolSelesaikan: document.getElementById('tombol-selesaikan'),
+        pesanPemenang: document.getElementById('pesan-pemenang'),
+        kontrolAkhirPermainan: document.getElementById('kontrol-akhir-permainan'),
+        tombolPermainanBaruDariAkhir: document.getElementById('tombol-permainan-baru-dari-akhir'),
+        // Bagian Riwayat
+        kontenRiwayat: document.getElementById('konten-riwayat'),
+        pesanRiwayatKosong: document.getElementById('pesan-riwayat-kosong'),
+    };
+
+    // === Kunci & State Aplikasi ===
+    const KUNCI_PEMAIN = 'papanSkorPemain_v7';
+    const KUNCI_PERMAINAN_AKTIF = 'papanSkorAktif_v7';
+    const KUNCI_RIWAYAT = 'papanSkorRiwayat_v7';
+    const WARNA_PEMAIN = ['#38bdf8', '#fb7185', '#4ade80', '#facc15', '#a78bfa', '#2dd4bf', '#f97316', '#e879f9'];
+
+    let semuaPemain = [];
+    let riwayatPermainan = [];
+    let statusPermainan = { pemain: [], skor: [], permainanAktif: false, tingkatZoom: 100 };
+
+    // === Fungsi Manajemen Data (Disimpan di Local Storage) ===
+    const muatData = () => {
+        semuaPemain = JSON.parse(localStorage.getItem(KUNCI_PEMAIN)) || [];
+        riwayatPermainan = JSON.parse(localStorage.getItem(KUNCI_RIWAYAT)) || [];
+        const permainanAktifTersimpan = JSON.parse(localStorage.getItem(KUNCI_PERMAINAN_AKTIF));
+        if (permainanAktifTersimpan && permainanAktifTersimpan.pemain.length > 0) statusPermainan = permainanAktifTersimpan;
+    };
+    const simpanSemuaPemain = () => localStorage.setItem(KUNCI_PEMAIN, JSON.stringify(semuaPemain));
+    const simpanRiwayat = () => localStorage.setItem(KUNCI_RIWAYAT, JSON.stringify(riwayatPermainan));
+    const simpanPermainanAktif = () => localStorage.setItem(KUNCI_PERMAINAN_AKTIF, JSON.stringify(statusPermainan));
+    const hapusPermainanAktif = () => localStorage.removeItem(KUNCI_PERMAINAN_AKTIF);
+
+    // === Fungsi Tampilan & UI ===
+    const gantiTab = (tabAktif) => {
+        Object.values(dom.panels).forEach(p => p.classList.add('hidden'));
+        Object.values(dom.tabs).forEach(t => {
+            t.classList.remove('tab-aktif');
+            if (!t.disabled) t.classList.add('text-slate-400', 'hover:text-slate-200');
+        });
+        dom.panels[tabAktif].classList.remove('hidden');
+        dom.tabs[tabAktif].classList.add('tab-aktif');
+        dom.tabs[tabAktif].classList.remove('text-slate-400', 'hover:text-slate-200');
+    };
+    
+    const tampilkanDaftarPemain = () => {
+        dom.daftarSemuaPemain.innerHTML = '';
+        dom.daftarPilihPemain.innerHTML = '';
+        if(semuaPemain.length === 0) dom.daftarSemuaPemain.innerHTML = `<p class="text-slate-500 text-center">Belum ada pemain.</p>`;
+        semuaPemain.forEach(pemain => {
+            const itemManajemen = document.createElement('div');
+            itemManajemen.className = 'flex items-center justify-between bg-slate-800 p-2 rounded-lg';
+            itemManajemen.innerHTML = `<div class="flex items-center gap-3"><span class="h-3 w-3 rounded-full" style="background-color: ${pemain.warna};"></span><span class="font-medium">${pemain.nama}</span></div><button data-nama="${pemain.nama}" class="tombol-hapus-pemain text-rose-500 hover:text-rose-400 text-xl font-bold">×</button>`;
+            dom.daftarSemuaPemain.appendChild(itemManajemen);
+            const itemPilihan = document.createElement('div');
+            itemPilihan.innerHTML = `<label class="flex items-center gap-2 p-3 rounded-lg border-2 border-slate-700 hover:border-sky-500 cursor-pointer transition has-[:checked]:bg-sky-900/50 has-[:checked]:border-sky-500"><input type="checkbox" value="${pemain.nama}" class="pilih-pemain-checkbox w-5 h-5 rounded bg-slate-900 border-slate-600 text-sky-500 focus:ring-sky-600"><span class="font-semibold" style="color: ${pemain.warna};">${pemain.nama}</span></label>`;
+            dom.daftarPilihPemain.appendChild(itemPilihan);
+        });
+        document.querySelectorAll('.tombol-hapus-pemain').forEach(btn => btn.addEventListener('click', () => hapusPemain(btn.dataset.nama)));
+    };
+
+    const tampilkanPapanSkor = () => {
+        let barisHeader = '<tr><th class="p-3 sm:p-4 text-slate-400 font-semibold">Ronde</th>';
+        statusPermainan.pemain.forEach(p => barisHeader += `<th class="p-3 sm:p-4 text-lg font-semibold border-t-4" style="border-color: ${p.warna}; color: ${p.warna};">${p.nama}</th>`);
+        dom.kepalaTabel.innerHTML = barisHeader + '</tr>';
+        dom.badanTabel.innerHTML = '';
+        statusPermainan.skor.forEach((skorRonde, indexRonde) => {
+            let baris = `<tr class="hover:bg-slate-700/50"><td class="p-3 sm:p-4 font-bold text-slate-500">${indexRonde + 1}</td>`;
+            statusPermainan.pemain.forEach((_, iPemain) => baris += `<td><input type="number" class="input-skor w-20 sm:w-24 text-center bg-transparent rounded-md p-2 outline-none focus:bg-slate-900 focus:ring-2 ring-sky-500 transition duration-200" data-ronde="${indexRonde}" data-pemain="${iPemain}" value="${skorRonde[iPemain] || ''}" inputmode="numeric"></td>`);
+            dom.badanTabel.innerHTML += baris + '</tr>';
+        });
+        perbaruiTampilanTotal();
+        tambahkanListenerKeInput();
+        dom.pesanPemenang.classList.add('hidden');
+        dom.kontrolPermainan.classList.toggle('hidden', !statusPermainan.permainanAktif);
+        dom.kontrolAkhirPermainan.classList.toggle('hidden', statusPermainan.permainanAktif);
+        if (!statusPermainan.permainanAktif) {
+            nonaktifkanInput();
+            tampilkanPemenang();
+        }
+        aturSkalaTabel(statusPermainan.tingkatZoom);
+        dom.pengaturZoom.value = statusPermainan.tingkatZoom;
+    };
+    
+    const perbaruiTampilanTotal = () => {
+        const totalSkor = hitungTotalSkor();
+        let barisTotal = `<tr class="border-t-4 border-slate-600"><th class="p-3 sm:p-4 font-semibold text-lg text-slate-300">Total</th>`;
+        totalSkor.forEach((total, index) => {
+            const warnaSkor = total < 0 ? '#f43f5e' : statusPermainan.pemain[index].warna;
+            barisTotal += `<td class="p-3 sm:p-4 font-bold text-2xl" style="color: ${warnaSkor};">${total}</td>`;
+        });
+        dom.kakiTabel.innerHTML = barisTotal + '</tr>';
+    };
+    
+    const tampilkanRiwayat = () => {
+        dom.kontenRiwayat.innerHTML = '';
+        dom.pesanRiwayatKosong.classList.toggle('hidden', riwayatPermainan.length > 0);
+        riwayatPermainan.slice().reverse().forEach(game => {
+            const kartu = document.createElement('div');
+            kartu.className = 'bg-slate-800/80 p-4 rounded-lg border border-slate-700';
+            const pemainHtml = game.pemain.map(p => `<span class="font-semibold" style="color:${p.warna}">${p.nama}</span> (${game.skor[p.nama]})`).join(', ');
+            kartu.innerHTML = `<p class="text-sm text-slate-400 mb-2">${game.tanggal}</p><p class="mb-2"><strong>Pemain:</strong> ${pemainHtml}</p><p class="text-lg"><strong>Pemenang:</strong> <span class="font-bold text-emerald-400">${game.pemenang}</span></p>`;
+            dom.kontenRiwayat.appendChild(kartu);
+        });
+    };
+
+    const tampilkanPemenang = () => {
+        const totalSkor = hitungTotalSkor();
+        const skorTertinggi = Math.max(...totalSkor);
+        const pemenang = statusPermainan.pemain.filter((_, i) => totalSkor[i] === skorTertinggi);
+        let pesan = pemenang.length > 1 ? `🏆 Seri! Pemenangnya: <strong>${pemenang.map(p => p.nama).join(' & ')}</strong> (Skor: <strong>${skorTertinggi}</strong>) 🏆` : `🏆 Selamat! <strong>${pemenang[0].nama}</strong> adalah pemenangnya! (Skor: <strong>${skorTertinggi}</strong>) 🏆`;
+        dom.pesanPemenang.innerHTML = pesan;
+        dom.pesanPemenang.classList.remove('hidden');
+    };
+
+    // === Fungsi Logika & Aksi ===
+    const aturSkalaTabel = (nilaiZoom) => {
+        const skala = nilaiZoom / 100;
+        dom.tabelSkor.style.transform = `scale(${skala})`;
+        dom.labelNilaiZoom.textContent = `${nilaiZoom}%`;
+    };
+
+    const tambahPemainBaru = (e) => {
+        e.preventDefault();
+        const nama = dom.inputNamaPemainBaru.value.trim();
+        if (nama && !semuaPemain.some(p => p.nama.toLowerCase() === nama.toLowerCase())) {
+            const warna = WARNA_PEMAIN[semuaPemain.length % WARNA_PEMAIN.length];
+            semuaPemain.push({ nama, warna });
+            simpanSemuaPemain();
+            tampilkanDaftarPemain();
+            dom.inputNamaPemainBaru.value = '';
+        } else alert('Nama pemain tidak boleh kosong atau sudah ada.');
+    };
+    
+    const hapusPemain = (nama) => {
+        if (confirm(`Yakin ingin menghapus pemain "${nama}"?`)) {
+            semuaPemain = semuaPemain.filter(p => p.nama !== nama);
+            simpanSemuaPemain();
+            tampilkanDaftarPemain();
+        }
+    };
+
+    const mulaiPermainanBaru = () => {
+        statusPermainan = { pemain: [], skor: [], permainanAktif: false, tingkatZoom: 100 };
+        hapusPermainanAktif();
+        dom.tabs.berlangsung.disabled = true;
+        dom.tabs.berlangsung.classList.add('text-slate-500');
+        gantiTab('baru');
+    };
+
+    const hitungTotalSkor = () => {
+        const total = Array(statusPermainan.pemain.length).fill(0);
+        statusPermainan.skor.forEach(skorRonde => skorRonde.forEach((skor, i) => total[i] += parseFloat(skor) || 0));
+        return total.map(t => Number(t.toFixed(2))); 
+    };
+    
+    const nonaktifkanInput = () => document.querySelectorAll('.input-skor').forEach(input => input.disabled = true);
+    
+    const arsipPermainanSelesai = () => {
+        const totalSkor = hitungTotalSkor();
+        const skorTertinggi = Math.max(...totalSkor);
+        const pemenang = statusPermainan.pemain.filter((_, i) => totalSkor[i] === skorTertinggi);
+        const dataSkor = {};
+        statusPermainan.pemain.forEach((p, i) => { dataSkor[p.nama] = totalSkor[i] });
+        riwayatPermainan.push({
+            id: Date.now(),
+            tanggal: new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }),
+            pemain: statusPermainan.pemain,
+            skor: dataSkor,
+            pemenang: pemenang.map(p => p.nama).join(' & ')
+        });
+        simpanRiwayat();
+        tampilkanRiwayat();
+    };
+
+    // === Event Listeners ===
+    Object.keys(dom.tabs).forEach(key => dom.tabs[key].addEventListener('click', () => !dom.tabs[key].disabled && gantiTab(key)));
+    dom.formTambahPemain.addEventListener('submit', tambahPemainBaru);
+    
+    dom.tombolMulai.addEventListener('click', () => {
+        const pemainTerpilihNodes = document.querySelectorAll('.pilih-pemain-checkbox:checked');
+        if (pemainTerpilihNodes.length < 2) return alert('Pilih minimal 2 pemain.');
+        const pemainTerpilih = Array.from(pemainTerpilihNodes).map(node => semuaPemain.find(p => p.nama === node.value));
+        statusPermainan = {
+            pemain: pemainTerpilih,
+            skor: Array.from({ length: 3 }, () => Array(pemainTerpilih.length).fill('')),
+            permainanAktif: true,
+            tingkatZoom: 100
+        };
+        simpanPermainanAktif();
+        tampilkanPapanSkor();
+        dom.tabs.berlangsung.disabled = false;
+        dom.tabs.berlangsung.classList.remove('text-slate-500');
+        gantiTab('berlangsung');
+    });
+
+    const tanganiInputSkor = (e) => {
+        statusPermainan.skor[e.target.dataset.ronde][e.target.dataset.pemain] = e.target.value;
+        simpanPermainanAktif();
+        perbaruiTampilanTotal();
+    };
+    const tambahkanListenerKeInput = () => document.querySelectorAll('.input-skor').forEach(i => { i.removeEventListener('input', tanganiInputSkor); i.addEventListener('input', tanganiInputSkor); });
+    dom.tombolTambahRonde.addEventListener('click', () => {
+        statusPermainan.skor.push(Array(statusPermainan.pemain.length).fill(''));
+        simpanPermainanAktif();
+        tampilkanPapanSkor();
+    });
+    dom.tombolSelesaikan.addEventListener('click', () => {
+        if (!confirm('Yakin ingin menyelesaikan permainan?')) return;
+        arsipPermainanSelesai();
+        statusPermainan.permainanAktif = false;
+        simpanPermainanAktif();
+        tampilkanPapanSkor();
+    });
+    dom.pengaturZoom.addEventListener('input', (e) => {
+        const nilaiZoom = e.target.value;
+        aturSkalaTabel(nilaiZoom);
+    });
+    dom.pengaturZoom.addEventListener('change', (e) => {
+        statusPermainan.tingkatZoom = e.target.value;
+        simpanPermainanAktif();
+    });
+    dom.tombolPermainanBaruDariAkhir.addEventListener('click', mulaiPermainanBaru);
+
+    // === Inisialisasi Aplikasi ===
+    const inisialisasi = () => {
+        muatData();
+        tampilkanDaftarPemain();
+        tampilkanRiwayat();
+        if (statusPermainan.permainanAktif) {
+            tampilkanPapanSkor();
+            dom.tabs.berlangsung.disabled = false;
+            dom.tabs.berlangsung.classList.remove('text-slate-500');
+            gantiTab('berlangsung');
+        } else {
+            gantiTab('baru');
+        }
+    };
+    inisialisasi();
+});
+</script>
+
+</body>
+</html>
